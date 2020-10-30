@@ -14,10 +14,8 @@ function getVersion() {
   //Builds of pull requests
   if (pull_request !== null && !pull_request.match(/false/i)) {
     release_version = `0.${pull_request}`;
-  }
-
-  //Builds of branches that aren't master or release
-  else if (!branch || !branch.match(/^(refs\/heads\/)?release[/-]/i)) {
+  } else if (!branch || !branch.match(/^(refs\/heads\/)?release[/-]/i)) {
+    //Builds of branches that aren't master or release
     release_version = '0.0';
   } else {
     //Builds of release branches (or locally or on server)
