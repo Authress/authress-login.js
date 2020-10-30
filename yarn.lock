@@ -334,6 +334,13 @@ chokidar@3.3.0:
   optionalDependencies:
     fsevents "~2.1.1"
 
+ci-build-tools@^1.0.13:
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/ci-build-tools/-/ci-build-tools-1.0.13.tgz#5c63e99d088a3052e06c2a07ebede586bd14cffc"
+  integrity sha1-XGPpnQiKMFLgbCoH6+3lhr0Uz/w=
+  dependencies:
+    semver "^5.0.3"
+
 cli-cursor@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/cli-cursor/-/cli-cursor-3.1.0.tgz#264305a7ae490d1d03bf0c9ba7c925d1753af307"
@@ -1880,13 +1887,6 @@ to-regex-range@^5.0.1:
   integrity sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==
   dependencies:
     is-number "^7.0.0"
-
-travis-build-tools@~1.2:
-  version "1.2.39"
-  resolved "https://registry.yarnpkg.com/travis-build-tools/-/travis-build-tools-1.2.39.tgz#6c7b820046f3bcee3a71a17719ee619b4f2f0909"
-  integrity sha1-bHuCAEbzvO46caF3Ge5hm08vCQk=
-  dependencies:
-    semver "^5.0.3"
 
 tslib@^1.8.1, tslib@^1.9.0:
   version "1.13.0"
