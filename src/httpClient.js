@@ -104,7 +104,7 @@ class HttpClient {
 
   get(url, headers, type = 'json') {
     return this.client.get(url.toString(), {
-      withCredentials: true,
+      withCredentials: window.location.hostname !== 'localhost',
       headers: Object.assign({}, defaultHeaders, headers),
       responseType: type
     });
@@ -112,7 +112,7 @@ class HttpClient {
 
   delete(url, headers, type = 'json') {
     return this.client.delete(url.toString(), {
-      withCredentials: true,
+      withCredentials: window.location.hostname !== 'localhost',
       headers: Object.assign({}, defaultHeaders, headers),
       responseType: type
     });
@@ -120,21 +120,21 @@ class HttpClient {
 
   post(url, data, headers) {
     return this.client.post(url.toString(), data, {
-      withCredentials: true,
+      withCredentials: window.location.hostname !== 'localhost',
       headers: Object.assign({}, defaultHeaders, headers)
     });
   }
 
   put(url, data, headers) {
     return this.client.put(url.toString(), data, {
-      withCredentials: true,
+      withCredentials: window.location.hostname !== 'localhost',
       headers: Object.assign({}, defaultHeaders, headers)
     });
   }
 
   patch(url, data, headers) {
     return this.client.patch(url.toString(), data, {
-      withCredentials: true,
+      withCredentials: window.location.hostname !== 'localhost',
       headers: Object.assign({}, defaultHeaders, headers)
     });
   }
