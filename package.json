@@ -1,5 +1,5 @@
 {
-  "name": "authress-login-sdk",
+  "name": "authress-login",
   "version": "0.0.0",
   "description": "Universal login sdk for Authress authentication as a service. Provides managed authentication for user identity, authentication, and token verification.",
   "main": "./index.js",
@@ -39,7 +39,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Authress/authress-login-sdk.js"
+    "url": "git+https://github.com/Authress/authress-login.js"
   },
   "keywords": [
     "authentication",
@@ -64,7 +64,7 @@
   "author": "Authress Developers <developers@authress.io> (https://authress.io)",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Authress/authress-login-sdk.js/issues"
+    "url": "https://github.com/Authress/authress-login.js/issues"
   },
   "homepage": "https://authress.io",
   "engines": {
