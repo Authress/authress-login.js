@@ -10,12 +10,12 @@ const defaultHeaders = {
 
 class HttpClient {
   constructor(authressLoginCustomDomain, overrideLogger) {
+    if (!authressLoginCustomDomain) {
+      throw Error('Custom Authress Domain Host is required');
+    }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const logger = overrideLogger || { debug() {}, warn() {}, critical() {} };
-    let loginUrl = window.location.origin.match(/localhost/) ? 'https://login.authress.io/api' : `${window.location.origin}/api`;
-    if (authressLoginCustomDomain) {
-      loginUrl = `https://${authressLoginCustomDomain.replace(/^(https?:\/\/)/, '')}/api`;
-    }
+    const loginUrl = `https://${authressLoginCustomDomain.replace(/^(https?:\/\/)/, '')}/api`;
     const client = axios.create({ baseURL: loginUrl });
 
     client.interceptors.request.use(config => {

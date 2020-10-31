@@ -11,7 +11,7 @@ afterEach(() => sandbox.restore());
 describe('index.js', () => {
   describe('LoginClient', () => {
     it('constructor', () => {
-      const loginClient = new LoginClient();
+      const loginClient = new LoginClient({ authenticationServiceUrl: 'https:/login.test.com' });
       expect(loginClient).to.not.eql(null);
     });
   });

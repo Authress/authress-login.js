@@ -10,11 +10,12 @@
     "src"
   ],
   "scripts": {
-    "lint": "eslint --ext .js,.ts tests make.js index.js index.d.ts",
+    "lint": "eslint --ext .js,.ts src tests make.js index.js index.d.ts",
     "test": "mocha tests/**/*.test.js -R spec"
   },
   "dependencies": {
     "axios": "^0.19",
+    "base64url": "^3.0.1",
     "cookie": "^0.4.1",
     "jsonwebtoken": "^8.5"
   },
