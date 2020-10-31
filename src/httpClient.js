@@ -1,0 +1,143 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+const axios = require('axios');
+
+const invalidToken = 'Invalid token';
+const noUrl = 'No Url Specified';
+
+const defaultHeaders = {
+  'Content-Type': 'application/json'
+};
+
+class HttpClient {
+  constructor(authressLoginCustomDomain, overrideLogger) {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const logger = overrideLogger || { debug() {}, warn() {}, critical() {} };
+    let loginUrl = window.location.origin.match(/localhost/) ? 'https://login.authress.io/api' : `${window.location.origin}/api`;
+    if (authressLoginCustomDomain) {
+      loginUrl = `https://${authressLoginCustomDomain.replace(/^(https?:\/\/)/, '')}/api`;
+    }
+    const client = axios.create({ baseURL: loginUrl });
+
+    client.interceptors.request.use(config => {
+      logger.debug({ title: 'HttpClient Request', online: navigator.onLine, requestId: config.requestId, method: config.method, url: config.url });
+
+      return config;
+    }, error => {
+      let notFound = false;
+      let newError = error;
+      let url;
+      let requestId;
+
+      if (error) {
+        newError = error.message;
+
+        if (error.response) {
+          newError = {
+            data: error.response.data,
+            status: error.response.status,
+            headers: error.response.headers
+          };
+          notFound = error.response.status === 404;
+        } else if (error.message) {
+          newError = {
+            message: error.message,
+            code: error.code,
+            stack: error.stack
+          };
+        }
+
+        if (error.config) {
+          url = error.config.url;
+          requestId = error.config.requestId;
+        } else {
+          requestId = error.request && error.request.config && error.request.config.requestId;
+        }
+      }
+
+      const logObject = { title: 'HttpClient Request Error', url, online: navigator.onLine, requestId, exception: newError };
+
+      if (notFound) {
+        logger.debug(logObject);
+      } else {
+        logger.warn(logObject);
+      }
+
+      throw newError;
+    });
+
+    client.interceptors.response.use(response => response, error => {
+      if (error.rewrittenError) {
+        throw error;
+      }
+
+      const newError = error && error.response && {
+        url: error.config && error.config.url,
+        data: error.response.data,
+        status: error.response.status,
+        headers: error.response.headers
+      } || error.message && { message: error.message, code: error.code, stack: error.stack } || error;
+      newError.rewrittenError = true;
+      const requestId = error && (error.config && error.config.requestId || error.request && error.request.config && error.request.config.requestId);
+
+      let message = 'HttpClient Response Error';
+      let logMethod = 'warn';
+
+      if (!error) {
+        message = 'HttpClient Response Error - Unknown error occurred';
+      } else if (error.message === noUrl) {
+        logMethod = 'critical';
+        message = 'HttpClient Error: "url" must be defined';
+      } else if (error.message === invalidToken) {
+        message = 'HttpClient call skipped due to a token error';
+      } else if (error.response && error.response.status === 404) {
+        logMethod = 'debug';
+      } else if (error.response && error.response.status === 401) {
+        message = 'HttpClient Response Error due to invalid token';
+      }
+
+      logger[logMethod]({ title: message, online: navigator.onLine, requestId, exception: newError, url: error && error.config && error.config.url });
+      throw newError;
+    });
+
+    this.client = client;
+  }
+
+  get(url, headers, type = 'json') {
+    return this.client.get(url.toString(), {
+      withCredentials: true,
+      headers: Object.assign({}, defaultHeaders, headers),
+      responseType: type
+    });
+  }
+
+  delete(url, headers, type = 'json') {
+    return this.client.delete(url.toString(), {
+      withCredentials: true,
+      headers: Object.assign({}, defaultHeaders, headers),
+      responseType: type
+    });
+  }
+
+  post(url, data, headers) {
+    return this.client.post(url.toString(), data, {
+      withCredentials: true,
+      headers: Object.assign({}, defaultHeaders, headers)
+    });
+  }
+
+  put(url, data, headers) {
+    return this.client.put(url.toString(), data, {
+      withCredentials: true,
+      headers: Object.assign({}, defaultHeaders, headers)
+    });
+  }
+
+  patch(url, data, headers) {
+    return this.client.patch(url.toString(), data, {
+      withCredentials: true,
+      headers: Object.assign({}, defaultHeaders, headers)
+    });
+  }
+}
+
+module.exports = HttpClient;

@@ -13,7 +13,7 @@ npm install authress-login-sdk
 
 Then required the package:
 ```js
-const { Login } = require('authress-login-sdk');
+const { LoginClient } = require('authress-login-sdk');
 ```
 
 ## Getting Started

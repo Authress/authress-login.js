@@ -3,10 +3,10 @@ export interface Settings {
   baseUrl: string;
 }
 
-declare class Login {
-  constructor(settings: Settings): Login;
+declare class LoginClient {
+  constructor(settings: Settings): LoginClient;
 }
 
 declare class ServiceClientTokenProvider {}
 
-export = { Login };
+export = { LoginClient: Login };
