@@ -109,7 +109,9 @@ class LoginClient {
    */
   async authenticate({ connectionId, redirectUrl, force }) {
     if (!force && await this.userSessionExists()) {
-      window.location.assign(redirectUrl || window.location.href);
+      if (redirectUrl && redirectUrl !== window.location.href) {
+        window.location.assign(redirectUrl);
+      }
       return true;
     }
 
