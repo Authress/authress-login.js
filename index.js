@@ -126,6 +126,9 @@ class LoginClient {
     });
     localStorage.setItem('AuthenticationRequestNonce', JSON.stringify({ nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId }));
     window.location.assign(requestOptions.data.authenticationUrl);
+
+    // Prevent the current UI from taking any action once we decided we need to log in.
+    await new Promise(resolve => setTimeout(resolve, 5000));
     return false;
   }
 
