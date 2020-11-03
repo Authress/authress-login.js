@@ -88,7 +88,7 @@ class LoginClient {
     }
 
     if (window.location.hostname !== 'localhost') {
-      await this.httpClient.getWithCredentials('/session');
+      await this.httpClient.get('/session');
       const newUserData = this.getUserData();
       // User session exists and now is logged in
       if (newUserData) {
