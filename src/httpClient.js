@@ -102,39 +102,39 @@ class HttpClient {
     this.client = client;
   }
 
-  get(url, headers, type = 'json') {
+  get(url, withCredentials, headers, type = 'json') {
     return this.client.get(url.toString(), {
-      withCredentials: window.location.hostname !== 'localhost',
+      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
       headers: Object.assign({}, defaultHeaders, headers),
       responseType: type
     });
   }
 
-  delete(url, headers, type = 'json') {
+  delete(url, withCredentials, headers, type = 'json') {
     return this.client.delete(url.toString(), {
-      withCredentials: window.location.hostname !== 'localhost',
+      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
       headers: Object.assign({}, defaultHeaders, headers),
       responseType: type
     });
   }
 
-  post(url, data, headers) {
+  post(url, withCredentials, data, headers) {
     return this.client.post(url.toString(), data, {
-      withCredentials: window.location.hostname !== 'localhost',
+      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
       headers: Object.assign({}, defaultHeaders, headers)
     });
   }
 
-  put(url, data, headers) {
+  put(url, withCredentials, data, headers) {
     return this.client.put(url.toString(), data, {
-      withCredentials: window.location.hostname !== 'localhost',
+      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
       headers: Object.assign({}, defaultHeaders, headers)
     });
   }
 
-  patch(url, data, headers) {
+  patch(url, withCredentials, data, headers) {
     return this.client.patch(url.toString(), data, {
-      withCredentials: window.location.hostname !== 'localhost',
+      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
       headers: Object.assign({}, defaultHeaders, headers)
     });
   }

@@ -88,7 +88,7 @@ class LoginClient {
     }
 
     if (window.location.hostname !== 'localhost') {
-      await this.httpClient.get('/session');
+      await this.httpClient.get('/session', true);
       const newUserData = this.getUserData();
       // User session exists and now is logged in
       if (newUserData) {
@@ -119,7 +119,7 @@ class LoginClient {
     const hash = crypto.createHash('sha256').update(codeVerifier).digest();
     const codeChallenge = base64url(hash);
 
-    const requestOptions = await this.httpClient.post('/authentication', {
+    const requestOptions = await this.httpClient.post('/authentication', false, {
       redirectUrl: redirectUrl || window.location.href, codeChallengeMethod: 'S256', codeChallenge,
       connectionId,
       applicationId: this.settings.applicationId
@@ -152,7 +152,7 @@ class LoginClient {
     document.cookie = cookieManager.serialize('user', '', { expires: new Date(), path: '/' });
     // Reset user local session
     userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
-    await this.httpClient.delete('/session');
+    await this.httpClient.delete('/session', true);
   }
 }
 
