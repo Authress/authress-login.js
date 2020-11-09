@@ -134,14 +134,16 @@ class LoginClient {
 
   /**
    * @description Gets the user's bearer token to be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created. So call after {@link userSessionExists}. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and cannot be fetched from javascript.
-   * @param {Boolean} [timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
+   * @param {Object} [options] Options for getting a token including timeout configuration.
+   * @param {Boolean} [options.timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
    * @return {Promise<String>} The Authorization Bearer token.
    */
-  async getToken(timeoutInMillis) {
+  async getToken(options) {
+    const inputOptions = Object.assign({ timeoutInMillis: 5000 }, options || {});
     const sessionWaiterAsync = this.waitForUserSession();
-    const timeoutAsync = timeoutInMillis ? new Promise((resolve, reject) => setTimeout(reject, timeoutInMillis)) : Promise.resolve();
+    const timeoutAsync = new Promise((resolve, reject) => setTimeout(reject, inputOptions.timeoutInMillis || 0));
     try {
-      await Promise.all([sessionWaiterAsync, timeoutAsync]);
+      await Promise.race([sessionWaiterAsync, timeoutAsync]);
     } catch (timeout) {
       const error = Error('No token retrieved after timeout');
       error.code = 'TokenTimeout';
