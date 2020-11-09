@@ -134,10 +134,19 @@ class LoginClient {
 
   /**
    * @description Gets the user's bearer token to be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created. So call after {@link userSessionExists}. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and cannot be fetched from javascript.
+   * @param {Boolean} [timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
    * @return {Promise<String>} The Authorization Bearer token.
    */
-  async getToken() {
-    await this.waitForUserSession();
+  async getToken(timeoutInMillis) {
+    const sessionWaiterAsync = this.waitForUserSession();
+    const timeoutAsync = timeoutInMillis ? new Promise((resolve, reject) => setTimeout(reject, timeoutInMillis)) : Promise.resolve();
+    try {
+      await Promise.all([sessionWaiterAsync, timeoutAsync]);
+    } catch (timeout) {
+      const error = Error('No token retrieved after timeout');
+      error.code = 'TokenTimeout';
+      throw error;
+    }
     const cookies = cookieManager.parse(document.cookie);
     if (!cookies.authorization && cookies.user) {
       const error = Error('Token is configured to be restricted and is set to use cookie authentication. This setting can be changed for this application at https://authress.io.');
