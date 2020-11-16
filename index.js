@@ -71,8 +71,8 @@ class LoginClient {
           throw error;
         }
         const idToken = jwtManager.decode(parameters.id_token);
-        document.cookie = cookieManager.serialize('authorization', parameters.access_token, { expires: new Date(idToken.exp * 1000), path: '/' });
-        document.cookie = cookieManager.serialize('user', parameters.id_token, { expires: new Date(idToken.exp * 1000), path: '/' });
+        document.cookie = cookieManager.serialize('authorization', parameters.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+        document.cookie = cookieManager.serialize('user', parameters.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
         userSessionResolver();
         return true;
       }
@@ -150,12 +150,13 @@ class LoginClient {
       throw error;
     }
     const cookies = cookieManager.parse(document.cookie);
-    if (!cookies.authorization && cookies.user) {
+    const authCookie = cookies.authorization !== 'undefined' && cookies.authorization;
+    if (!authCookie && cookies.user) {
       const error = Error('Token is configured to be restricted and is set to use cookie authentication. This setting can be changed for this application at https://authress.io.');
       error.code = 'RestrictedToken';
       throw error;
     }
-    return cookies.authorization;
+    return authCookie;
   }
 
   /**
