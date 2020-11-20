@@ -9,6 +9,8 @@ const HttpClient = require('./src/httpClient');
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
 
+let userSessionSequencePromise = null;
+
 class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
@@ -54,6 +56,13 @@ class LoginClient {
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
   async userSessionExists() {
+    if (userSessionSequencePromise) {
+      await userSessionSequencePromise.catch(() => { /* ignore since we always want to continue even after a failure */ });
+    }
+    return userSessionSequencePromise = this.userSessionContinuation();
+  }
+
+  async userSessionContinuation() {
     if (window.location.hostname === 'localhost') {
       const parameters = querystring.parse(window.location.search.slice(1));
       if (parameters.nonce && parameters.access_token) {
@@ -82,7 +91,6 @@ class LoginClient {
     const userData = this.getUserData();
     // User is already logged in
     if (userData) {
-      this.logger.debug({ title: 'User is logged in' });
       userSessionResolver();
       return true;
     }
@@ -92,7 +100,6 @@ class LoginClient {
       const newUserData = this.getUserData();
       // User session exists and now is logged in
       if (newUserData) {
-        this.logger.debug({ title: 'User is logged in' });
         userSessionResolver();
         return true;
       }
@@ -133,12 +140,13 @@ class LoginClient {
   }
 
   /**
-   * @description Gets the user's bearer token to be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created. So call after {@link userSessionExists}. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and cannot be fetched from javascript.
+   * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned.
    * @param {Object} [options] Options for getting a token including timeout configuration.
    * @param {Boolean} [options.timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
-   * @return {Promise<String>} The Authorization Bearer token.
+   * @return {Promise<String>} The Authorization Bearer token if allowed otherwise null.
    */
-  async getToken(options) {
+  async ensureToken(options) {
+    await this.userSessionExists();
     const inputOptions = Object.assign({ timeoutInMillis: 5000 }, options || {});
     const sessionWaiterAsync = this.waitForUserSession();
     const timeoutAsync = new Promise((resolve, reject) => setTimeout(reject, inputOptions.timeoutInMillis || 0));
@@ -150,13 +158,11 @@ class LoginClient {
       throw error;
     }
     const cookies = cookieManager.parse(document.cookie);
-    const authCookie = cookies.authorization !== 'undefined' && cookies.authorization;
-    if (!authCookie && cookies.user) {
-      const error = Error('Token is configured to be restricted and is set to use cookie authentication. This setting can be changed for this application at https://authress.io.');
-      error.code = 'RestrictedToken';
-      throw error;
-    }
-    return authCookie;
+    return cookies.authorization !== 'undefined' && cookies.authorization;
+  }
+
+  getToken() {
+    return this.ensureToken();
   }
 
   /**

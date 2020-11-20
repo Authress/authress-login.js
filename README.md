@@ -42,7 +42,7 @@ return;
 
 When API calls are made your services that are hosted on the same domain `api.application.com`, `other-app.application.com` a cookie will automatically sent. If you wish to interact with an insecure other domain, you can use:
 ```js
-const userToken = await loginClient.getToken();
+const userToken = await loginClient.ensureToken();
 ```
 
 ### Part 2: User Authentication in Service APIs
