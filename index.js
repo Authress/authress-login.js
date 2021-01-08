@@ -71,6 +71,8 @@ class LoginClient {
         newUrl.searchParams.delete('access_token');
         newUrl.searchParams.delete('id_token');
         newUrl.searchParams.delete('state');
+        newUrl.searchParams.delete('code');
+        newUrl.searchParams.delete('iss');
         history.pushState({}, undefined, newUrl.toString());
         const nonce = JSON.parse(localStorage.getItem('AuthenticationRequestNonce') || '{}').nonce;
         localStorage.removeItem('AuthenticationRequestNonce');
