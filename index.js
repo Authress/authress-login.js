@@ -63,19 +63,20 @@ class LoginClient {
   }
 
   async userSessionContinuation() {
+    const parameters = querystring.parse(window.location.search.slice(1));
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.delete('nonce');
+    newUrl.searchParams.delete('access_token');
+    newUrl.searchParams.delete('id_token');
+    newUrl.searchParams.delete('state');
+    newUrl.searchParams.delete('code');
+    newUrl.searchParams.delete('iss');
+    history.pushState({}, undefined, newUrl.toString());
+
     if (window.location.hostname === 'localhost') {
-      const parameters = querystring.parse(window.location.search.slice(1));
       if (parameters.nonce && parameters.access_token) {
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.delete('nonce');
-        newUrl.searchParams.delete('access_token');
-        newUrl.searchParams.delete('id_token');
-        newUrl.searchParams.delete('state');
-        newUrl.searchParams.delete('code');
-        newUrl.searchParams.delete('iss');
-        history.pushState({}, undefined, newUrl.toString());
         const authRequest = JSON.parse(localStorage.getItem('AuthenticationRequestNonce') || '{}');
-        // Use in authorization code exchange with non-local host
+        // Use in authorization code exchange with non-localhost
         // authRequest.codeVerifier
         localStorage.removeItem('AuthenticationRequestNonce');
         if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
