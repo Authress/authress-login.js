@@ -74,9 +74,11 @@ class LoginClient {
         newUrl.searchParams.delete('code');
         newUrl.searchParams.delete('iss');
         history.pushState({}, undefined, newUrl.toString());
-        const nonce = JSON.parse(localStorage.getItem('AuthenticationRequestNonce') || '{}').nonce;
+        const authRequest = JSON.parse(localStorage.getItem('AuthenticationRequestNonce') || '{}');
+        // Use in authorization code exchange with non-local host
+        // authRequest.codeVerifier
         localStorage.removeItem('AuthenticationRequestNonce');
-        if (nonce && nonce !== parameters.nonce) {
+        if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
           const error = Error('Prevented a reply attack reusing the authentication request');
           error.code = 'InvalidNonce';
           throw error;
@@ -98,7 +100,9 @@ class LoginClient {
     }
 
     if (window.location.hostname !== 'localhost') {
-      await this.httpClient.get('/session', true);
+      try {
+        await this.httpClient.get('/session', true);
+      } catch (error) { /**/ }
       const newUserData = this.getUserData();
       // User session exists and now is logged in
       if (newUserData) {
@@ -175,7 +179,9 @@ class LoginClient {
     document.cookie = cookieManager.serialize('user', '', { expires: new Date(), path: '/' });
     // Reset user local session
     userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
-    await this.httpClient.delete('/session', true);
+    try {
+      await this.httpClient.delete('/session', true);
+    } catch (error) { /**/ }
   }
 }
 
