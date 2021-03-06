@@ -10,9 +10,57 @@ afterEach(() => sandbox.restore());
 
 describe('index.js', () => {
   describe('LoginClient', () => {
-    it('constructor', () => {
-      const loginClient = new LoginClient({ authenticationServiceUrl: 'https:/login.test.com' });
-      expect(loginClient).to.not.eql(null);
+    describe('constructor', () => {
+      const tests = {};
+      tests[Symbol.iterator] = function* () {
+        yield {
+          name: 'loginHost set correctly',
+          url: 'https://login.test.com',
+          expectedBaseUrl: 'https://login.test.com/api'
+        };
+
+        yield {
+          name: 'loginHost set correctly from http',
+          url: 'http://login.test.com',
+          expectedBaseUrl: 'https://login.test.com/api'
+        };
+
+        yield {
+          name: 'loginHost set correctly no scheme',
+          url: 'login.test.com',
+          expectedBaseUrl: 'https://login.test.com/api'
+        };
+
+        yield {
+          name: 'loginHost set correctly with path',
+          url: 'login.test.com/path',
+          expectedBaseUrl: 'https://login.test.com/api'
+        };
+
+        yield {
+          name: 'loginHost set with wrong scheme',
+          url: 'https:/login.test.com/path',
+          expectedBaseUrl: 'https://login.test.com/api'
+        };
+
+        yield {
+          name: 'loginHost not set',
+          url: null,
+          expectedBaseUrl: 'https://login.test.com/api',
+          expectedError: 'Custom Authress Domain Host is required'
+        };
+      };
+      for (let test of tests) {
+        it(test.name, () => {
+          try {
+            const loginClient = new LoginClient({ authressLoginHostUrl: test.url });
+            expect(loginClient.httpClient.client.defaults.baseURL).to.eql(test.expectedBaseUrl);
+            expect(test.expectedError).to.eql(undefined);
+          } catch (error) {
+            expect(error.message).to.eql(test.expectedError);
+          }
+        });
+      }
     });
   });
 });

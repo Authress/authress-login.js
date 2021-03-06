@@ -2,7 +2,7 @@
 
 export interface Settings {
   /** Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications */
-  authenticationServiceUrl: string;
+  authressLoginHostUrl: string;
   /** The Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications */
   applicationId: string;
 }

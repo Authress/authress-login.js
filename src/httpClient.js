@@ -15,7 +15,9 @@ class HttpClient {
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const logger = overrideLogger || { debug() {}, warn() {}, critical() {} };
-    const loginUrl = `https://${authressLoginCustomDomain.replace(/^(https?:\/\/)/, '')}/api`;
+
+    const loginHostFullUrl = new URL(`https://${authressLoginCustomDomain.replace(/^(https?:\/+)/, '')}`);
+    const loginUrl = `${loginHostFullUrl.origin}/api`;
     const client = axios.create({ baseURL: loginUrl });
 
     client.interceptors.request.use(config => {
@@ -66,7 +68,8 @@ class HttpClient {
     });
 
     client.interceptors.response.use(response => response, error => {
-      if (error.rewrittenError) {
+      // Rewritten error object for easy consumption
+      if (error.re) {
         throw error;
       }
 
@@ -76,7 +79,7 @@ class HttpClient {
         status: error.response.status,
         headers: error.response.headers
       } || error.message && { message: error.message, code: error.code, stack: error.stack } || error;
-      newError.rewrittenError = true;
+      newError.re = true;
       const requestId = error && (error.config && error.config.requestId || error.request && error.request.config && error.request.config.requestId);
 
       let message = 'HttpClient Response Error';

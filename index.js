@@ -15,14 +15,14 @@ class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
    * @param {Object} settings
-   * @param {string} settings.authenticationServiceUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
+   * @param {string} settings.authressLoginHostUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
    * @param {string} settings.applicationId the Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
   constructor(settings, logger) {
     this.settings = Object.assign({}, settings);
     this.logger = logger || console;
-    this.httpClient = new HttpClient(this.settings.authenticationServiceUrl);
+    this.httpClient = new HttpClient(this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl);
   }
 
   /**
@@ -117,7 +117,7 @@ class LoginClient {
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
    * @param {String} connectionId Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
-   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified with be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
+   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
    * @param {Boolean} [force=false] Force getting new credentials.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
@@ -133,13 +133,22 @@ class LoginClient {
     const hash = crypto.createHash('sha256').update(codeVerifier).digest();
     const codeChallenge = base64url(hash);
 
-    const requestOptions = await this.httpClient.post('/authentication', false, {
-      redirectUrl: redirectUrl || window.location.href, codeChallengeMethod: 'S256', codeChallenge,
-      connectionId,
-      applicationId: this.settings.applicationId
-    });
-    localStorage.setItem('AuthenticationRequestNonce', JSON.stringify({ nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId }));
-    window.location.assign(requestOptions.data.authenticationUrl);
+    try {
+      const requestOptions = await this.httpClient.post('/authentication', false, {
+        redirectUrl: redirectUrl || window.location.href, codeChallengeMethod: 'S256', codeChallenge,
+        connectionId,
+        applicationId: this.settings.applicationId
+      });
+      localStorage.setItem('AuthenticationRequestNonce', JSON.stringify({ nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId }));
+      window.location.assign(requestOptions.data.authenticationUrl);
+    } catch (error) {
+      if (error.status >= 400 && error.status < 500) {
+        const e = Error(error.data.title || error.data.errorCode);
+        e.code = error.data.errorCode;
+        throw e;
+      }
+      throw error;
+    }
 
     // Prevent the current UI from taking any action once we decided we need to log in.
     await new Promise(resolve => setTimeout(resolve, 5000));
