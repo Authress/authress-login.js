@@ -11,6 +11,8 @@ let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
 
 let userSessionSequencePromise = null;
 
+const AuthenticationRequestNonceKey = 'AuthenticationRequestNonce';
+
 class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
@@ -73,12 +75,29 @@ class LoginClient {
     newUrl.searchParams.delete('iss');
     history.pushState({}, undefined, newUrl.toString());
 
+    if (parameters.code) {
+      const authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
+      localStorage.removeItem(AuthenticationRequestNonceKey);
+      if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
+        const error = Error('Prevented a reply attack reusing the authentication request');
+        error.code = 'InvalidNonce';
+        throw error;
+      }
+
+      const code = parameters.code === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : parameters.code;
+      const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
+      const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, true, request);
+      const idToken = jwtManager.decode(tokenResult.data.id_token);
+      document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+      document.cookie = cookieManager.serialize('user', tokenResult.data.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+      userSessionResolver();
+      return true;
+    }
+
     if (window.location.hostname === 'localhost') {
       if (parameters.nonce && parameters.access_token) {
-        const authRequest = JSON.parse(localStorage.getItem('AuthenticationRequestNonce') || '{}');
-        // Use in authorization code exchange with non-localhost
-        // authRequest.codeVerifier
-        localStorage.removeItem('AuthenticationRequestNonce');
+        const authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
+        localStorage.removeItem(AuthenticationRequestNonceKey);
         if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
           const error = Error('Prevented a reply attack reusing the authentication request');
           error.code = 'InvalidNonce';
@@ -102,7 +121,14 @@ class LoginClient {
 
     if (window.location.hostname !== 'localhost') {
       try {
-        await this.httpClient.get('/session', true);
+        const sessionResult = await this.httpClient.get('/session', true);
+        // In the case that the session contains non cookie based data, store it back to the cookie for this domain
+        if (sessionResult.data.access_token) {
+          const idToken = jwtManager.decode(sessionResult.data.id_token);
+          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+          document.cookie = cookieManager.serialize('user', sessionResult.data.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+        }
+        // await this.httpClient.patch('/session', true, {});
       } catch (error) { /**/ }
       const newUserData = this.getUserData();
       // User session exists and now is logged in
@@ -117,11 +143,19 @@ class LoginClient {
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
    * @param {String} connectionId Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
+   * @param {String} [responseLocation=cookie] Store the credentials response in the specified location. Options are either 'cookie' or 'query'.
+   * @param {String} [flowType=token id_token] The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow.
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
    * @param {Boolean} [force=false] Force getting new credentials.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, redirectUrl, force }) {
+  async authenticate({ connectionId, redirectUrl, force, responseLocation, flowType }) {
+    if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query') {
+      const e = Error('Authentication response location is not valid');
+      e.code = 'InvalidResponseLocation';
+      throw e;
+    }
+
     if (!force && await this.userSessionExists()) {
       if (redirectUrl && redirectUrl !== window.location.href) {
         window.location.assign(redirectUrl);
@@ -134,12 +168,16 @@ class LoginClient {
     const codeChallenge = base64url(hash);
 
     try {
+      const selectedRedirectUrl = redirectUrl || window.location.href;
       const requestOptions = await this.httpClient.post('/authentication', false, {
-        redirectUrl: redirectUrl || window.location.href, codeChallengeMethod: 'S256', codeChallenge,
+        redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId,
-        applicationId: this.settings.applicationId
+        applicationId: this.settings.applicationId,
+        responseLocation, flowType
       });
-      localStorage.setItem('AuthenticationRequestNonce', JSON.stringify({ nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId }));
+      localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
+        nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, redirectUrl: selectedRedirectUrl
+      }));
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
       if (error.status >= 400 && error.status < 500) {
