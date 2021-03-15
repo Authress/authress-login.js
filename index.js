@@ -156,8 +156,9 @@ class LoginClient {
       throw e;
     }
 
+    const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
     if (!force && await this.userSessionExists()) {
-      if (redirectUrl && redirectUrl !== window.location.href) {
+      if (normalizedRedirectUrl && normalizedRedirectUrl !== new URL(window.location.href).toString()) {
         window.location.assign(redirectUrl);
       }
       return true;
@@ -168,7 +169,7 @@ class LoginClient {
     const codeChallenge = base64url(hash);
 
     try {
-      const selectedRedirectUrl = redirectUrl || window.location.href;
+      const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
       const requestOptions = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId,
@@ -234,4 +235,3 @@ class LoginClient {
 }
 
 module.exports = { LoginClient };
-
