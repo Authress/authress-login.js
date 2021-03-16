@@ -27,6 +27,8 @@ You'll want to create:
 
 On every route change check to see if the user exists, and if they don't redirect them to a login prompt.
 ```js
+const { LoginClient } = require('authress-login');
+
 // Both of these properties an be found and configured at: https://authress.io/app/#/manage?focus=applications
 const loginClient = new LoginClient({ authressLoginHostUrl: 'https://login.application.com', applicationId: 'YOUR_APPLICATION_ID' });
 const isUserLoggedIn = await loginClient.userSessionExists();
