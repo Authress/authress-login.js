@@ -34,6 +34,9 @@ class LoginClient {
   getUserData() {
     const cookies = cookieManager.parse(document.cookie);
     const userData = cookies.user && jwtManager.decode(cookies.user);
+    if (!userData) {
+      return null;
+    }
     userData.userId = userData.sub;
     return userData;
   }
