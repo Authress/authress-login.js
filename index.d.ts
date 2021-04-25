@@ -7,7 +7,9 @@ interface Settings {
 
 interface AuthenticationParameters {
   /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
-  connectionId: string;
+  connectionId?: string;
+  /** Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants */
+  tenantLookupIdentifier?: string;
   /** Store the credentials response in the specified location. Options are either 'cookie' or 'query'. (Default: **cookie**) */
   responseLocation: string;
   /** The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow. (Default: **token id_token**) */

@@ -39,6 +39,8 @@ if (!isUserLoggedIn) {
 In your app's login screen when the user selects how they would like to login, direct them there. And also specify where you would like Authress to redirect the user to after login. By default this is the user's current location.
 ```js
 await loginClient.authenticate({ connectionId: 'SELECTED_CONNECTION_ID', redirectUrl: window.location.href });
+// Or if you know which tenant the user wants to log in with:
+await loginClient.authenticate({ tenantLookupIdentifier: 'tenant-subdomain.app.com', redirectUrl: window.location.href });
 return;
 ```
 
