@@ -16,6 +16,8 @@ interface AuthenticationParameters {
   flowType: string;
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
+  /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
+  connectionProperties?: Record<string, string>;
   /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
   force?: boolean;
 }
