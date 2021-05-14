@@ -159,14 +159,14 @@ class LoginClient {
       throw e;
     }
 
+    if (!force && await this.userSessionExists()) {
+      return true;
+    }
+
     if (!connectionId && !tenantLookupIdentifier) {
       const e = Error('connectionId or tenantLookupIdentifier must be specified');
       e.code = 'InvalidConnection';
       throw e;
-    }
-
-    if (!force && await this.userSessionExists()) {
-      return true;
     }
 
     const codeVerifier = crypto.randomBytes(64).toString('hex');
