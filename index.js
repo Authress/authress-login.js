@@ -25,6 +25,7 @@ class LoginClient {
     this.settings = Object.assign({}, settings);
     this.logger = logger || console;
     this.httpClient = new HttpClient(this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl);
+    this.enableCredentials = true;
   }
 
   /**
@@ -76,9 +77,16 @@ class LoginClient {
     newUrl.searchParams.delete('iss');
     history.pushState({}, undefined, newUrl.toString());
 
-    if (parameters.code) {
-      const authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
+    let authRequest = {};
+    try {
+      authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
       localStorage.removeItem(AuthenticationRequestNonceKey);
+      this.enableCredentials = authRequest.enableCredentials !== false;
+    } catch (error) {
+      console.debug('LocalStorage failed in Browser', error);
+    }
+
+    if (parameters.code) {
       if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
         const error = Error('Prevented a reply attack reusing the authentication request');
         error.code = 'InvalidNonce';
@@ -87,7 +95,7 @@ class LoginClient {
 
       const code = parameters.code === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : parameters.code;
       const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
-      const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, true, request);
+      const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
       const idToken = jwtManager.decode(tokenResult.data.id_token);
       document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
       document.cookie = cookieManager.serialize('user', tokenResult.data.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
@@ -97,8 +105,6 @@ class LoginClient {
 
     if (window.location.hostname === 'localhost') {
       if (parameters.nonce && parameters.access_token) {
-        const authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
-        localStorage.removeItem(AuthenticationRequestNonceKey);
         if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
           const error = Error('Prevented a reply attack reusing the authentication request');
           error.code = 'InvalidNonce';
@@ -122,7 +128,7 @@ class LoginClient {
 
     if (window.location.hostname !== 'localhost') {
       try {
-        const sessionResult = await this.httpClient.get('/session', true);
+        const sessionResult = await this.httpClient.get('/session', this.enableCredentials);
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
@@ -184,7 +190,8 @@ class LoginClient {
         responseLocation, flowType
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
-        nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl
+        nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
+        enableCredentials: requestOptions.data.enableCredentials
       }));
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
@@ -236,7 +243,7 @@ class LoginClient {
     // Reset user local session
     userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
     try {
-      await this.httpClient.delete('/session', true);
+      await this.httpClient.delete('/session', this.enableCredentials);
     } catch (error) { /**/ }
   }
 }

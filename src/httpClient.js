@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 const axios = require('axios');
 
-const invalidToken = 'Invalid token';
-const noUrl = 'No Url Specified';
-
 const defaultHeaders = {
   'Content-Type': 'application/json'
 };
@@ -87,11 +84,6 @@ class HttpClient {
 
       if (!error) {
         message = 'HttpClient Response Error - Unknown error occurred';
-      } else if (error.message === noUrl) {
-        logMethod = 'critical';
-        message = 'HttpClient Error: "url" must be defined';
-      } else if (error.message === invalidToken) {
-        message = 'HttpClient call skipped due to a token error';
       } else if (error.response && error.response.status === 404) {
         logMethod = 'debug';
       } else if (error.response && error.response.status === 401) {
