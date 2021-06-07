@@ -7,3 +7,4 @@ This is the changelog for [Authress Login](readme.md).
 * Return the full OIDC identity when calling `getUserData()` instead of only a limited set.
 * Add `tenantLookupIdentifier` property to `authenticate` to specify a specific tenant to use rather than just the `connection`.
 * Support `connectionProperties` in `authenticate` to override connection and identity provider specific defaults.
+* `logout` redirects the user client to the hosted login UI to ensure logout happens, and then is redirected back.

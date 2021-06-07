@@ -69,7 +69,8 @@ export class LoginClient {
   ensureToken(settings: TokenParameters): Promise<string>;
 
   /**
-   * @description Log the user out removing the current user's session
+   * @description Log the user out removing the current user's session. If the user is not logged in this has no effect. If the user is logged in via secure session, the the redirect url will be ignored. If the user is logged in without a secure session the user agent will be redirected to the hosted login and then redirected to the {@link redirectUrl}.
+   * @param {string} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
-  logout(): Promise<void>;
+  logout(redirectUri: string): Promise<void>;
 }

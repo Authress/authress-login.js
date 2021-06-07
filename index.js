@@ -24,7 +24,8 @@ class LoginClient {
   constructor(settings, logger) {
     this.settings = Object.assign({}, settings);
     this.logger = logger || console;
-    this.httpClient = new HttpClient(this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl);
+    this.hostUrl = this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl;
+    this.httpClient = new HttpClient(this.hostUrl);
     this.enableCredentials = true;
   }
 
@@ -235,11 +236,23 @@ class LoginClient {
   }
 
   /**
-   * @description Log the user out removing the current user's session
+   * @description Log the user out removing the current user's session. If the user is not logged in this has no effect. If the user is logged in via secure session, the the redirect url will be ignored. If the user is logged in without a secure session the user agent will be redirected to the hosted login and then redirected to the {@link redirectUrl}.
+   * @param {string} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
-  async logout() {
+  async logout(redirectUrl) {
     document.cookie = cookieManager.serialize('authorization', '', { expires: new Date(), path: '/' });
     document.cookie = cookieManager.serialize('user', '', { expires: new Date(), path: '/' });
+
+    // Localhost also has enableCredentials set, so this path is only for cross domain logins
+    if (!this.enableCredentials) {
+      const fullLogoutUrl = new URL('/logout', this.hostUrl);
+      const referrer = (document.referrer || document.referer) ? new URL(document.referrer || document.referer).toString() : undefined;
+      fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || referrer);
+      fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
+      window.location.href = fullLogoutUrl.toString();
+      return;
+    }
+
     // Reset user local session
     userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
     try {
