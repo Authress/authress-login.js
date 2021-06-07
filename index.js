@@ -249,7 +249,7 @@ class LoginClient {
       const referrer = (document.referrer || document.referer) ? new URL(document.referrer || document.referer).toString() : undefined;
       fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || referrer);
       fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
-      window.location.href = fullLogoutUrl.toString();
+      window.location.assign(fullLogoutUrl.toString());
       return;
     }
 
