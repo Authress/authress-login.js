@@ -62,7 +62,9 @@ class LoginClient {
    */
   async userSessionExists() {
     if (userSessionSequencePromise) {
-      await userSessionSequencePromise.catch(() => { /* ignore since we always want to continue even after a failure */ });
+      return userSessionSequencePromise = userSessionSequencePromise
+      .catch(() => { /* ignore since we always want to continue even after a failure */ })
+      .then(() => this.userSessionContinuation());
     }
     return userSessionSequencePromise = this.userSessionContinuation();
   }
