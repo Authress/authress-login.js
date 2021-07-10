@@ -60,7 +60,7 @@ class LoginClient {
    * @description Call this function on every route change. It will check if the user just logged in or is still logged in.
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
-  async userSessionExists() {
+  userSessionExists() {
     if (userSessionSequencePromise) {
       return userSessionSequencePromise = userSessionSequencePromise
       .catch(() => { /* ignore since we always want to continue even after a failure */ })
