@@ -78,7 +78,7 @@ class LoginClient {
     newUrl.searchParams.delete('state');
     newUrl.searchParams.delete('code');
     newUrl.searchParams.delete('iss');
-    history.pushState({}, undefined, newUrl.toString());
+    history.replaceState({}, undefined, newUrl.toString());
 
     let authRequest = {};
     try {
