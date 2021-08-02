@@ -28,6 +28,11 @@ interface TokenParameters {
   timeoutInMillis?: number;
 }
 
+interface UserCredentials {
+  /** User access token generated credentials for the connected provider used to log in */
+  accessToken: string;
+}
+
 export class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
@@ -42,6 +47,12 @@ export class LoginClient {
    * @return {Object} The user data object.
    */
   getUserData(): Record<string, unknown>;
+
+  /**
+   * @description Gets the user's credentials that were generated as part of the connection provider. These credentials work directly with that provider.
+   * @return {Promise<UserCredentials?>} The user's connection credentials.
+   */
+  getConnectionCredentials(): Promise<UserCredentials | null>;
 
   /**
    * @description Async wait for a user session to exist. Will block until {@link userSessionExists} or {@link authenticate} is called.

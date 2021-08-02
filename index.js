@@ -44,6 +44,19 @@ class LoginClient {
   }
 
   /**
+   * @description Gets the user's credentials that were generated as part of the connection provider. These credentials work directly with that provider.
+   * @return {Promise<UserCredentials?>} The user's connection credentials.
+   */
+  async getConnectionCredentials() {
+    try {
+      const credentialsResult = await this.httpClient.get('/session/credentials', this.enableCredentials);
+      return credentialsResult.data;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
    * @description Async wait for a user session to exist. Will block until {@link userSessionExists} or {@link authenticate} is called.
    * @return {Promise<void>}
    */
