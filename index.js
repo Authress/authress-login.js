@@ -48,6 +48,10 @@ class LoginClient {
    * @return {Promise<UserCredentials?>} The user's connection credentials.
    */
   async getConnectionCredentials() {
+    if (!(await this.userSessionExists())) {
+      return null;
+    }
+
     try {
       const credentialsResult = await this.httpClient.get('/session/credentials', this.enableCredentials);
       return credentialsResult.data;
