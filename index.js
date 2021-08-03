@@ -48,9 +48,7 @@ class LoginClient {
    * @return {Promise<UserCredentials?>} The user's connection credentials.
    */
   async getConnectionCredentials() {
-    if (!(await this.userSessionExists())) {
-      return null;
-    }
+    await this.waitForUserSession();
 
     try {
       const token = await this.ensureToken();
