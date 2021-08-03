@@ -53,7 +53,8 @@ class LoginClient {
     }
 
     try {
-      const credentialsResult = await this.httpClient.get('/session/credentials', this.enableCredentials);
+      const token = await this.ensureToken();
+      const credentialsResult = await this.httpClient.get('/session/credentials', this.enableCredentials, { Authorization: token && `Bearer ${token}` });
       return credentialsResult.data;
     } catch (error) {
       return null;
