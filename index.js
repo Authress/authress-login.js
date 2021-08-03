@@ -89,6 +89,7 @@ class LoginClient {
     const parameters = querystring.parse(window.location.search.slice(1));
     const newUrl = new URL(window.location);
     newUrl.searchParams.delete('nonce');
+    newUrl.searchParams.delete('expires_in');
     newUrl.searchParams.delete('access_token');
     newUrl.searchParams.delete('id_token');
     newUrl.searchParams.delete('state');
@@ -116,8 +117,9 @@ class LoginClient {
       const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
       const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
       const idToken = jwtManager.decode(tokenResult.data.id_token);
-      document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
-      document.cookie = cookieManager.serialize('user', tokenResult.data.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+      const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
+      document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/' });
+      document.cookie = cookieManager.serialize('user', tokenResult.data.id_token || '', { expires: expiry, path: '/' });
       userSessionResolver();
       return true;
     }
@@ -130,8 +132,9 @@ class LoginClient {
           throw error;
         }
         const idToken = jwtManager.decode(parameters.id_token);
-        document.cookie = cookieManager.serialize('authorization', parameters.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
-        document.cookie = cookieManager.serialize('user', parameters.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+        const expiry = parameters.expires_in && new Date(Date.now() + parameters.expires_in * 1000) || new Date(idToken.exp * 1000);
+        document.cookie = cookieManager.serialize('authorization', parameters.access_token || '', { expires: expiry, path: '/' });
+        document.cookie = cookieManager.serialize('user', parameters.id_token || '', { expires: expiry, path: '/' });
         userSessionResolver();
         return true;
       }
@@ -151,8 +154,9 @@ class LoginClient {
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
-          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
-          document.cookie = cookieManager.serialize('user', sessionResult.data.id_token || '', { expires: new Date(idToken.exp * 1000), path: '/' });
+          const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
+          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
+          document.cookie = cookieManager.serialize('user', sessionResult.data.id_token || '', { expires: expiry, path: '/' });
         }
         // await this.httpClient.patch('/session', true, {});
       } catch (error) { /**/ }
