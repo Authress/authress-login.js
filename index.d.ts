@@ -74,7 +74,7 @@ export class LoginClient {
   authenticate(settings: AuthenticationParameters): Promise<boolean>;
 
   /**
-   * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned.
+   * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.
    * @return {Promise<string>} The Authorization Bearer token.
    */
   ensureToken(settings: TokenParameters): Promise<string>;
