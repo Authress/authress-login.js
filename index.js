@@ -217,7 +217,7 @@ class LoginClient {
         enableCredentials: requestOptions.data.enableCredentials
       }));
       if (openType === 'tab') {
-        window.location.open(requestOptions.data.authenticationUrl);
+        window.open(requestOptions.data.authenticationUrl, '_blank');
       } else {
         window.location.assign(requestOptions.data.authenticationUrl);
       }
