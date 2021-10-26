@@ -181,8 +181,8 @@ class LoginClient {
    * @param {Boolean} [force=false] Force getting new credentials.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties }) {
-    if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query') {
+  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType }) {
+    if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
       throw e;
@@ -216,7 +216,11 @@ class LoginClient {
         nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
         enableCredentials: requestOptions.data.enableCredentials
       }));
-      window.location.assign(requestOptions.data.authenticationUrl);
+      if (openType === 'tab') {
+        window.location.open(requestOptions.data.authenticationUrl);
+      } else {
+        window.location.assign(requestOptions.data.authenticationUrl);
+      }
     } catch (error) {
       if (error.status >= 400 && error.status < 500) {
         const e = Error(error.data.title || error.data.errorCode);
