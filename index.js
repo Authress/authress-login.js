@@ -30,10 +30,17 @@ class LoginClient {
   }
 
   /**
+   * @deprecated
+   */
+  getUserData() {
+    return this.getUserIdentity();
+  }
+
+  /**
    * @description Gets the user's profile data and returns it if it exists. Should be called after {@link userSessionExists} or it will be empty.
    * @return {Object} The user data object.
    */
-  getUserData() {
+  getUserIdentity() {
     const cookies = cookieManager.parse(document.cookie);
     const userData = cookies.user && jwtManager.decode(cookies.user);
     if (!userData) {
@@ -141,7 +148,7 @@ class LoginClient {
       // Otherwise check cookies and then force the user to log in
     }
 
-    const userData = this.getUserData();
+    const userData = this.getUserIdentity();
     // User is already logged in
     if (userData) {
       userSessionResolver();
@@ -160,7 +167,7 @@ class LoginClient {
         }
         // await this.httpClient.patch('/session', true, {});
       } catch (error) { /**/ }
-      const newUserData = this.getUserData();
+      const newUserData = this.getUserIdentity();
       // User session exists and now is logged in
       if (newUserData) {
         userSessionResolver();

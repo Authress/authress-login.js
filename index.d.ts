@@ -43,10 +43,15 @@ export class LoginClient {
   constructor(settings: Settings, logger?: unknown);
 
   /**
-   * @description Gets the user's profile data and returns it if it exists. Should be called after {@link userSessionExists} or it will be empty.
-   * @return {Object} The user data object.
+   * @deprecated
    */
   getUserData(): Record<string, unknown>;
+
+  /**
+   * @description Gets the user's profile data and returns it if it exists. Should be called after {@link userSessionExists} or it will be empty.
+   * @return {Object} The user identity which contains a userData object.
+   */
+  getUserIdentity(): Record<string, unknown>;
 
   /**
    * @description Gets the user's credentials that were generated as part of the connection provider. These credentials work directly with that provider.

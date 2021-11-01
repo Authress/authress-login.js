@@ -9,3 +9,4 @@ This is the changelog for [Authress Login](readme.md).
 * Support `connectionProperties` in `authenticate` to override connection and identity provider specific defaults.
 * `logout` redirects the user client to the hosted login UI to ensure logout happens, and then is redirected back.
 * Add `UserCredentials` and `getConnectionCredentials` to fetch the credentials associated with the connected provider.
+* Deprecate `getUserData` in favor of `getUserIdentity`
