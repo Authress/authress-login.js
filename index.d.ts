@@ -1,5 +1,5 @@
 interface Settings {
-  /** Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications */
+  /** Your Authress custom domain - see https://authress.io/app/#/setup?focus=domain */
   authressLoginHostUrl: string;
   /** The Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications */
   applicationId: string;
