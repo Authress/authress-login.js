@@ -1,10 +1,10 @@
 const cookieManager = require('cookie');
-const jwtManager = require('jsonwebtoken');
 const querystring = require('querystring');
 const crypto = require('crypto');
 const base64url = require('base64url');
 
 const HttpClient = require('./src/httpClient');
+const jwtManager = require('./src/jwtManager');
 
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
