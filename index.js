@@ -1,5 +1,4 @@
 const cookieManager = require('cookie');
-const querystring = require('querystring');
 const crypto = require('crypto');
 const base64url = require('base64url');
 
@@ -93,7 +92,7 @@ class LoginClient {
   }
 
   async userSessionContinuation() {
-    const parameters = querystring.parse(window.location.search.slice(1));
+    const urlSearchParams = new URLSearchParams(window.location.search);
     const newUrl = new URL(window.location);
     newUrl.searchParams.delete('nonce');
     newUrl.searchParams.delete('expires_in');
@@ -113,14 +112,14 @@ class LoginClient {
       console.debug('LocalStorage failed in Browser', error);
     }
 
-    if (parameters.code) {
-      if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
+    if (urlSearchParams.get('code')) {
+      if (authRequest.nonce && authRequest.nonce !== urlSearchParams.get('nonce')) {
         const error = Error('Prevented a reply attack reusing the authentication request');
         error.code = 'InvalidNonce';
         throw error;
       }
 
-      const code = parameters.code === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : parameters.code;
+      const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
       const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
       const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
       const idToken = jwtManager.decode(tokenResult.data.id_token);
@@ -132,16 +131,16 @@ class LoginClient {
     }
 
     if (window.location.hostname === 'localhost') {
-      if (parameters.nonce && parameters.access_token) {
-        if (authRequest.nonce && authRequest.nonce !== parameters.nonce) {
+      if (urlSearchParams.get('nonce') && urlSearchParams.get('access_token')) {
+        if (authRequest.nonce && authRequest.nonce !== urlSearchParams.get('nonce')) {
           const error = Error('Prevented a reply attack reusing the authentication request');
           error.code = 'InvalidNonce';
           throw error;
         }
-        const idToken = jwtManager.decode(parameters.id_token);
-        const expiry = parameters.expires_in && new Date(Date.now() + parameters.expires_in * 1000) || new Date(idToken.exp * 1000);
-        document.cookie = cookieManager.serialize('authorization', parameters.access_token || '', { expires: expiry, path: '/' });
-        document.cookie = cookieManager.serialize('user', parameters.id_token || '', { expires: expiry, path: '/' });
+        const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
+        const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
+        document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/' });
+        document.cookie = cookieManager.serialize('user', urlSearchParams.get('id_token') || '', { expires: expiry, path: '/' });
         userSessionResolver();
         return true;
       }
