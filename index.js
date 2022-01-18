@@ -1,5 +1,4 @@
 const cookieManager = require('cookie');
-const crypto = require('crypto');
 const base64url = require('base64url');
 
 const HttpClient = require('./src/httpClient');
@@ -204,8 +203,17 @@ class LoginClient {
       throw e;
     }
 
-    const codeVerifier = crypto.randomBytes(64).toString('hex');
-    const hash = crypto.createHash('sha256').update(codeVerifier).digest();
+    const sha256 = str => crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+
+    const generateNonce = async () => {
+      const hash = await sha256(crypto.getRandomValues(new Uint32Array(32)).toString());
+      // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+      const hashArray = Array.from(new Uint8Array(hash));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    const codeVerifier = await generateNonce();
+    const hash = await sha256(codeVerifier);
     const codeChallenge = base64url(hash);
 
     try {
