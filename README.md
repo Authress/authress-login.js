@@ -16,6 +16,9 @@ Then required the package:
 const { LoginClient } = require('authress-login');
 ```
 
+### Troubleshooting usage
+Troubles with esbuild or another bundler, checkout the [build tools troubleshooting page](./docs/troubleshooting.md).
+
 ## Getting Started
 
 ### Part 0: Setup Authress Login
