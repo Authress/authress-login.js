@@ -22,7 +22,13 @@ class LoginClient {
   constructor(settings, logger) {
     this.settings = Object.assign({}, settings);
     this.logger = logger || console;
-    this.hostUrl = this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl;
+    const hostUrl = this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl || '';
+
+    if (!hostUrl) {
+      throw Error('Missing required property "authressLoginHostUrl" in LoginClient constructor. Custom Authress Domain Host is required.');
+    }
+
+    this.hostUrl = `https://${hostUrl.replace(/^(https?:\/+)/, '')}`;
     this.httpClient = new HttpClient(this.hostUrl);
     this.enableCredentials = true;
   }

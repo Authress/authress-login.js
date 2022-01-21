@@ -47,7 +47,7 @@ describe('index.js', () => {
           name: 'loginHost not set',
           url: null,
           expectedBaseUrl: 'https://login.test.com/api',
-          expectedError: 'Custom Authress Domain Host is required'
+          expectedError: 'Missing required property "authressLoginHostUrl" in LoginClient constructor. Custom Authress Domain Host is required.'
         };
       };
       for (let test of tests) {
