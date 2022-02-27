@@ -1,6 +1,5 @@
 const webpack = require('webpack');
 const CompressionPlugin = require('compression-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
 
 const path = require('path');
 
@@ -30,24 +29,29 @@ if (process.env.NODE_ENV === 'production') {
 module.exports = {
   mode: 'production',
   entry: './src/index.js',
-  devtool: 'cheap-module-source-map',
+  devtool: process.env.NODE_ENV ? undefined : 'cheap-module-source-map',
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'authress.min.js',
-    publicPath: ''
+    publicPath: '',
+    library: {
+      name: 'authress',
+      type: 'umd'
+    },
+    globalObject: 'this'
   },
   optimization: {
+    minimize: true,
     minimizer: [
-      new TerserPlugin({
-        extractComments: {
-          condition: /^\**!|@preserve|@license|@cc_on/i,
-          banner: licenseFile => `Authress Login SDK ${version} | Author - Authress Developers | License information can be found in ${licenseFile} `
-        }
-      })
+      // new TerserPlugin({
+      //   extractComments: {
+      //     condition: /^\**!|@preserve|@license|@cc_on/i,
+      //     banner: licenseFile => `Authress Login SDK ${version} | Author - Authress Developers | License information can be found in ${licenseFile} `
+      //   }
+      // })
     ]
   },
   devServer: {
-    contentBase: path.join(__dirname, 'docs'),
     port: 8080,
     hot: true
   },
