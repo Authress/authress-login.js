@@ -23,7 +23,7 @@ jobs:
     - name: Install packages
       run: npm install
     - name: Run build
-      run: node make.js build
+      run: yarn build
     - name: Test
       run: yarn lint && yarn test
     - name: Deploy to NPM
