@@ -2,7 +2,7 @@ const { describe, it, beforeEach, afterEach } = require('mocha');
 const sinon = require('sinon');
 const { expect } = require('chai');
 
-const { LoginClient } = require('../index');
+const { LoginClient } = require('../src/index');
 
 let sandbox;
 beforeEach(() => { sandbox = sinon.createSandbox(); });
