@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const CompressionPlugin = require('compression-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const path = require('path');
 
@@ -20,7 +21,7 @@ if (process.env.NODE_ENV === 'production') {
 * License: Apache-2.0
 * Repo   : https://github.com/Authress/login-sdk.js
 * Author : Authress Developers
-*`;
+*/`;
   commonPlugins.push(new webpack.BannerPlugin({
     raw: true, banner
   }));
@@ -43,12 +44,12 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // new TerserPlugin({
-      //   extractComments: {
-      //     condition: /^\**!|@preserve|@license|@cc_on/i,
-      //     banner: licenseFile => `Authress Login SDK ${version} | Author - Authress Developers | License information can be found in ${licenseFile} `
-      //   }
-      // })
+      new TerserPlugin({
+        extractComments: {
+          condition: /^\**!|@preserve|@license|@cc_on/i,
+          banner: () => `Authress Login SDK ${version} | Author - Authress Developers | License information can be found at https://github.com/Authress/login-sdk.js`
+        }
+      })
     ]
   },
   devServer: {
