@@ -2,7 +2,8 @@
 This is the changelog for [Authress Login](readme.md).
 
 ## 1.2 ##
-Use builtin `crypto.subtle` for all crypto operations.
+* Use builtin `crypto.subtle` for all crypto operations.
+* Publish a babel to work with vanilla.js.
 
 ## 1.1 ##
 * Added `authorization-code` exchange specifying necessary parameters `responseMode = query` and `responseType = code`.

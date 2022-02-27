@@ -27,3 +27,4 @@ build/Release
 node_modules
 bin/template/yarn.lock
 types/
+dist
