@@ -7,8 +7,10 @@ For esbuild build script, a quick change to the build configuration solves this:
 
 ```sh
 npm i @esbuild-plugins/node-globals-polyfill
+
 ```
 
+#### ESBuild:
 ```js
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill';
 await esbuild
@@ -20,3 +22,18 @@ await esbuild
       })
     ]
   })
+```
+
+#### vite.config.js:
+```js
+optimizeDeps: {
+  esbuildOptions: {
+    define: { global: 'globalThis' },
+    plugins: [
+      NodeGlobalsPolyfillPlugin({
+        buffer: true
+      })
+    ]
+  }
+}
+```
