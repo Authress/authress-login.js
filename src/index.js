@@ -99,14 +99,6 @@ class LoginClient {
   async userSessionContinuation() {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const newUrl = new URL(window.location);
-    newUrl.searchParams.delete('nonce');
-    newUrl.searchParams.delete('expires_in');
-    newUrl.searchParams.delete('access_token');
-    newUrl.searchParams.delete('id_token');
-    newUrl.searchParams.delete('state');
-    newUrl.searchParams.delete('code');
-    newUrl.searchParams.delete('iss');
-    history.replaceState({}, undefined, newUrl.toString());
 
     let authRequest = {};
     try {
@@ -117,12 +109,17 @@ class LoginClient {
       console.debug('LocalStorage failed in Browser', error);
     }
 
-    if (urlSearchParams.get('code')) {
-      if (authRequest.nonce && authRequest.nonce !== urlSearchParams.get('nonce')) {
+    if (authRequest.nonce && urlSearchParams.get('code')) {
+      if (authRequest.nonce !== urlSearchParams.get('nonce')) {
         const error = Error('Prevented a reply attack reusing the authentication request');
         error.code = 'InvalidNonce';
         throw error;
       }
+
+      newUrl.searchParams.delete('nonce');
+      newUrl.searchParams.delete('iss');
+      newUrl.searchParams.delete('code');
+      history.replaceState({}, undefined, newUrl.toString());
 
       const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
       const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
@@ -142,6 +139,15 @@ class LoginClient {
           error.code = 'InvalidNonce';
           throw error;
         }
+
+        newUrl.searchParams.delete('nonce');
+        newUrl.searchParams.delete('iss');
+        newUrl.searchParams.delete('nonce');
+        newUrl.searchParams.delete('expires_in');
+        newUrl.searchParams.delete('access_token');
+        newUrl.searchParams.delete('id_token');
+        history.replaceState({}, undefined, newUrl.toString());
+
         const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
         const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
         document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/' });
