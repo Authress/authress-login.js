@@ -1,5 +1,5 @@
-# authress-login
-The Authress Universal Login SDK for javascript app websites and service authentication. Used to integrate with the authentication as a service provider Authress at https://authress.io.
+# Authress Login SDK for UIs
+The Authress Universal Login SDK for javascript app websites and user identity authentication. Used to integrate with the authentication as a service provider Authress at https://authress.io.
 
 
 [![npm version](https://badge.fury.io/js/authress-login.svg)](https://badge.fury.io/js/authress-login)
@@ -83,6 +83,9 @@ try {
   return { statusCode: 401 };
 }
 ```
+
+## Advanced
+Curious exactly how these methods work and when they should be used? We have some advanced guidance available for each of the methods on the [method documentation](./docs/advanced.md).
 
 ## Contributing
 
