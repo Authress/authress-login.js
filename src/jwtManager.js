@@ -1,4 +1,4 @@
-const base64url = require('base64url');
+const base64url = require('./base64url');
 
 class JwtManager {
   decode(token) {

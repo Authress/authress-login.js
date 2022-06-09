@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "axios": "^0.21",
-    "base64url": "^3.0.1",
     "cookie": "^0.4.1"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 const cookieManager = require('cookie');
-const base64url = require('base64url');
+const base64url = require('./base64url');
 
 const HttpClient = require('./httpClient');
 const jwtManager = require('./jwtManager');
@@ -226,7 +226,7 @@ class LoginClient {
 
     const codeVerifier = await generateNonce();
     const hash = await sha256(codeVerifier);
-    const codeChallenge = base64url(hash);
+    const codeChallenge = base64url.encode(hash);
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
