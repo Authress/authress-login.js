@@ -196,16 +196,17 @@ class LoginClient {
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @param {Boolean} [force=false] Force getting new credentials.
+   * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType }) {
+  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount }) {
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
       throw e;
     }
 
-    if (!force && await this.userSessionExists()) {
+    if (!force && !multiAccount && await this.userSessionExists()) {
       return true;
     }
 
@@ -236,11 +237,11 @@ class LoginClient {
         connectionId, tenantLookupIdentifier,
         connectionProperties,
         applicationId: this.settings.applicationId,
-        responseLocation, flowType
+        responseLocation, flowType, multiAccount
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
         nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
-        enableCredentials: requestOptions.data.enableCredentials
+        enableCredentials: requestOptions.data.enableCredentials, multiAccount
       }));
       if (openType === 'tab') {
         window.open(requestOptions.data.authenticationUrl, '_blank');
