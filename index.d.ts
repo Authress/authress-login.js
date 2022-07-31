@@ -20,6 +20,8 @@ interface AuthenticationParameters {
   connectionProperties?: Record<string, string>;
   /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
   force?: boolean;
+  /** Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already. (Default: **false** - the current session is validated and no login is displayed) */
+  multiAccount?: boolean;
 }
 
 /** Options for getting a token including timeout configuration. */
