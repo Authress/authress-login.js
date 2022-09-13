@@ -53,7 +53,7 @@ describe('index.js', () => {
       for (let test of tests) {
         it(test.name, () => {
           try {
-            const loginClient = new LoginClient({ authressLoginHostUrl: test.url });
+            const loginClient = new LoginClient({ authressLoginHostUrl: test.url, skipBackgroundCredentialsCheck: true });
             expect(loginClient.httpClient.client.defaults.baseURL).to.eql(test.expectedBaseUrl);
             expect(test.expectedError).to.eql(undefined);
           } catch (error) {

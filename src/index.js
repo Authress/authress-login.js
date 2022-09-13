@@ -34,13 +34,15 @@ class LoginClient {
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
 
-    window.onload = async () => {
-      await this.userSessionExists(true);
-    };
+    if (!settings.skipBackgroundCredentialsCheck) {
+      window.onload = async () => {
+        await this.userSessionExists(true);
+      };
+    }
   }
 
   isLocalHost() {
-    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalHost = typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     return isLocalHost;
   }
 
@@ -48,6 +50,10 @@ class LoginClient {
     const host = new URL(hostUrl);
 
     if (this.isLocalHost()) {
+      return false;
+    }
+
+    if (typeof window === 'undefined') {
       return false;
     }
 
