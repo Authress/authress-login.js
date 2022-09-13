@@ -1,5 +1,6 @@
 const cookieManager = require('cookie');
 const base64url = require('./base64url');
+const take = require('lodash.take');
 
 const HttpClient = require('./httpClient');
 const jwtManager = require('./jwtManager');
@@ -30,7 +31,55 @@ class LoginClient {
 
     this.hostUrl = `https://${hostUrl.replace(/^(https?:\/+)/, '')}`;
     this.httpClient = new HttpClient(this.hostUrl);
-    this.enableCredentials = true;
+
+    this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
+
+    window.onload = async () => {
+      await this.userSessionExists(true);
+    };
+  }
+
+  isLocalHost() {
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    return isLocalHost;
+  }
+
+  getMatchingDomainInfo(hostUrl) {
+    const host = new URL(hostUrl);
+
+    if (this.isLocalHost()) {
+      return false;
+    }
+
+    if (window.location.protocol !== 'https:') {
+      return false;
+    }
+
+    const tokenUrlList = host.host.toLowerCase().split('.').reverse();
+    // Login url may not be known all the time, in which case we will compare the token url to the appUrl
+    const appUrlList = window.location.host.toLowerCase().split('.').reverse();
+
+    let reversedMatchSegments = [];
+    for (let segment of tokenUrlList) {
+      const urlToTest = take(appUrlList, reversedMatchSegments.length + 1).join('.');
+      const urlToMatch = reversedMatchSegments.concat(segment).join('.');
+      if (urlToMatch !== urlToTest) {
+        break;
+      }
+
+      reversedMatchSegments.push(segment);
+    }
+
+    if (reversedMatchSegments.length === tokenUrlList.length && reversedMatchSegments.length === appUrlList.length) {
+      return true;
+    }
+
+    // Quick match TLD assuming TLD is only one path part
+    if (reversedMatchSegments.length > 1) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -87,16 +136,16 @@ class LoginClient {
    * @description Call this function on every route change. It will check if the user just logged in or is still logged in.
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
-  userSessionExists() {
+  userSessionExists(backgroundTrigger) {
     if (userSessionSequencePromise) {
       return userSessionSequencePromise = userSessionSequencePromise
       .catch(() => { /* ignore since we always want to continue even after a failure */ })
-      .then(() => this.userSessionContinuation());
+      .then(() => this.userSessionContinuation(backgroundTrigger));
     }
-    return userSessionSequencePromise = this.userSessionContinuation();
+    return userSessionSequencePromise = this.userSessionContinuation(backgroundTrigger);
   }
 
-  async userSessionContinuation() {
+  async userSessionContinuation(backgroundTrigger) {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const newUrl = new URL(window.location);
 
@@ -132,7 +181,7 @@ class LoginClient {
       return true;
     }
 
-    if (window.location.hostname === 'localhost') {
+    if (this.isLocalHost()) {
       if (urlSearchParams.get('nonce') && urlSearchParams.get('access_token')) {
         if (authRequest.nonce && authRequest.nonce !== urlSearchParams.get('nonce')) {
           const error = Error('Prevented a reply attack reusing the authentication request');
@@ -165,7 +214,7 @@ class LoginClient {
       return true;
     }
 
-    if (window.location.hostname !== 'localhost') {
+    if (!this.isLocalHost() && !backgroundTrigger) {
       try {
         const sessionResult = await this.httpClient.get('/session', this.enableCredentials);
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain

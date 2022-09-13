@@ -1,6 +1,10 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 1.3 ##
+* Automatically trigger credentials checking on load.
+* Support 127.0.0.1 for localhost
+
 ## 1.2 ##
 * Use builtin `crypto.subtle` for all crypto operations.
 * Publish a babel to work with vanilla.js.
