@@ -24,6 +24,17 @@ interface AuthenticationParameters {
   multiAccount?: boolean;
 }
 
+interface ExtensionAuthenticationParameters {
+  /** The redirect to your login screen will contain two query parameters `state`. Pass the state into this method. (Default: **window.location.query.state**) */
+  state?: string;
+  /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
+  connectionId?: string;
+  /** Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants */
+  tenantLookupIdentifier?: string;
+  /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
+  connectionProperties?: Record<string, string>;
+}
+
 /** Options for getting a token including timeout configuration. */
 interface TokenParameters {
   /** Timeout waiting for user token to populate. After this time an error will be thrown. (Default: **5000**) */
@@ -72,6 +83,13 @@ export class LoginClient {
    * @return {Promise<boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
   userSessionExists(): Promise<boolean>;
+
+  /**
+   * @description When a platform extension attempts to log a user in, the Authress Login page will redirect to your Platform defaultAuthenticationUrl. At this point, show the user the login screen, and then pass the results of the login to this method.
+   * @param {ExtensionAuthenticationParameters} settings Parameters for controlling how and when users should be authenticated for the app.
+   * @return {Promise<boolean>} Is there a valid existing session.
+   */
+  updateExtensionAuthenticationRequest(settings: ExtensionAuthenticationParameters): Promise<void>;
 
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.

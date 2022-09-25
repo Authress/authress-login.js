@@ -164,6 +164,11 @@ class LoginClient {
       console.debug('LocalStorage failed in Browser', error);
     }
 
+    // Your app was redirected to from the Authress Hosted Login page. The next step is to show the user the login widget and enable them to login.
+    if (urlSearchParams.get('state') && urlSearchParams.get('flow') === 'oauthLogin') {
+      return false;
+    }
+
     if (authRequest.nonce && urlSearchParams.get('code')) {
       if (authRequest.nonce !== urlSearchParams.get('nonce')) {
         const error = Error('Prevented a reply attack reusing the authentication request');
@@ -240,6 +245,47 @@ class LoginClient {
       }
     }
     return false;
+  }
+
+  /**
+   * @description When a platform extension attempts to log a user in, the Authress Login page will redirect to your Platform defaultAuthenticationUrl. At this point, show the user the login screen, and then pass the results of the login to this method.
+   * @param {String} [state] The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method.
+   * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
+   * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
+   * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
+   */
+  async updateExtensionAuthenticationRequest({ state, connectionId, tenantLookupIdentifier, connectionProperties }) {
+    if (!connectionId && !tenantLookupIdentifier) {
+      const e = Error('connectionId or tenantLookupIdentifier must be specified');
+      e.code = 'InvalidConnection';
+      throw e;
+    }
+
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const authenticationRequestId = state || urlSearchParams.get('state');
+    if (!authenticationRequestId) {
+      const e = Error('The `state` parameters must be specified to update this authentication request');
+      e.code = 'InvalidAuthenticationRequest';
+      throw e;
+    }
+
+    try {
+      const requestOptions = await this.httpClient.patch(`/authentication/${authenticationRequestId}`, true, {
+        connectionId, tenantLookupIdentifier, connectionProperties
+      });
+
+      window.location.assign(requestOptions.data.authenticationUrl);
+    } catch (error) {
+      if (error.status >= 400 && error.status < 500) {
+        const e = Error(error.data.title || error.data.errorCode);
+        e.code = error.data.errorCode;
+        throw e;
+      }
+      throw error;
+    }
+
+    // Prevent the current UI from taking any action once we decided we need to log in.
+    await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
   /**

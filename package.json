@@ -67,7 +67,11 @@
     "user authentication",
     "user identity",
     "Oauth2",
+    "Oauth2.1",
     "Oauth3",
+    "platform",
+    "platform login",
+    "extension",
     "Authress",
     "Authress client",
     "user security"
