@@ -200,7 +200,6 @@ class LoginClient {
           throw error;
         }
 
-        newUrl.searchParams.delete('nonce');
         newUrl.searchParams.delete('iss');
         newUrl.searchParams.delete('nonce');
         newUrl.searchParams.delete('expires_in');
