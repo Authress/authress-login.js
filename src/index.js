@@ -414,4 +414,5 @@ class LoginClient {
   }
 }
 
-module.exports = { LoginClient };
+const ExtensionClient = require('./extensionClient');
+module.exports = { LoginClient, ExtensionClient };

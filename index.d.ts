@@ -110,3 +110,42 @@ export class LoginClient {
    */
   logout(redirectUri: string): Promise<void>;
 }
+
+interface RequestTokenParameters {
+  /** The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method. */
+  code?: string;
+}
+
+interface TokenResponse {
+  /** The user access token to be used with the platform */
+  access_token: string;
+}
+
+export class ExtensionClient {
+  /**
+   * @constructor constructs an ExtensionClient to be embedded in your platform SDK to enable extension easy login
+   * @param {string} authressCustomDomain Your Authress custom domain - see https://authress.io/app/#/manage?focus=domain
+   * @param {string} extensionId The platform extensionId for this app - see https://authress.io/app/#/manage?focus=extensions
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  constructor(authressCustomDomain: string, extensionId: string);
+
+  /**
+   * @description Gets the user's profile data and returns it if it exists. Should be called after {@link userSessionExists} or it will be empty.
+   * @return {Promise<Record<string, unknown>>} The user identity which contains a userData object.
+   */
+  getUserIdentity(): Promise<Record<string, unknown>>;
+
+  /**
+   * @description When a platform extension attempts to log a user in, the Authress Login page will redirect to your Platform defaultAuthenticationUrl. At this point, show the user the login screen, and then pass the results of the login to this method.
+   * @param {String} [code] The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method.
+   */
+  requestToken(options?: RequestTokenParameters): Promise<TokenResponse>;
+
+  /**
+   * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
+   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
+   * @return {Promise}
+   */
+  login(redirectUrl: string): Promise<void>;
+}
