@@ -99,7 +99,7 @@ class ExtensionClient {
     const codeVerifier = base64url.encode((window.crypto || window.msCrypto).getRandomValues(new Uint32Array(32)).toString());
     // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
     const hashBuffer = await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
-    const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(36).padStart(2, '0')).join('');
     const codeChallenge = base64url.encode(hash);
 
     const redirectUrl = redirectUrlOverride || window.location.href;
