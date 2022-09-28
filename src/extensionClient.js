@@ -70,7 +70,7 @@ class ExtensionClient {
       .then(() => this.requestTokenContinuation(options));
     }
     const nextContinuation = this.requestTokenContinuation(options);
-    nextContinuation.catch(() => { /* ignore since we always want to continue even after a failure */ });
+    nextContinuation.catch(() => { /* This prevents an uncaught promise rejection in the running process */ });
     return userSessionSequencePromise = nextContinuation;
   }
 
