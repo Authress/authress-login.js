@@ -96,11 +96,11 @@ const extensionClient = new ExtensionClient('https://login.application.io', exte
 
 // redirectUrl is where the extension would like to return the user to after login
 // * This method will redirect the user to the Authress Login UI screen with an auth code
-await extensionClient.login(redirectUrl);
+const { accessToken } = await extensionClient.login(redirectUrl);
 
 // .... After login the user is redirected to the redirectUrl
-// * Now exchange the auth code to get an access token
-const { accessToken } = await this.requestToken();
+// * So try the login again:
+const { accessToken } = await extensionClient.login(redirectUrl);
 
 // * Or get the user claims from the token
 await userData = await this.getUserIdentity();

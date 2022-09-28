@@ -118,7 +118,7 @@ interface RequestTokenParameters {
 
 interface TokenResponse {
   /** The user access token to be used with the platform */
-  access_token: string;
+  accessToken: string;
 }
 
 export class ExtensionClient {
@@ -143,9 +143,9 @@ export class ExtensionClient {
   requestToken(options?: RequestTokenParameters): Promise<TokenResponse>;
 
   /**
-   * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
-   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
-   * @return {Promise}
+      * @description Logs a user in, if the user is logged in, will return the token response, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
+   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. Only used if the user is not logged in.
+   * @return {Promise<TokenResponse>} Returns the token if the user is logged in otherwise redirects the user
    */
-  login(redirectUrl: string): Promise<void>;
+  login(redirectUrl: string): Promise<TokenResponse>;
 }

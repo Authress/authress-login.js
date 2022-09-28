@@ -23,6 +23,10 @@ class ExtensionClient {
 
     this.authressCustomDomain = `https://${authressCustomDomain.replace(/^(https?:\/+)/, '')}`;
     this.accessToken = null;
+
+    window.onload = async () => {
+      await this.requestToken({ silent: true });
+    };
   }
 
   /**
@@ -46,8 +50,9 @@ class ExtensionClient {
   /**
    * @description When a platform extension attempts to log a user in, the Authress Login page will redirect to your Platform defaultAuthenticationUrl. At this point, show the user the login screen, and then pass the results of the login to this method.
    * @param {String} [options.code] The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method.
+   * @return {Promise<TokenResponse>} Returns the token if the user is logged in otherwise redirects the user
    */
-  async requestToken(options = { code: null, silent: true }) {
+  async requestToken(options = { code: null, silent: false }) {
     const code = options && options.code || new URLSearchParams(window.location.search).get('code');
     if (!code) {
       if (!options || !options.silent) {
@@ -89,11 +94,15 @@ class ExtensionClient {
   }
 
   /**
-   * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
+   * @description Logs a user in, if the user is logged in, will return the token response, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
-   * @return {Promise}
+   * @return {Promise<TokenResponse>} Returns the token if the user is logged in otherwise redirects the user
    */
   async login(redirectUrlOverride) {
+    const completeLoginResult = await this.requestToken({ silent: true });
+    if (completeLoginResult) {
+      return completeLoginResult;
+    }
     const url = new URL(this.authressCustomDomain);
 
     const codeVerifier = base64url.encode((window.crypto || window.msCrypto).getRandomValues(new Uint32Array(16)).toString());
@@ -111,6 +120,7 @@ class ExtensionClient {
 
     // Prevent the current UI from taking any action once we decided we need to log in.
     await new Promise(resolve => setTimeout(resolve, 5000));
+    return null;
   }
 }
 
