@@ -47,6 +47,15 @@ class ExtensionClient {
     return userData;
   }
 
+  async getTokenResponse() {
+    const isLoggedIn = await this.getUserIdentity();
+    if (!isLoggedIn) {
+      return null;
+    }
+
+    return { accessToken: this.accessToken };
+  }
+
   /**
    * @description When a platform extension attempts to log a user in, the Authress Login page will redirect to your Platform defaultAuthenticationUrl. At this point, show the user the login screen, and then pass the results of the login to this method.
    * @param {String} [options.code] The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method.
@@ -60,7 +69,7 @@ class ExtensionClient {
         e.code = 'InvalidAuthorizationCode';
         throw e;
       }
-      return null;
+      return this.getTokenResponse();
     }
 
     const url = new URL(this.authressCustomDomain);
@@ -90,7 +99,7 @@ class ExtensionClient {
     newUrl.searchParams.delete('id_token');
     history.replaceState({}, undefined, newUrl.toString());
 
-    return { accessToken: this.accessToken };
+    return this.getTokenResponse();
   }
 
   /**
@@ -99,6 +108,10 @@ class ExtensionClient {
    * @return {Promise<TokenResponse>} Returns the token if the user is logged in otherwise redirects the user
    */
   async login(redirectUrlOverride) {
+    const tokenResponse = await this.getTokenResponse();
+    if (tokenResponse) {
+      return tokenResponse;
+    }
     const completeLoginResult = await this.requestToken({ silent: true });
     if (completeLoginResult) {
       return completeLoginResult;
