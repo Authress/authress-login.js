@@ -1,6 +1,9 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 1.4 ##
+* Include the extensionClient as embeddable client for OAuth extension login.
+
 ## 1.3 ##
 * Automatically trigger credentials checking on load.
 * Support 127.0.0.1 for localhost
