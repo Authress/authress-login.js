@@ -19,6 +19,12 @@ module.exports.decode = function decode(str) {
 };
 
 module.exports.encode = function encode(str) {
+  if (str && typeof str === 'object') {
+    return btoa(String.fromCharCode(...new Uint8Array(str))).replace(/\//g, '_')
+    .replace(/\+/g, '-')
+    .replace(/=+$/, '');
+  }
+
   return encodeBase64(str)
   .replace(/\//g, '_')
   .replace(/\+/g, '-')
