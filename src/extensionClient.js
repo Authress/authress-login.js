@@ -4,6 +4,8 @@ const jwtManager = require('./jwtManager');
 
 const AuthenticationRequestNonceKey = 'ExtensionRequestNonce';
 
+let userSessionSequencePromise = null;
+
 class ExtensionClient {
   /**
    * @constructor constructs an ExtensionClient to be embedded in your platform SDK to enable extension easy login
@@ -61,7 +63,16 @@ class ExtensionClient {
    * @param {String} [options.code] The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method.
    * @return {Promise<TokenResponse>} Returns the token if the user is logged in otherwise redirects the user
    */
-  async requestToken(options = { code: null, silent: false }) {
+  requestToken(options = { code: null, silent: false }) {
+    if (userSessionSequencePromise) {
+      return userSessionSequencePromise = userSessionSequencePromise
+      .catch(() => { /* ignore since we always want to continue even after a failure */ })
+      .then(() => this.requestTokenContinuation(options));
+    }
+    return userSessionSequencePromise = this.requestTokenContinuation(options);
+  }
+
+  async requestTokenContinuation(options = { code: null, silent: false }) {
     const code = options && options.code || new URLSearchParams(window.location.search).get('code');
     if (!code) {
       if (!options || !options.silent) {
