@@ -316,17 +316,10 @@ class LoginClient {
       throw e;
     }
 
-    const sha256 = str => crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-
-    const generateNonce = async () => {
-      const hash = await sha256(crypto.getRandomValues(new Uint32Array(32)).toString());
-      // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
-      const hashArray = Array.from(new Uint8Array(hash));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    };
-
-    const codeVerifier = await generateNonce();
-    const hash = await sha256(codeVerifier);
+    const codeVerifier = base64url.encode((window.crypto || window.msCrypto).getRandomValues(new Uint32Array(32)).toString());
+    // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+    const hashBuffer = await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
+    const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     const codeChallenge = base64url.encode(hash);
 
     try {
@@ -414,4 +407,5 @@ class LoginClient {
   }
 }
 
-module.exports = { LoginClient };
+const ExtensionClient = require('./extensionClient');
+module.exports = { LoginClient, ExtensionClient };
