@@ -69,7 +69,9 @@ class ExtensionClient {
       .catch(() => { /* ignore since we always want to continue even after a failure */ })
       .then(() => this.requestTokenContinuation(options));
     }
-    return userSessionSequencePromise = this.requestTokenContinuation(options);
+    const nextContinuation = this.requestTokenContinuation(options);
+    nextContinuation.catch(() => { /* ignore since we always want to continue even after a failure */ });
+    return userSessionSequencePromise = nextContinuation;
   }
 
   async requestTokenContinuation(options = { code: null, silent: false }) {
