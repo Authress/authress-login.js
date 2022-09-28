@@ -84,6 +84,28 @@ try {
 }
 ```
 
+### Platform Extension Login
+The goal of the platform extension is to make it easy for your platform extension developers to login with Authress. Embed the `ExtensionClient` in your javascript UI SDK, and pass in the `extensionId`.
+
+```js
+const { ExtensionClient } = require('authress-login');
+
+// What is my custom Domain? => https://authress.io/app/#/setup?focus=domain
+// What is my extensionId => https://authress.io/app/#/manage?focus=extensions
+const extensionClient = new ExtensionClient('https://login.application.io', extensionId);
+
+// redirectUrl is where the extension would like to return the user to after login
+// * This method will redirect the user to the Authress Login UI screen with an auth code
+await extensionClient.login(redirectUrl);
+
+// .... After login the user is redirected to the redirectUrl
+// * Now exchange the auth code to get an access token
+const { accessToken } = await this.requestToken();
+
+// * Or get the user claims from the token
+await userData = await this.getUserIdentity();
+```
+
 ## Advanced
 Curious exactly how these methods work and when they should be used? We have some advanced guidance available for each of the methods on the [method documentation](./docs/advanced.md).
 
