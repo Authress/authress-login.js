@@ -31,6 +31,7 @@ class LoginClient {
 
     this.hostUrl = `https://${hostUrl.replace(/^(https?:\/+)/, '')}`;
     this.httpClient = new HttpClient(this.hostUrl);
+    this.lastSessionCheck = 0;
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
 
@@ -143,7 +144,12 @@ class LoginClient {
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
   userSessionExists(backgroundTrigger) {
+    this.lastSessionCheck = Date.now();
     if (userSessionSequencePromise) {
+      if (Date.now() - this.lastSessionCheck < 5) {
+        return userSessionSequencePromise;
+      }
+
       return userSessionSequencePromise = userSessionSequencePromise
       .catch(() => { /* ignore since we always want to continue even after a failure */ })
       .then(() => this.userSessionContinuation(backgroundTrigger));
