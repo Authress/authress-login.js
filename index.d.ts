@@ -22,6 +22,8 @@ interface AuthenticationParameters {
   force?: boolean;
   /** Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already. (Default: **false** - the current session is validated and no login is displayed) */
   multiAccount?: boolean;
+  /** Link another identity with the currently logged in user. This will force the user to log in with the new connection. On login completion the user will be able to log in with either identity. To unlike the account call {@link unlinkAccount}. */
+  linkAccount?: boolean;
 }
 
 interface ExtensionAuthenticationParameters {
@@ -90,6 +92,13 @@ export class LoginClient {
    * @return {Promise<boolean>} Is there a valid existing session.
    */
   updateExtensionAuthenticationRequest(settings: ExtensionAuthenticationParameters): Promise<void>;
+
+  /**
+   * @description Unlink an identity from the user's account.
+   * @param {String} [connectionId] Specify the provider connection id that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
+   * @return {Promise<void>} Throws an error if identity cannot be unlinked.
+   */
+  unlinkAccount(connectionId: string): Promise<void>;
 
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.

@@ -1,5 +1,4 @@
 const cookieManager = require('cookie');
-const base64url = require('./base64url');
 const take = require('lodash.take');
 
 const HttpClient = require('./httpClient');
@@ -294,6 +293,36 @@ class LoginClient {
   }
 
   /**
+   * @description Unlink an identity from the user's account.
+   * @param {String} [connectionId] Specify the provider connection id that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
+   * @return {Promise<void>} Throws an error if identity cannot be unlinked.
+   */
+  async unlinkAccount(connectionId) {
+    if (!connectionId) {
+      const e = Error('connectionId must be specified');
+      e.code = 'InvalidConnection';
+      throw e;
+    }
+
+    if (!this.getUserIdentity()) {
+      const e = Error('User must be logged into to unlink an account.');
+      e.code = 'NotLoggedIn';
+      throw e;
+    }
+
+    try {
+      await this.httpClient.delete(`/identities/${encodeURIComponent(connectionId)}`, this.enableCredentials);
+    } catch (error) {
+      if (error.status >= 400 && error.status < 500) {
+        const e = Error(error.data.title || error.data.errorCode);
+        e.code = error.data.errorCode;
+        throw e;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
    * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
    * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
@@ -303,16 +332,17 @@ class LoginClient {
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
+   * @param {Boolean} [linkAccount=false] Start the account linking flow to link the existing user to the new connection or tenant.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount }) {
+  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, linkAccount }) {
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
       throw e;
     }
 
-    if (!force && !multiAccount && await this.userSessionExists()) {
+    if (!force && !linkAccount && !multiAccount && await this.userSessionExists()) {
       return true;
     }
 
@@ -322,20 +352,25 @@ class LoginClient {
       throw e;
     }
 
-    const codeVerifier = base64url.encode((window.crypto || window.msCrypto).getRandomValues(new Uint32Array(16)).toString());
-    // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
-    const hashBuffer = await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
-    const codeChallenge = base64url.encode(hashBuffer);
+    if (linkAccount) {
+      if (!this.getUserIdentity()) {
+        const e = Error('User must be logged into an existing account before linking a second account.');
+        e.code = 'NotLoggedIn';
+        throw e;
+      }
+    }
+
+    const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      const requestOptions = await this.httpClient.post('/authentication', false, {
+      const requestOptions = await this.httpClient.post('/authentication', linkAccount && this.enableCredentials, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
         connectionProperties,
         applicationId: this.settings.applicationId,
-        responseLocation, flowType, multiAccount
+        responseLocation, flowType, multiAccount, linkAccount
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
         nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,

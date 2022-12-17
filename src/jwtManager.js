@@ -19,6 +19,14 @@ class JwtManager {
       return null;
     }
   }
+
+  async getAuthCodes() {
+    const codeVerifier = base64url.encode((window.crypto || window.msCrypto).getRandomValues(new Uint32Array(16)).toString());
+    // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+    const hashBuffer = await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
+    const codeChallenge = base64url.encode(hashBuffer);
+    return { codeVerifier, codeChallenge };
+  }
 }
 
 module.exports = new JwtManager();
