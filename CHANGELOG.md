@@ -3,7 +3,7 @@ This is the changelog for [Authress Login](readme.md).
 
 ## 1.4 ##
 * Include the extensionClient as embeddable client for OAuth extension login.
-* Add `linkAccount` parameter to Authenticate and `unlinkAccount` method to support account linking.
+* Add `linkIdentity` parameter to Authenticate and `unlinkIdentity` method to support account linking.
 
 ## 1.3 ##
 * Automatically trigger credentials checking on load.

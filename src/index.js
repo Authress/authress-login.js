@@ -297,7 +297,7 @@ class LoginClient {
    * @param {String} [connectionId] Specify the provider connection id that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
    * @return {Promise<void>} Throws an error if identity cannot be unlinked.
    */
-  async unlinkAccount(connectionId) {
+  async unlinkIdentity(connectionId) {
     if (!connectionId) {
       const e = Error('connectionId must be specified');
       e.code = 'InvalidConnection';
@@ -332,17 +332,17 @@ class LoginClient {
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
-   * @param {Boolean} [linkAccount=false] Start the account linking flow to link the existing user to the new connection or tenant.
+   * @param {Boolean} [linkIdentity=false] Start the account linking flow to link the existing user to the new connection or tenant.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, linkAccount }) {
+  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, linkIdentity }) {
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
       throw e;
     }
 
-    if (!force && !linkAccount && !multiAccount && await this.userSessionExists()) {
+    if (!force && !linkIdentity && !multiAccount && await this.userSessionExists()) {
       return true;
     }
 
@@ -352,7 +352,7 @@ class LoginClient {
       throw e;
     }
 
-    if (linkAccount) {
+    if (linkIdentity) {
       if (!this.getUserIdentity()) {
         const e = Error('User must be logged into an existing account before linking a second account.');
         e.code = 'NotLoggedIn';
@@ -365,12 +365,12 @@ class LoginClient {
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      const requestOptions = await this.httpClient.post('/authentication', linkAccount && this.enableCredentials, {
+      const requestOptions = await this.httpClient.post('/authentication', linkIdentity && this.enableCredentials, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
         connectionProperties,
         applicationId: this.settings.applicationId,
-        responseLocation, flowType, multiAccount, linkAccount
+        responseLocation, flowType, multiAccount, linkIdentity
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
         nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
