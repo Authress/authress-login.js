@@ -378,6 +378,7 @@ class LoginClient {
         Authorization: `Bearer ${accessToken}`
       };
       const requestOptions = await this.httpClient.post('/authentication', this.enableCredentials, {
+        linkIdentity: true,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
         connectionProperties,
