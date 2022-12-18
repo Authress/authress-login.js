@@ -22,8 +22,17 @@ interface AuthenticationParameters {
   force?: boolean;
   /** Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already. (Default: **false** - the current session is validated and no login is displayed) */
   multiAccount?: boolean;
-  /** Link another identity with the currently logged in user. This will force the user to log in with the new connection. On login completion the user will be able to log in with either identity. To unlike the account call {@link unlinkIdentity}. */
-  linkIdentity?: boolean;
+}
+
+interface LinkIdentityParameters {
+  /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
+  connectionId?: string;
+  /** Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants */
+  tenantLookupIdentifier?: string;
+  /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
+  redirectUrl?: string;
+  /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
+  connectionProperties?: Record<string, string>;
 }
 
 interface ExtensionAuthenticationParameters {
@@ -99,6 +108,13 @@ export class LoginClient {
    * @return {Promise<void>} Throws an error if identity cannot be unlinked.
    */
   unlinkIdentity(connectionId: string): Promise<void>;
+
+  /**
+   * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.
+   * @param {LinkIdentityParameters} settings Parameters for selecting which identity of a user should be linked.
+   * @return {Promise<Boolean>} Is there a valid existing session.
+   */
+  linkIdentity(settings: LinkIdentityParameters): Promise<void>;
 
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.

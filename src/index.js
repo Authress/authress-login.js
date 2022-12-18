@@ -15,8 +15,8 @@ class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
    * @param {Object} settings
-   * @param {string} settings.authressLoginHostUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
-   * @param {string} settings.applicationId the Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications
+   * @param {String} settings.authressLoginHostUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
+   * @param {String} settings.applicationId the Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
   constructor(settings, logger) {
@@ -310,8 +310,23 @@ class LoginClient {
       throw e;
     }
 
+    let accessToken;
     try {
-      await this.httpClient.delete(`/identities/${encodeURIComponent(connectionId)}`, this.enableCredentials);
+      accessToken = await this.ensureToken({ timeoutInMillis: 100 });
+    } catch (error) {
+      if (error.code === 'TokenTimeout') {
+        const e = Error('User must be logged into an existing account before linking a second account.');
+        e.code = 'NotLoggedIn';
+        throw e;
+      }
+    }
+
+    const headers = this.enableCredentials ? {} : {
+      Authorization: `Bearer ${accessToken}`
+    };
+
+    try {
+      await this.httpClient.delete(`/identities/${encodeURIComponent(connectionId)}`, this.enableCredentials, headers);
     } catch (error) {
       if (error.status >= 400 && error.status < 500) {
         const e = Error(error.data.title || error.data.errorCode);
@@ -320,6 +335,70 @@ class LoginClient {
       }
       throw error;
     }
+  }
+
+  /**
+   * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.
+   * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
+   * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
+   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
+   * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
+   * @return {Promise<void>} Is there a valid existing session.
+   */
+  async linkIdentity({ connectionId, tenantLookupIdentifier, redirectUrl, connectionProperties }) {
+    if (!connectionId && !tenantLookupIdentifier) {
+      const e = Error('connectionId or tenantLookupIdentifier must be specified');
+      e.code = 'InvalidConnection';
+      throw e;
+    }
+
+    if (!this.getUserIdentity()) {
+      const e = Error('User must be logged into an existing account before linking a second account.');
+      e.code = 'NotLoggedIn';
+      throw e;
+    }
+
+    let accessToken;
+    try {
+      accessToken = await this.ensureToken({ timeoutInMillis: 100 });
+    } catch (error) {
+      if (error.code === 'TokenTimeout') {
+        const e = Error('User must be logged into an existing account before linking a second account.');
+        e.code = 'NotLoggedIn';
+        throw e;
+      }
+    }
+
+    const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
+
+    try {
+      const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
+      const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
+      const headers = this.enableCredentials ? {} : {
+        Authorization: `Bearer ${accessToken}`
+      };
+      const requestOptions = await this.httpClient.post('/authentication', this.enableCredentials, {
+        redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
+        connectionId, tenantLookupIdentifier,
+        connectionProperties,
+        applicationId: this.settings.applicationId
+      }, headers);
+      localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
+        nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
+        enableCredentials: requestOptions.data.enableCredentials
+      }));
+      window.location.assign(requestOptions.data.authenticationUrl);
+    } catch (error) {
+      if (error.status >= 400 && error.status < 500) {
+        const e = Error(error.data.title || error.data.errorCode);
+        e.code = error.data.errorCode;
+        throw e;
+      }
+      throw error;
+    }
+
+    // Prevent the current UI from taking any action once we decided we need to log in.
+    await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
   /**
@@ -332,17 +411,16 @@ class LoginClient {
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
-   * @param {Boolean} [linkIdentity=false] Start the account linking flow to link the existing user to the new connection or tenant.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, linkIdentity }) {
+  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount }) {
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
       throw e;
     }
 
-    if (!force && !linkIdentity && !multiAccount && await this.userSessionExists()) {
+    if (!force && !multiAccount && await this.userSessionExists()) {
       return true;
     }
 
@@ -352,25 +430,17 @@ class LoginClient {
       throw e;
     }
 
-    if (linkIdentity) {
-      if (!this.getUserIdentity()) {
-        const e = Error('User must be logged into an existing account before linking a second account.');
-        e.code = 'NotLoggedIn';
-        throw e;
-      }
-    }
-
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      const requestOptions = await this.httpClient.post('/authentication', linkIdentity && this.enableCredentials, {
+      const requestOptions = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
         connectionProperties,
         applicationId: this.settings.applicationId,
-        responseLocation, flowType, multiAccount, linkIdentity
+        responseLocation, flowType, multiAccount
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
         nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
@@ -398,7 +468,7 @@ class LoginClient {
   /**
    * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.
    * @param {Object} [options] Options for getting a token including timeout configuration.
-   * @param {Boolean} [options.timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
+   * @param {Number} [options.timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
    * @return {Promise<String>} The Authorization Bearer token if allowed otherwise null.
    */
   async ensureToken(options) {
@@ -423,7 +493,7 @@ class LoginClient {
 
   /**
    * @description Log the user out removing the current user's session. If the user is not logged in this has no effect. If the user is logged in via secure session, the the redirect url will be ignored. If the user is logged in without a secure session the user agent will be redirected to the hosted login and then redirected to the {@link redirectUrl}.
-   * @param {string} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
+   * @param {String} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
   async logout(redirectUrl) {
     document.cookie = cookieManager.serialize('authorization', '', { expires: new Date(), path: '/' });
