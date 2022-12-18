@@ -321,7 +321,7 @@ class LoginClient {
       }
     }
 
-    const headers = this.enableCredentials ? {} : {
+    const headers = this.enableCredentials && !this.isLocalHost() ? {} : {
       Authorization: `Bearer ${accessToken}`
     };
 
@@ -374,7 +374,7 @@ class LoginClient {
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      const headers = this.enableCredentials ? {} : {
+      const headers = this.enableCredentials && !this.isLocalHost() ? {} : {
         Authorization: `Bearer ${accessToken}`
       };
       const requestOptions = await this.httpClient.post('/authentication', this.enableCredentials, {
