@@ -369,7 +369,7 @@ class LoginClient {
       }
     }
 
-    const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
+    const { codeChallenge } = await jwtManager.getAuthCodes();
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
@@ -384,10 +384,6 @@ class LoginClient {
         connectionProperties,
         applicationId: this.settings.applicationId
       }, headers);
-      localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
-        nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
-        enableCredentials: requestOptions.data.enableCredentials
-      }));
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
       if (error.status >= 400 && error.status < 500) {
