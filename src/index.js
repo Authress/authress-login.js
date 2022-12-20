@@ -145,10 +145,6 @@ class LoginClient {
   userSessionExists(backgroundTrigger) {
     this.lastSessionCheck = Date.now();
     if (userSessionSequencePromise) {
-      if (Date.now() - this.lastSessionCheck < 5) {
-        return userSessionSequencePromise;
-      }
-
       return userSessionSequencePromise = userSessionSequencePromise
       .catch(() => { /* ignore since we always want to continue even after a failure */ })
       .then(() => this.userSessionContinuation(backgroundTrigger));
