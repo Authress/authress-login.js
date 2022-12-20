@@ -226,6 +226,7 @@ class LoginClient {
       // Otherwise check cookies and then force the user to log in
     }
 
+    // At this point the user identity should have been loaded through cookies (if the cookie mechanism was selected and it isn't local host.) So we'll first check if a login session just completed.
     const userData = this.getUserIdentity();
     // User is already logged in
     if (userData) {
