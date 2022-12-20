@@ -430,7 +430,7 @@ class LoginClient {
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      userIdentityTokenStorageManager.clearCookies();
+      userIdentityTokenStorageManager.clear();
       const requestOptions = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
@@ -488,7 +488,7 @@ class LoginClient {
    * @param {String} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
   async logout(redirectUrl) {
-    userIdentityTokenStorageManager.clearCookies();
+    userIdentityTokenStorageManager.clear();
 
     // Localhost also has enableCredentials set, so this path is only for cross domain logins
     if (!this.enableCredentials) {

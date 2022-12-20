@@ -33,6 +33,11 @@ class UserIdentityTokenStorageManager {
     }
   }
 
+  clear() {
+    this.clearCookies();
+    this.delete();
+  }
+
   clearCookies(cookieName) {
     const cookies = document.cookie.split('; ');
     for (const cookie of cookies) {
