@@ -34,6 +34,7 @@ class UserIdentityTokenStorageManager {
   }
 
   clearCookies(cookieName) {
+    this.delete();
     const cookies = document.cookie.split('; ');
     for (const cookie of cookies) {
       // Remove only the cookies that are relevant to the client
