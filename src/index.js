@@ -147,12 +147,13 @@ class LoginClient {
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
   userSessionExists(backgroundTrigger) {
-    this.lastSessionCheck = Date.now();
     if (userSessionSequencePromise) {
       if (Date.now() - this.lastSessionCheck < 5) {
+        this.lastSessionCheck = Date.now();
         return userSessionSequencePromise;
       }
 
+      this.lastSessionCheck = Date.now();
       return userSessionSequencePromise = userSessionSequencePromise
       .catch(() => { /* ignore since we always want to continue even after a failure */ })
       .then(() => this.userSessionContinuation(backgroundTrigger));
