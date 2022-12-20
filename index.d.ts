@@ -112,7 +112,7 @@ export class LoginClient {
   /**
    * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.
    * @param {LinkIdentityParameters} settings Parameters for selecting which identity of a user should be linked.
-   * @return {Promise<Boolean>} Is there a valid existing session.
+   * @return {Promise<void>}
    */
   linkIdentity(settings: LinkIdentityParameters): Promise<void>;
 
