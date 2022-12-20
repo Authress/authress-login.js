@@ -90,13 +90,6 @@ class LoginClient {
   }
 
   /**
-   * @deprecated
-   */
-  getUserData() {
-    return this.getUserIdentity();
-  }
-
-  /**
    * @description Gets the user's profile data and returns it if it exists. Should be called after {@link userSessionExists} or it will be empty.
    * @return {Object} The user data object.
    */
@@ -238,6 +231,11 @@ class LoginClient {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
           const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
           document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
+          userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
+        } else {
+          const cookies = cookieManager.parse(document.cookie);
+          const idToken = cookies && cookies.user;
+          const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || idToken && new Date(idToken.exp * 1000) || new Date(Date.now() + 86400000);
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
       } catch (error) { /**/ }
@@ -483,10 +481,6 @@ class LoginClient {
     }
     const cookies = cookieManager.parse(document.cookie);
     return cookies.authorization !== 'undefined' && cookies.authorization;
-  }
-
-  getToken() {
-    return this.ensureToken();
   }
 
   /**
