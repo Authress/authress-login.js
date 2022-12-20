@@ -1,6 +1,9 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 2.0 ##
+* Optimize cookie storage location for the `user` cookie.
+
 ## 1.4 ##
 * Include the extensionClient as embeddable client for OAuth extension login.
 * Add `linkIdentity` parameter to Authenticate and `unlinkIdentity` method to support account linking.

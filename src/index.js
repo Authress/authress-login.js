@@ -3,6 +3,7 @@ const take = require('lodash.take');
 
 const HttpClient = require('./httpClient');
 const jwtManager = require('./jwtManager');
+const userIdentityTokenStorageManager = require('./userIdentityTokenStorageManager');
 
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
@@ -100,8 +101,8 @@ class LoginClient {
    * @return {Object} The user data object.
    */
   getUserIdentity() {
-    const cookies = cookieManager.parse(document.cookie);
-    const userData = cookies.user && jwtManager.decode(cookies.user);
+    const userIdToken = userIdentityTokenStorageManager.get();
+    const userData = userIdToken && jwtManager.decode(userIdToken);
     if (!userData) {
       return null;
     }
@@ -192,7 +193,7 @@ class LoginClient {
       const idToken = jwtManager.decode(tokenResult.data.id_token);
       const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
       document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/' });
-      document.cookie = cookieManager.serialize('user', tokenResult.data.id_token || '', { expires: expiry, path: '/' });
+      userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
       userSessionResolver();
       return true;
     }
@@ -215,7 +216,7 @@ class LoginClient {
         const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
         const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
         document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/' });
-        document.cookie = cookieManager.serialize('user', urlSearchParams.get('id_token') || '', { expires: expiry, path: '/' });
+        userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
         userSessionResolver();
         return true;
       }
@@ -237,7 +238,7 @@ class LoginClient {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
           const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
           document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
-          document.cookie = cookieManager.serialize('user', sessionResult.data.id_token || '', { expires: expiry, path: '/' });
+          userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
         // await this.httpClient.patch('/session', true, {});
       } catch (error) { /**/ }
@@ -432,6 +433,7 @@ class LoginClient {
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
+      userIdentityTokenStorageManager.clearCookies();
       const requestOptions = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
@@ -493,8 +495,7 @@ class LoginClient {
    * @param {String} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
   async logout(redirectUrl) {
-    document.cookie = cookieManager.serialize('authorization', '', { expires: new Date(), path: '/' });
-    document.cookie = cookieManager.serialize('user', '', { expires: new Date(), path: '/' });
+    userIdentityTokenStorageManager.clearCookies();
 
     // Localhost also has enableCredentials set, so this path is only for cross domain logins
     if (!this.enableCredentials) {
