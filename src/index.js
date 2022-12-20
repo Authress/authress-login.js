@@ -99,8 +99,8 @@ class LoginClient {
     // Cache the ID Token in the local storage as soon as we attempt to check for it.
     // * We need this in the cache, and the best way to do this is right here, so it's in one place
     // * While this isn't the optimal location, this will ensure that every fetch to the user identity correctly is cached and is returned to the caller.
-    if (idToken) {
-      const expiry = idToken && new Date(idToken.exp * 1000) || new Date(Date.now() + 86400000);
+    if (idToken && jwtManager.decode(idToken)) {
+      const expiry = new Date(jwtManager.decode(idToken).exp * 1000) || new Date(Date.now() + 86400000);
       userIdentityTokenStorageManager.set(idToken, expiry);
     }
 
@@ -149,7 +149,6 @@ class LoginClient {
   userSessionExists(backgroundTrigger) {
     if (userSessionSequencePromise) {
       if (Date.now() - this.lastSessionCheck < 5) {
-        this.lastSessionCheck = Date.now();
         return userSessionSequencePromise;
       }
 

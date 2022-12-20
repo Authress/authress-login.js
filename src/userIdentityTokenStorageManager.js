@@ -14,7 +14,6 @@ class UserIdentityTokenStorageManager {
     try {
       const { idToken, expiry } = JSON.parse(localStorage.getItem(AuthenticationCredentialsStorageKey) || '{}');
       if (!idToken || expiry < Date.now()) {
-        localStorage.removeItem(AuthenticationCredentialsStorageKey);
         return null;
       }
 
