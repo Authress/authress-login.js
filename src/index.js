@@ -94,6 +94,16 @@ class LoginClient {
    * @return {Object} The user data object.
    */
   getUserIdentity() {
+    const cookies = cookieManager.parse(document.cookie);
+    const idToken = cookies && cookies.user;
+    // Cache the ID Token in the local storage as soon as we attempt to check for it.
+    // * We need this in the cache, and the best way to do this is right here, so it's in one place
+    // * While this isn't the optimal location, this will ensure that every fetch to the user identity correctly is cached and is returned to the caller.
+    if (idToken) {
+      const expiry = idToken && new Date(idToken.exp * 1000) || new Date(Date.now() + 86400000);
+      userIdentityTokenStorageManager.set(idToken, expiry);
+    }
+
     const userIdToken = userIdentityTokenStorageManager.get();
     const userData = userIdToken && jwtManager.decode(userIdToken);
     if (!userData) {
@@ -231,11 +241,6 @@ class LoginClient {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
           const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
           document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
-          userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
-        } else {
-          const cookies = cookieManager.parse(document.cookie);
-          const idToken = cookies && cookies.user;
-          const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || idToken && new Date(idToken.exp * 1000) || new Date(Date.now() + 86400000);
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
       } catch (error) { /**/ }
@@ -430,7 +435,7 @@ class LoginClient {
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      userIdentityTokenStorageManager.clearCookies();
+      userIdentityTokenStorageManager.clear();
       const requestOptions = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
@@ -488,7 +493,7 @@ class LoginClient {
    * @param {String} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
   async logout(redirectUrl) {
-    userIdentityTokenStorageManager.clearCookies();
+    userIdentityTokenStorageManager.clear();
 
     // Localhost also has enableCredentials set, so this path is only for cross domain logins
     if (!this.enableCredentials) {
