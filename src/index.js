@@ -232,7 +232,7 @@ class LoginClient {
 
     if (!this.isLocalHost() && !backgroundTrigger) {
       try {
-        const sessionResult = await this.httpClient.get('/session', this.enableCredentials);
+        const sessionResult = await this.httpClient.patch('/session', this.enableCredentials, {});
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
@@ -240,7 +240,6 @@ class LoginClient {
           document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
-        // await this.httpClient.patch('/session', true, {});
       } catch (error) { /**/ }
       const newUserData = this.getUserIdentity();
       // User session exists and now is logged in
