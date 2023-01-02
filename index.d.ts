@@ -99,10 +99,10 @@ export class LoginClient {
 
   /**
    * @description Unlink an identity from the user's account.
-   * @param {String} [connectionId] Specify the provider connection id that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
+   * @param {String} identityId Specify the provider connection id or the user id of that connection that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
    * @return {Promise<void>} Throws an error if identity cannot be unlinked.
    */
-  unlinkIdentity(connectionId: string): Promise<void>;
+  unlinkIdentity(identityId: string): Promise<void>;
 
   /**
    * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.

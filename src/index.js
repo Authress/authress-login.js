@@ -299,11 +299,11 @@ class LoginClient {
 
   /**
    * @description Unlink an identity from the user's account.
-   * @param {String} [connectionId] Specify the provider connection id that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
+   * @param {String} identityId Specify the provider connection id or the user id of that connection that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
    * @return {Promise<void>} Throws an error if identity cannot be unlinked.
    */
-  async unlinkIdentity(connectionId) {
-    if (!connectionId) {
+  async unlinkIdentity(identityId) {
+    if (!identityId) {
       const e = Error('connectionId must be specified');
       e.code = 'InvalidConnection';
       throw e;
@@ -331,7 +331,7 @@ class LoginClient {
     };
 
     try {
-      await this.httpClient.delete(`/identities/${encodeURIComponent(connectionId)}`, this.enableCredentials, headers);
+      await this.httpClient.delete(`/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
     } catch (error) {
       if (error.status >= 400 && error.status < 500) {
         const e = Error(error.data.title || error.data.errorCode);
