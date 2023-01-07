@@ -1,9 +1,12 @@
+const cookieManager = require('cookie');
+
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
 class UserIdentityTokenStorageManager {
   set(value, expiry) {
     try {
-      localStorage.setItem(AuthenticationCredentialsStorageKey, JSON.stringify({ idToken: value, expiry: expiry && expiry.getTime() }));
+      const cookies = cookieManager.parse(document.cookie);
+      localStorage.setItem(AuthenticationCredentialsStorageKey, JSON.stringify({ idToken: value, expiry: expiry && expiry.getTime(), jsCookies: !!cookies.authorization }));
       this.clearCookies('user');
     } catch (error) {
       console.debug('LocalStorage failed in Browser', error);
@@ -12,8 +15,16 @@ class UserIdentityTokenStorageManager {
 
   get() {
     try {
-      const { idToken, expiry } = JSON.parse(localStorage.getItem(AuthenticationCredentialsStorageKey) || '{}');
+      const { idToken, expiry, jsCookies } = JSON.parse(localStorage.getItem(AuthenticationCredentialsStorageKey) || '{}');
       if (!idToken || expiry < Date.now()) {
+        return null;
+      }
+
+      const cookies = cookieManager.parse(document.cookie);
+      // If the authorization cookie was present when the identity was stored, then it must still be present after, otherwise we know that the user data saved isn't valid anymore
+      // * If the authorization cookie wasn't present, then it is because the application configuration restricts access to javascript.
+      // * That means that the implementation can't use the presence of the ID token information to make a decision about if the user is logged in.
+      if (jsCookies && !cookies.authorization) {
         return null;
       }
 
