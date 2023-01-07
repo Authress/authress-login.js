@@ -171,7 +171,7 @@ class LoginClient {
       localStorage.removeItem(AuthenticationRequestNonceKey);
       this.enableCredentials = authRequest.enableCredentials !== false;
     } catch (error) {
-      console.debug('LocalStorage failed in Browser', error);
+      this.logger && this.logger.debug('LocalStorage failed in Browser', error);
     }
 
     // Your app was redirected to from the Authress Hosted Login page. The next step is to show the user the login widget and enable them to login.
@@ -245,7 +245,9 @@ class LoginClient {
           document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
-      } catch (error) { /**/ }
+      } catch (error) {
+        this.logger && this.logger.log({ title: 'Failed attempting to check if the user has an existing authentication session', error });
+      }
       const newUserData = this.getUserIdentity();
       // User session exists and now is logged in
       if (newUserData) {
