@@ -415,9 +415,10 @@ class LoginClient {
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
+   * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount }) {
+  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin }) {
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
@@ -439,8 +440,10 @@ class LoginClient {
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
       const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      userIdentityTokenStorageManager.clear();
-      const requestOptions = await this.httpClient.post('/authentication', false, {
+      if (clearUserDataBeforeLogin !== false) {
+        userIdentityTokenStorageManager.clear();
+      }
+      const authResponse = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
         connectionProperties,
@@ -448,13 +451,13 @@ class LoginClient {
         responseLocation, flowType, multiAccount
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
-        nonce: requestOptions.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
-        enableCredentials: requestOptions.data.enableCredentials, multiAccount
+        nonce: authResponse.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
+        enableCredentials: authResponse.data.enableCredentials, multiAccount
       }));
       if (openType === 'tab') {
-        window.open(requestOptions.data.authenticationUrl, '_blank');
+        window.open(authResponse.data.authenticationUrl, '_blank');
       } else {
-        window.location.assign(requestOptions.data.authenticationUrl);
+        window.location.assign(authResponse.data.authenticationUrl);
       }
     } catch (error) {
       if (error.status >= 400 && error.status < 500) {

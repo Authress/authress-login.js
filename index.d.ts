@@ -22,6 +22,8 @@ interface AuthenticationParameters {
   force?: boolean;
   /** Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already. (Default: **false** - the current session is validated and no login is displayed) */
   multiAccount?: boolean;
+  /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
+  clearUserDataBeforeLogin?: boolean;
 }
 
 interface LinkIdentityParameters {
