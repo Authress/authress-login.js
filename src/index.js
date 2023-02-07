@@ -148,7 +148,8 @@ class LoginClient {
    */
   userSessionExists(backgroundTrigger) {
     if (userSessionSequencePromise) {
-      if (Date.now() - this.lastSessionCheck < 5) {
+      // Prevent duplicate calls to checking the user session when they happen within the same 50ms time span
+      if (Date.now() - this.lastSessionCheck < 50) {
         return userSessionSequencePromise;
       }
 
