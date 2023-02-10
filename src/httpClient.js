@@ -5,6 +5,24 @@ const defaultHeaders = {
   'Content-Type': 'application/json'
 };
 
+async function retryExecutor(func) {
+  let lastError = null;
+  for (let iteration = 0; iteration < 5; iteration++) {
+    try {
+      const result = await func();
+      return result;
+    } catch (error) {
+      lastError = error;
+      if (error.code === 'EPIPE' || error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.status >= 500) {
+        await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 class HttpClient {
   constructor(authressLoginCustomDomain, overrideLogger) {
     if (!authressLoginCustomDomain) {
@@ -98,39 +116,49 @@ class HttpClient {
   }
 
   get(url, withCredentials, headers, type = 'json') {
-    return this.client.get(url.toString(), {
-      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-      headers: Object.assign({}, defaultHeaders, headers),
-      responseType: type
+    return retryExecutor(() => {
+      return this.client.get(url.toString(), {
+        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
+        headers: Object.assign({}, defaultHeaders, headers),
+        responseType: type
+      });
     });
   }
 
   delete(url, withCredentials, headers, type = 'json') {
-    return this.client.delete(url.toString(), {
-      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-      headers: Object.assign({}, defaultHeaders, headers),
-      responseType: type
+    return retryExecutor(() => {
+      return this.client.delete(url.toString(), {
+        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
+        headers: Object.assign({}, defaultHeaders, headers),
+        responseType: type
+      });
     });
   }
 
   post(url, withCredentials, data, headers) {
-    return this.client.post(url.toString(), data, {
-      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-      headers: Object.assign({}, defaultHeaders, headers)
+    return retryExecutor(() => {
+      return this.client.post(url.toString(), data, {
+        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
+        headers: Object.assign({}, defaultHeaders, headers)
+      });
     });
   }
 
   put(url, withCredentials, data, headers) {
-    return this.client.put(url.toString(), data, {
-      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-      headers: Object.assign({}, defaultHeaders, headers)
+    return retryExecutor(() => {
+      return this.client.put(url.toString(), data, {
+        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
+        headers: Object.assign({}, defaultHeaders, headers)
+      });
     });
   }
 
   patch(url, withCredentials, data, headers) {
-    return this.client.patch(url.toString(), data, {
-      withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-      headers: Object.assign({}, defaultHeaders, headers)
+    return retryExecutor(() => {
+      return this.client.patch(url.toString(), data, {
+        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
+        headers: Object.assign({}, defaultHeaders, headers)
+      });
     });
   }
 }

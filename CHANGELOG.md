@@ -6,6 +6,7 @@ This is the changelog for [Authress Login](readme.md).
 * Use more secure `PATCH` for session management.
 * Remove deprecated properties from previous version.
 * Increase time span for duplicate session checks to 50ms
+* Add automatic retries to network connection issues.
 
 ## 1.4 ##
 * Include the extensionClient as embeddable client for OAuth extension login.
