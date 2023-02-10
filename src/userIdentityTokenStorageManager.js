@@ -1,4 +1,5 @@
 const cookieManager = require('cookie');
+const jwtManager = require('./jwtManager');
 
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
@@ -8,6 +9,11 @@ class UserIdentityTokenStorageManager {
       const cookies = cookieManager.parse(document.cookie);
       localStorage.setItem(AuthenticationCredentialsStorageKey, JSON.stringify({ idToken: value, expiry: expiry && expiry.getTime(), jsCookies: !!cookies.authorization }));
       this.clearCookies('user');
+
+      const cookieDomain = window.location.hostname.split('.').reverse().slice(0, 2).reverse().join('.');
+      const userData = jwtManager.decode(value);
+      const newCookie = `AuthUserId=${userData && userData.sub || ''}; expires=${expiry.toUTCString()}; path=/; domain=${cookieDomain}`;
+      document.cookie = newCookie;
     } catch (error) {
       console.debug('LocalStorage failed in Browser', error);
     }
