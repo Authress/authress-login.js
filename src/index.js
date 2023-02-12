@@ -508,8 +508,7 @@ class LoginClient {
     // Localhost also has enableCredentials set, so this path is only for cross domain logins
     if (!this.enableCredentials) {
       const fullLogoutUrl = new URL('/logout', this.hostUrl);
-      const referrer = (document.referrer || document.referer) ? new URL(document.referrer || document.referer).toString() : undefined;
-      fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || referrer);
+      fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || window.location.href);
       fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
       window.location.assign(fullLogoutUrl.toString());
       return;
