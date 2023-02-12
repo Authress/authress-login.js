@@ -63,5 +63,46 @@ describe('index.js', () => {
       }
     });
   });
+
+  describe('getMatchingDomainInfo()', () => {
+    it('Adjacent domain returns true', () => {
+      const authressLoginHostUrl = 'https://security.application.com';
+      const loginClient = new LoginClient({ authressLoginHostUrl, skipBackgroundCredentialsCheck: true });
+      const window = {
+        location: {
+          protocol: 'https:',
+          host: 'app.application.com'
+        }
+      };
+      const result = loginClient.getMatchingDomainInfo(authressLoginHostUrl, window);
+      expect(result).to.eql(true);
+    });
+
+    it('Top level domain returns true', () => {
+      const authressLoginHostUrl = 'https://security.application.com';
+      const loginClient = new LoginClient({ authressLoginHostUrl, skipBackgroundCredentialsCheck: true });
+      const window = {
+        location: {
+          protocol: 'https:',
+          host: 'application.com'
+        }
+      };
+      const result = loginClient.getMatchingDomainInfo(authressLoginHostUrl, window);
+      expect(result).to.eql(true);
+    });
+
+    it('Cross domain returns false', () => {
+      const authressLoginHostUrl = 'https://security.application.com';
+      const loginClient = new LoginClient({ authressLoginHostUrl, skipBackgroundCredentialsCheck: true });
+      const window = {
+        location: {
+          protocol: 'https:',
+          host: 'app.cross-domain.com'
+        }
+      };
+      const result = loginClient.getMatchingDomainInfo(authressLoginHostUrl, window);
+      expect(result).to.eql(false);
+    });
+  });
 });
 

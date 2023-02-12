@@ -8,6 +8,7 @@ This is the changelog for [Authress Login](readme.md).
 * Increase time span for duplicate session checks to 50ms
 * Add automatic retries to network connection issues.
 * Add AuthUserId cookie available in all requests to replace the `user` cookie.
+* Avoid unnecessary CORS warnings when using a cross domain application
 
 ## 1.4 ##
 * Include the extensionClient as embeddable client for OAuth extension login.

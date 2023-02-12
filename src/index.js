@@ -33,7 +33,7 @@ class LoginClient {
     this.httpClient = new HttpClient(this.hostUrl);
     this.lastSessionCheck = 0;
 
-    this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
+    this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl, typeof window !== 'undefined' ? window : undefined);
 
     if (!settings.skipBackgroundCredentialsCheck) {
       window.onload = async () => {
@@ -47,24 +47,24 @@ class LoginClient {
     return isLocalHost;
   }
 
-  getMatchingDomainInfo(hostUrl) {
+  getMatchingDomainInfo(hostUrl, webWindow) {
     const host = new URL(hostUrl);
 
     if (this.isLocalHost()) {
       return false;
     }
 
-    if (typeof window === 'undefined') {
+    if (typeof webWindow === 'undefined') {
       return false;
     }
 
-    if (window.location.protocol !== 'https:') {
+    if (webWindow.location.protocol !== 'https:') {
       return false;
     }
 
     const tokenUrlList = host.host.toLowerCase().split('.').reverse();
     // Login url may not be known all the time, in which case we will compare the token url to the appUrl
-    const appUrlList = window.location.host.toLowerCase().split('.').reverse();
+    const appUrlList = webWindow.location.host.toLowerCase().split('.').reverse();
 
     let reversedMatchSegments = [];
     for (let segment of tokenUrlList) {
@@ -170,7 +170,9 @@ class LoginClient {
     try {
       authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
       localStorage.removeItem(AuthenticationRequestNonceKey);
-      this.enableCredentials = authRequest.enableCredentials !== false;
+      if (Object.hasOwnProperty.call(authRequest, 'enableCredentials')) {
+        this.enableCredentials = authRequest.enableCredentials;
+      }
     } catch (error) {
       this.logger && this.logger.debug('LocalStorage failed in Browser', error);
     }
