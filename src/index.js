@@ -432,12 +432,6 @@ class LoginClient {
       return true;
     }
 
-    if (!connectionId && !tenantLookupIdentifier) {
-      const e = Error('connectionId or tenantLookupIdentifier must be specified');
-      e.code = 'InvalidConnection';
-      throw e;
-    }
-
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
 
     try {
@@ -446,6 +440,7 @@ class LoginClient {
       if (clearUserDataBeforeLogin !== false) {
         userIdentityTokenStorageManager.clear();
       }
+
       const authResponse = await this.httpClient.post('/authentication', false, {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,

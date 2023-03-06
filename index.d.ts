@@ -114,7 +114,7 @@ export class LoginClient {
   linkIdentity(settings: LinkIdentityParameters): Promise<void>;
 
   /**
-   * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
+   * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}. If neither the {@link connectionId} nor the {@link tenantLookupIdentifier} is specified the user will be directed to the Authress hosted login page to select their preferred login method.
    * @param {AuthenticationParameters} settings Parameters for controlling how and when users should be authenticated for the app.
    * @return {Promise<boolean>} Is there a valid existing session.
    */
