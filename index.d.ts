@@ -115,22 +115,23 @@ export class LoginClient {
 
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}. If neither the {@link connectionId} nor the {@link tenantLookupIdentifier} is specified the user will be directed to the Authress hosted login page to select their preferred login method.
-   * @param {AuthenticationParameters} settings Parameters for controlling how and when users should be authenticated for the app.
+   * @param {AuthenticationParameters} [settings] Parameters for controlling how and when users should be authenticated for the app.
    * @return {Promise<boolean>} Is there a valid existing session.
    */
-  authenticate(settings: AuthenticationParameters): Promise<boolean>;
+  authenticate(settings?: AuthenticationParameters): Promise<boolean>;
 
   /**
    * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.
+   * @param {TokenParameters} [settings] Optional token parameters to constrain how the existing token is retreived.
    * @return {Promise<string>} The Authorization Bearer token.
    */
-  ensureToken(settings: TokenParameters): Promise<string>;
+  ensureToken(settings?: TokenParameters): Promise<string>;
 
   /**
    * @description Log the user out removing the current user's session. If the user is not logged in this has no effect. If the user is logged in via secure session, the the redirect url will be ignored. If the user is logged in without a secure session the user agent will be redirected to the hosted login and then redirected to the {@link redirectUrl}.
    * @param {string} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
    */
-  logout(redirectUri: string): Promise<void>;
+  logout(redirectUri?: string): Promise<void>;
 }
 
 interface RequestTokenParameters {
@@ -169,5 +170,5 @@ export class ExtensionClient {
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. Only used if the user is not logged in.
    * @return {Promise<TokenResponse>} Returns the token if the user is logged in otherwise redirects the user
    */
-  login(redirectUrl: string): Promise<TokenResponse>;
+  login(redirectUrl?: string): Promise<TokenResponse>;
 }

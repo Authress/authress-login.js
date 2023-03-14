@@ -421,7 +421,8 @@ class LoginClient {
    * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
    * @return {Promise<Boolean>} Is there a valid existing session.
    */
-  async authenticate({ connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin }) {
+  async authenticate(options = {}) {
+    const { connectionId, tenantLookupIdentifier, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin } = (options || {});
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
