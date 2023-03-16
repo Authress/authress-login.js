@@ -10,6 +10,15 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
+"@authress/login@^2.2.196":
+  version "2.2.196"
+  resolved "https://registry.yarnpkg.com/@authress/login/-/login-2.2.196.tgz#25a9770b6f730262884e18ffcbdcc28a58a9aaa2"
+  integrity sha512-0C7uXKFqKIYzQcXh2dzN3WAsTQt3hhGwT/7hZPWYhfhunczAvZLGH3GSvJzJYhdKzwowiYO7WOuw50ue1emRmA==
+  dependencies:
+    axios "^0.21"
+    cookie "^0.4.1"
+    lodash.take "^4.1.1"
+
 "@babel/code-frame@7.12.11":
   version "7.12.11"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.11.tgz#f4ad435aa263db935b8f10f2c552d23fb716a63f"
