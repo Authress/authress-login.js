@@ -1,5 +1,5 @@
 {
-  "name": "authress-login",
+  "name": "@authress/login",
   "version": "0.0.0",
   "description": "Universal login sdk for Authress authentication as a service. Provides managed authentication for user identity, authentication, and token verification.",
   "main": "./src/index.js",
