@@ -183,36 +183,28 @@ class LoginClient {
     }
 
     if (authRequest.nonce && urlSearchParams.get('code')) {
-      if (authRequest.nonce !== urlSearchParams.get('nonce')) {
-        const error = Error('Prevented a reply attack reusing the authentication request');
-        error.code = 'InvalidNonce';
-        throw error;
-      }
-
       newUrl.searchParams.delete('nonce');
       newUrl.searchParams.delete('iss');
       newUrl.searchParams.delete('code');
       history.replaceState({}, undefined, newUrl.toString());
 
-      const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
-      const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
-      const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
-      const idToken = jwtManager.decode(tokenResult.data.id_token);
-      const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
-      document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/' });
-      userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
-      userSessionResolver();
-      return true;
+      // Compare the initial authentication requestId to the returned one. If they don't match either the nonce has been tampered with or this isn't the latest authentication request
+      // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
+      if (authRequest.nonce === urlSearchParams.get('nonce')) {
+        const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
+        const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
+        const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
+        const idToken = jwtManager.decode(tokenResult.data.id_token);
+        const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
+        document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/' });
+        userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
+        userSessionResolver();
+        return true;
+      }
     }
 
     if (this.isLocalHost()) {
       if (urlSearchParams.get('nonce') && urlSearchParams.get('access_token')) {
-        if (authRequest.nonce && authRequest.nonce !== urlSearchParams.get('nonce')) {
-          const error = Error('Prevented a reply attack reusing the authentication request');
-          error.code = 'InvalidNonce';
-          throw error;
-        }
-
         newUrl.searchParams.delete('iss');
         newUrl.searchParams.delete('nonce');
         newUrl.searchParams.delete('expires_in');
@@ -220,12 +212,16 @@ class LoginClient {
         newUrl.searchParams.delete('id_token');
         history.replaceState({}, undefined, newUrl.toString());
 
-        const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
-        const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
-        document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/' });
-        userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
-        userSessionResolver();
-        return true;
+        // Compare the initial authentication requestId to the returned one. If they don't match either the nonce has been tampered with or this isn't the latest authentication request
+        // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
+        if (!authRequest.nonce || authRequest.nonce === urlSearchParams.get('nonce')) {
+          const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
+          const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
+          document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/' });
+          userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
+          userSessionResolver();
+          return true;
+        }
       }
       // Otherwise check cookies and then force the user to log in
     }
