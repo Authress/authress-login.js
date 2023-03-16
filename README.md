@@ -8,12 +8,12 @@ The Authress Universal Login SDK for javascript app websites and user identity a
 ## Usage
 
 ```sh
-npm install authress-login
+npm install @authress/login
 ```
 
 Then required the package:
 ```js
-const { LoginClient } = require('authress-login');
+const { LoginClient } = require('@authress/login');
 ```
 
 ### Troubleshooting usage
@@ -30,7 +30,7 @@ You'll want to create:
 
 On every route change check to see if the user exists, and if they don't redirect them to a login prompt.
 ```js
-const { LoginClient } = require('authress-login');
+const { LoginClient } = require('@authress/login');
 
 // What is my applicationId => https://authress.io/app/#/manage?focus=applications
 // What is my authressLoginHostUrl? => https://authress.io/app/#/setup?focus=domain
@@ -88,7 +88,7 @@ try {
 The goal of the platform extension is to make it easy for your platform extension developers to login with Authress. Embed the `ExtensionClient` in your javascript UI SDK, and pass in the `extensionId`.
 
 ```js
-const { ExtensionClient } = require('authress-login');
+const { ExtensionClient } = require('@authress/login');
 
 // What is my custom Domain? => https://authress.io/app/#/setup?focus=domain
 // What is my extensionId => https://authress.io/app/#/manage?focus=extensions
