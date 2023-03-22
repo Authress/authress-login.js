@@ -196,7 +196,7 @@ class LoginClient {
         const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
         const idToken = jwtManager.decode(tokenResult.data.id_token);
         const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
-        document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/' });
+        document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
         userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
         userSessionResolver();
         return true;
@@ -217,7 +217,7 @@ class LoginClient {
         if (!authRequest.nonce || authRequest.nonce === urlSearchParams.get('nonce')) {
           const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
           const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
-          document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/' });
+          document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/', sameSite: 'strict' });
           userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
           userSessionResolver();
           return true;
@@ -241,7 +241,7 @@ class LoginClient {
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
           const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
-          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/' });
+          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
       } catch (error) {
@@ -497,20 +497,22 @@ class LoginClient {
   async logout(redirectUrl) {
     userIdentityTokenStorageManager.clear();
 
-    // Localhost also has enableCredentials set, so this path is only for cross domain logins
-    if (!this.enableCredentials) {
-      const fullLogoutUrl = new URL('/logout', this.hostUrl);
-      fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || window.location.href);
-      fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
-      window.location.assign(fullLogoutUrl.toString());
-      return;
-    }
-
     // Reset user local session
     userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
-    try {
-      await this.httpClient.delete('/session', this.enableCredentials);
-    } catch (error) { /**/ }
+    if (this.enableCredentials) {
+      try {
+        await this.httpClient.delete('/session', this.enableCredentials);
+        if (redirectUrl && redirectUrl !== window.location.href) {
+          window.location.assign(redirectUrl);
+        }
+        return;
+      } catch (error) { /**/ }
+    }
+
+    const fullLogoutUrl = new URL('/logout', this.hostUrl);
+    fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || window.location.href);
+    fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
+    window.location.assign(fullLogoutUrl.toString());
   }
 }
 

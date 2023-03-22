@@ -17,7 +17,7 @@
   "dependencies": {
     "@authress/login": "^2.2.196",
     "axios": "^0.21",
-    "cookie": "^0.4.1",
+    "cookie": "^0.5.0",
     "lodash.take": "^4.1.1"
   },
   "devDependencies": {
