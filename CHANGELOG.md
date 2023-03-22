@@ -5,6 +5,7 @@ This is the changelog for [Authress Login](readme.md).
 * Remove `connectionId` and `tenantLookupIdentifier` requirements from the authentication call so that the user can be directed to the Authress Hosted login when necessary: https://authress.io/app/#/settings?focus=branding
 * Enable the methods to have optional inputs parameters when not required
 * Automatically handle replay attacks against the user by ignoring the request and opting for returning no token. (Error('InvalidNonce') will no longer be thrown.)
+* Enable explicit SameSite=Strict
 
 ## 2.0 ##
 * Optimize cookie storage location for the `user` cookie.
