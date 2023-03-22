@@ -56,8 +56,8 @@ class UserIdentityTokenStorageManager {
         continue;
       }
       const domain = window.location.hostname.split('.');
-      while (domain.length > 0) {
-        const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; domain=${domain.join('.')} ;path=: SameSite=Strict`;
+      while (domain.length > 1) {
+        const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; domain=${domain.join('.')}; SameSite=Strict; path=`;
         const path = location.pathname.split('/');
         document.cookie = `${cookieBase}/`;
         while (path.length > 0) {
