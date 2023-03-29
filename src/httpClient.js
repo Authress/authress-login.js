@@ -13,7 +13,9 @@ async function retryExecutor(func) {
       return result;
     } catch (error) {
       lastError = error;
-      if (error.code === 'EPIPE' || error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.status >= 500) {
+      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK'
+        || error.code === 'EPIPE' || error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET'
+        || error.status >= 500) {
         await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
         continue;
       }
