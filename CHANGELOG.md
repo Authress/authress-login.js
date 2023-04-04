@@ -3,6 +3,7 @@ This is the changelog for [Authress Login](readme.md).
 
 ## 2.2 ##
 * Automatically retry on network connection issues.
+* Handle expired requests on code exchanges.
 
 ## 2.1 ##
 * Remove `connectionId` and `tenantLookupIdentifier` requirements from the authentication call so that the user can be directed to the Authress Hosted login when necessary: https://authress.io/app/#/settings?focus=branding

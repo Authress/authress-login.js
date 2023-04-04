@@ -174,7 +174,7 @@ class LoginClient {
         this.enableCredentials = authRequest.enableCredentials;
       }
     } catch (error) {
-      this.logger && this.logger.debug('LocalStorage failed in Browser', error);
+      this.logger && this.logger.debug && this.logger.debug({ title: 'LocalStorage failed in Browser', error });
     }
 
     // Your app was redirected to from the Authress Hosted Login page. The next step is to show the user the login widget and enable them to login.
@@ -193,13 +193,22 @@ class LoginClient {
       if (authRequest.nonce === urlSearchParams.get('nonce')) {
         const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
         const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
-        const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
-        const idToken = jwtManager.decode(tokenResult.data.id_token);
-        const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
-        document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
-        userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
-        userSessionResolver();
-        return true;
+        try {
+          const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
+          const idToken = jwtManager.decode(tokenResult.data.id_token);
+          const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
+          document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
+          userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
+          userSessionResolver();
+          return true;
+        } catch (error) {
+          // The code was expired, contaminated, or already exchanged.
+          if (error.data && error.data.error === 'invalid_request') {
+            this.logger && this.logger.log({ title: 'Failed exchange authentication response for a token.', error });
+            return false;
+          }
+          throw (error.data || error);
+        }
       }
     }
 
@@ -294,7 +303,7 @@ class LoginClient {
         e.code = error.data.errorCode;
         throw e;
       }
-      throw error;
+      throw (error.data || error);
     }
 
     // Prevent the current UI from taking any action once we decided we need to log in.
@@ -342,7 +351,7 @@ class LoginClient {
         e.code = error.data.errorCode;
         throw e;
       }
-      throw error;
+      throw (error.data || error);
     }
   }
 
@@ -463,7 +472,7 @@ class LoginClient {
         e.code = error.data.errorCode;
         throw e;
       }
-      throw error;
+      throw (error.data || error);
     }
 
     // Prevent the current UI from taking any action once we decided we need to log in.
