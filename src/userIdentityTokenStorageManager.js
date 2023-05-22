@@ -14,13 +14,22 @@ class UserIdentityTokenStorageManager {
   }
 
   get() {
+    let cookies = {};
+    try {
+      cookies = cookieManager.parse(document.cookie);
+    } catch (error) {
+      console.debug('CookieManagement failed in Browser', error);
+    }
+
     try {
       const { idToken, expiry, jsCookies } = JSON.parse(localStorage.getItem(AuthenticationCredentialsStorageKey) || '{}');
-      if (!idToken || expiry < Date.now()) {
+      if (!idToken) {
+        return cookies.user || null;
+      }
+      if (expiry < Date.now()) {
         return null;
       }
 
-      const cookies = cookieManager.parse(document.cookie);
       // If the authorization cookie was present when the identity was stored, then it must still be present after, otherwise we know that the user data saved isn't valid anymore
       // * If the authorization cookie wasn't present, then it is because the application configuration restricts access to javascript.
       // * That means that the implementation can't use the presence of the ID token information to make a decision about if the user is logged in.
@@ -31,7 +40,7 @@ class UserIdentityTokenStorageManager {
       return idToken;
     } catch (error) {
       console.debug('LocalStorage failed in Browser', error);
-      return null;
+      return cookies.user || null;
     }
   }
 
@@ -40,6 +49,12 @@ class UserIdentityTokenStorageManager {
       localStorage.removeItem(AuthenticationCredentialsStorageKey);
     } catch (error) {
       console.debug('LocalStorage failed in Browser', error);
+    }
+
+    try {
+      this.clearCookies('user');
+    } catch (error) {
+      console.debug('CookieManagement failed in Browser', error);
     }
   }
 
