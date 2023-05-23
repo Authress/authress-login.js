@@ -9,6 +9,18 @@ class JwtManager {
     }
   }
 
+  decodeOrParse(token) {
+    if (!token) {
+      return null;
+    }
+
+    try {
+      return this.decode(token) || JSON.parse(token);
+    } catch (error) {
+      return null;
+    }
+  }
+
   decodeFull(token) {
     try {
       return token && {

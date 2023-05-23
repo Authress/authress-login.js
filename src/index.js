@@ -104,8 +104,8 @@ class LoginClient {
       userIdentityTokenStorageManager.set(idToken, expiry);
     }
 
-    const userIdToken = userIdentityTokenStorageManager.get();
-    const userData = userIdToken && jwtManager.decode(userIdToken);
+    const userIdTokenOrString = userIdentityTokenStorageManager.get();
+    const userData = userIdTokenOrString && jwtManager.decodeOrParse(userIdTokenOrString);
     if (!userData) {
       return null;
     }
