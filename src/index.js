@@ -99,13 +99,16 @@ class LoginClient {
     // Cache the ID Token in the local storage as soon as we attempt to check for it.
     // * We need this in the cache, and the best way to do this is right here, so it's in one place
     // * While this isn't the optimal location, this will ensure that every fetch to the user identity correctly is cached and is returned to the caller.
-    if (idToken && jwtManager.decode(idToken)) {
-      const expiry = new Date(jwtManager.decode(idToken).exp * 1000) || new Date(Date.now() + 86400000);
-      userIdentityTokenStorageManager.set(idToken, expiry);
+    const userDataFromCookie = jwtManager.decodeOrParse(idToken);
+    if (userDataFromCookie) {
+      const expiry = new Date(jwtManager.decode(userDataFromCookie).exp * 1000) || new Date(Date.now() + 86400000);
+      userIdentityTokenStorageManager.set(userDataFromCookie, expiry);
+      userDataFromCookie.userId = userDataFromCookie.sub;
+      return userDataFromCookie;
     }
 
     const userIdToken = userIdentityTokenStorageManager.get();
-    const userData = userIdToken && jwtManager.decode(userIdToken);
+    const userData = jwtManager.decodeOrParse(userIdToken);
     if (!userData) {
       return null;
     }
