@@ -14,6 +14,10 @@ class JwtManager {
       return null;
     }
 
+    if (typeof token === 'object') {
+      return token;
+    }
+
     try {
       return this.decode(token) || JSON.parse(token);
     } catch (error) {

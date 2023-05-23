@@ -102,7 +102,7 @@ class LoginClient {
     const userDataFromCookie = jwtManager.decodeOrParse(idToken);
     if (userDataFromCookie) {
       const expiry = new Date(userDataFromCookie.exp * 1000) || new Date(Date.now() + 86400000);
-      userIdentityTokenStorageManager.set(userDataFromCookie, expiry);
+      userIdentityTokenStorageManager.set(idToken, expiry);
       userDataFromCookie.userId = userDataFromCookie.sub;
       return userDataFromCookie;
     }
