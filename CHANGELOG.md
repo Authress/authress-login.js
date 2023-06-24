@@ -5,6 +5,7 @@ This is the changelog for [Authress Login](readme.md).
 * Automatically retry on network connection issues.
 * Handle expired requests on code exchanges.
 * Fallback to user cookie when localstorage is blocked for user.
+* Support removing of the cookies set at the current domain, not just subdomain cookies. This change fixes an bug in the intended version 2.0 function, if you are expecting the `user` cookie to be stored, and it is no longer available, this change is the reason. Direct dependency on the Authress cookies should never be used, all functionality is exposed through this SDK, as implementation of hidden login interface is not stable. This library is stable, so only the published interface is supposed.
 
 ## 2.1 ##
 * Remove `connectionId` and `tenantLookupIdentifier` requirements from the authentication call so that the user can be directed to the Authress Hosted login when necessary: https://authress.io/app/#/settings?focus=branding

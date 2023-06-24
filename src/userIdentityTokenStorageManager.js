@@ -74,19 +74,30 @@ class UserIdentityTokenStorageManager {
       if (!['user', 'authorization', 'auth-code'].includes(cookie.split('=')[0]) || cookieName && cookie.split('=')[0] !== cookieName) {
         continue;
       }
-      const domain = window.location.hostname.split('.');
+
+      const domainParts = window.location.hostname.split('.');
+
+      const domainsToRemove = [...Array(domainParts.length - 1)].map((_, partLength) => domainParts.reverse().slice(0, partLength + 2).reverse().join('.')).map(domain => [domain, `.${domain}`]).flat(1).concat(null);
+
+      if (window.location.hostname === 'localhost') {
+        domainsToRemove.push('localhost');
+      }
 
       // We will also clear cookies associated with localhost, but of course we don't need to clear domain cookies for the TLD, because parts like .com don't have cookies.
       // * So instead we loop on domain parts more than just a single part.
-      while (domain.length > 1 || domain.length && window.location.hostname === 'localhost') {
-        const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; domain=${domain.join('.')}; SameSite=Strict; path=`;
-        const path = location.pathname.split('/');
+      for (const domain of domainsToRemove) {
+        const domainString = domain ? `domain=${domain};` : '';
+        const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; ${domainString} SameSite=Strict; path=`;
+        // console.log('clearing cookie', `${cookieBase}/`);
         document.cookie = `${cookieBase}/`;
+
+        // Also update all the paths as well
+        const path = location.pathname.split('/');
         while (path.length > 0) {
+          // console.log('clearing cookie', cookieBase + path.join('/'));
           document.cookie = cookieBase + path.join('/');
           path.pop();
         }
-        domain.shift();
       }
     }
   }
