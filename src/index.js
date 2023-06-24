@@ -101,7 +101,7 @@ class LoginClient {
     // * While this isn't the optimal location, this will ensure that every fetch to the user identity correctly is cached and is returned to the caller.
     const userDataFromCookie = jwtManager.decodeOrParse(idToken);
     if (userDataFromCookie) {
-      const expiry = new Date(userDataFromCookie.exp * 1000) || new Date(Date.now() + 86400000);
+      const expiry = userDataFromCookie.exp ? new Date(userDataFromCookie.exp * 1000) : new Date(Date.now() + 86400000);
       userIdentityTokenStorageManager.set(idToken, expiry);
       userDataFromCookie.userId = userDataFromCookie.sub;
       return userDataFromCookie;

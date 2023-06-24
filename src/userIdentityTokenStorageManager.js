@@ -64,6 +64,10 @@ class UserIdentityTokenStorageManager {
   }
 
   clearCookies(cookieName) {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const cookies = document.cookie.split('; ');
     for (const cookie of cookies) {
       // Remove only the cookies that are relevant to the client
@@ -71,7 +75,10 @@ class UserIdentityTokenStorageManager {
         continue;
       }
       const domain = window.location.hostname.split('.');
-      while (domain.length > 1) {
+
+      // We will also clear cookies associated with localhost, but of course we don't need to clear domain cookies for the TLD, because parts like .com don't have cookies.
+      // * So instead we loop on domain parts more than just a single part.
+      while (domain.length > 1 || domain.length && window.location.hostname === 'localhost') {
         const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; domain=${domain.join('.')}; SameSite=Strict; path=`;
         const path = location.pathname.split('/');
         document.cookie = `${cookieBase}/`;
