@@ -19,9 +19,9 @@ class JwtManager {
     }
 
     try {
-      return this.decode(token) || JSON.parse(token);
+      return JSON.parse(token);
     } catch (error) {
-      return null;
+      return this.decode(token);
     }
   }
 

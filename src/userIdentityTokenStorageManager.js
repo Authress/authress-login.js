@@ -5,7 +5,8 @@ const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 class UserIdentityTokenStorageManager {
   getUserCookie() {
     // Skip empty cookies when fetching
-    return document.cookie.split(';').filter(c => c.split('=')[0].trim() === 'user').map(c => c.split('=')[1]).find(c => c.trim()) || null;
+    const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === 'user').map(c => c.replace(/^user=/, '')).find(c => c && c.trim()) || null;
+    return val;
   }
 
   set(value, expiry) {
