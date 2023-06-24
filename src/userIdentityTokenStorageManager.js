@@ -3,6 +3,11 @@ const cookieManager = require('cookie');
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
 class UserIdentityTokenStorageManager {
+  getUserCookie() {
+    // Skip empty cookies when fetching
+    return document.cookie.split(';').filter(c => c.split('=')[0].trim() === 'user').map(c => c.split('=')[1]).find(c => c.trim()) || null;
+  }
+
   set(value, expiry) {
     try {
       const cookies = cookieManager.parse(document.cookie);
@@ -24,7 +29,7 @@ class UserIdentityTokenStorageManager {
     try {
       const { idToken, expiry, jsCookies } = JSON.parse(localStorage.getItem(AuthenticationCredentialsStorageKey) || '{}');
       if (!idToken) {
-        return cookies.user || null;
+        return this.getUserCookie();
       }
       if (expiry < Date.now()) {
         return null;
@@ -40,7 +45,7 @@ class UserIdentityTokenStorageManager {
       return idToken;
     } catch (error) {
       console.debug('LocalStorage failed in Browser', error);
-      return cookies.user || null;
+      return this.getUserCookie();
     }
   }
 

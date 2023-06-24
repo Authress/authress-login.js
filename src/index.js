@@ -94,8 +94,7 @@ class LoginClient {
    * @return {Object} The user data object.
    */
   getUserIdentity() {
-    const cookies = cookieManager.parse(document.cookie);
-    const idToken = cookies && cookies.user;
+    const idToken = userIdentityTokenStorageManager.getUserCookie();
     // Cache the ID Token in the local storage as soon as we attempt to check for it.
     // * We need this in the cache, and the best way to do this is right here, so it's in one place
     // * While this isn't the optimal location, this will ensure that every fetch to the user identity correctly is cached and is returned to the caller.
