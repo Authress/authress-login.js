@@ -44,6 +44,8 @@ interface ExtensionAuthenticationParameters {
   connectionId?: string;
   /** Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants */
   tenantLookupIdentifier?: string;
+  /** Invite to use to login, only one of the connectionId, tenantLookupIdentifier, or the inviteId is required. */
+  inviteId?: string;
   /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
   connectionProperties?: Record<string, string>;
 }
