@@ -21,7 +21,7 @@ class LoginClient {
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
   constructor(settings, logger) {
-    this.settings = Object.assign({}, settings);
+    this.settings = Object.assign({ applicationId: 'app_default' }, settings);
     this.logger = logger || console;
     const hostUrl = this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl || '';
 
