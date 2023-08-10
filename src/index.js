@@ -256,8 +256,8 @@ class LoginClient {
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
       } catch (error) {
-        // On 409 we know that the session is no longer able to be continued.
-        if (error.status !== 409) {
+        // On 400, 404, 409 we know that the session is no longer able to be continued.
+        if (error.status !== 400 && error.status !== 404 && error.status !== 409) {
           this.logger && this.logger.log({ title: 'Failed attempting to check if the user has an existing authentication session', error });
         }
       }
