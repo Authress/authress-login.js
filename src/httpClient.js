@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 const axios = require('axios');
+const packageData = require('../package.json');
 
 const defaultHeaders = {
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
+  'User-Agent': `Authress Javascript Login SDK; ${packageData.version}`
 };
 
 async function retryExecutor(func) {
@@ -13,9 +15,7 @@ async function retryExecutor(func) {
       return result;
     } catch (error) {
       lastError = error;
-      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK'
-        || error.code === 'EPIPE' || error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET'
-        || error.status >= 500) {
+      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.status || error.status >= 500) {
         await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
         continue;
       }
