@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 const axios = require('axios');
-const packageData = require('../package.json');
 
 const defaultHeaders = {
-  'Content-Type': 'application/json',
-  'User-Agent': `Authress Javascript Login SDK; ${packageData.version}`
+  'Content-Type': 'application/json'
 };
 
 async function retryExecutor(func) {
