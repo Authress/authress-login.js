@@ -465,7 +465,10 @@ class LoginClient {
         enableCredentials: authResponse.data.enableCredentials, multiAccount
       }));
       if (openType === 'tab') {
-        window.open(authResponse.data.authenticationUrl, '_blank');
+        const result = window.open(authResponse.data.authenticationUrl, '_blank');
+        if (!result || result.closed || typeof result.closed === 'undefined') {
+          window.location.assign(authResponse.data.authenticationUrl);
+        }
       } else {
         window.location.assign(authResponse.data.authenticationUrl);
       }
