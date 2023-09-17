@@ -198,7 +198,7 @@ class LoginClient {
         try {
           const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
           const idToken = jwtManager.decode(tokenResult.data.id_token);
-          const expiry = tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
+          const expiry = idToken.exp && new Date(idToken.exp * 1000) || tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000);
           document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
           userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
           userSessionResolver();
@@ -227,7 +227,7 @@ class LoginClient {
         // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
         if (!authRequest.nonce || authRequest.nonce === urlSearchParams.get('nonce')) {
           const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
-          const expiry = Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000) || new Date(idToken.exp * 1000);
+          const expiry = idToken.exp && new Date(idToken.exp * 1000) || Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000);
           document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/', sameSite: 'strict' });
           userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
           userSessionResolver();
@@ -251,7 +251,7 @@ class LoginClient {
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
-          const expiry = sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000) || new Date(idToken.exp * 1000);
+          const expiry = idToken.exp && new Date(idToken.exp * 1000) || sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000);
           document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }

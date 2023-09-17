@@ -2,8 +2,19 @@ const base64url = require('./base64url');
 
 class JwtManager {
   decode(token) {
+    if (!token) {
+      return null;
+    }
+
     try {
-      return token && JSON.parse(base64url.decode(token.split('.')[1]));
+      const parsedToken = JSON.parse(base64url.decode(token.split('.')[1]));
+      // If the identity expires in less than 10 seconds from now, assume it is already expired.
+      // * This blocks issues with intermittent access, and subsequent issues when the token has a limited finite lifetime
+      // * All the Authress token server returns 5 second long JWT lifetimes to prevent issues with browsers refusing 0 second long lifetimes, so a buffer is required
+      if (parsedToken.exp) {
+        parsedToken.exp = parsedToken.exp - 10;
+      }
+      return parsedToken;
     } catch (error) {
       return null;
     }
@@ -26,11 +37,20 @@ class JwtManager {
   }
 
   decodeFull(token) {
+    if (!token) {
+      return null;
+    }
+
     try {
-      return token && {
-        header: JSON.parse(base64url.decode(token.split('.')[0])),
-        payload: JSON.parse(base64url.decode(token.split('.')[1]))
-      };
+      const header = JSON.parse(base64url.decode(token.split('.')[0]));
+      const payload = JSON.parse(base64url.decode(token.split('.')[1]));
+      // If the identity expires in less than 10 seconds from now, assume it is already expired.
+      // * This blocks issues with intermittent access, and subsequent issues when the token has a limited finite lifetime
+      // * All the Authress token server returns 5 second long JWT lifetimes to prevent issues with browsers refusing 0 second long lifetimes, so a buffer is required
+      if (payload.exp) {
+        payload.exp = payload.exp - 10;
+      }
+      return { header, payload };
     } catch (error) {
       return null;
     }

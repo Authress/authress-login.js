@@ -32,6 +32,7 @@ class UserIdentityTokenStorageManager {
       if (!idToken) {
         return this.getUserCookie();
       }
+
       if (expiry < Date.now()) {
         return null;
       }
