@@ -15,7 +15,6 @@
     "test": "check-dts index.d.ts && mocha tests/**/*.test.js -R spec"
   },
   "dependencies": {
-    "axios": "^0.21",
     "cookie": "^0.5.0",
     "lodash.take": "^4.1.1"
   },
