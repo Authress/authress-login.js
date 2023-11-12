@@ -47,8 +47,8 @@ class LoginClient {
     return isLocalHost;
   }
 
-  getMatchingDomainInfo(hostUrl, webWindow) {
-    const host = new URL(hostUrl);
+  getMatchingDomainInfo(hostUrlString, webWindow) {
+    const hostUrl = new URL(hostUrlString);
 
     if (this.isLocalHost()) {
       return false;
@@ -62,7 +62,7 @@ class LoginClient {
       return false;
     }
 
-    const tokenUrlList = host.host.toLowerCase().split('.').reverse();
+    const tokenUrlList = hostUrl.host.toLowerCase().split('.').reverse();
     // Login url may not be known all the time, in which case we will compare the token url to the appUrl
     const appUrlList = webWindow.location.host.toLowerCase().split('.').reverse();
 

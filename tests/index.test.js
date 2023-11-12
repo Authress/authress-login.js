@@ -54,10 +54,10 @@ describe('index.js', () => {
         it(test.name, () => {
           try {
             const loginClient = new LoginClient({ authressLoginHostUrl: test.url, skipBackgroundCredentialsCheck: true });
-            expect(loginClient.httpClient.client.defaults.baseURL).to.eql(test.expectedBaseUrl);
+            expect(loginClient.httpClient.loginUrl).to.eql(test.expectedBaseUrl);
             expect(test.expectedError).to.eql(undefined);
           } catch (error) {
-            expect(error.message).to.eql(test.expectedError);
+            expect(error.message).to.eql(test.expectedError, `The test was not supposed to throw an error, but it did: ${error.message}`);
           }
         });
       }

@@ -1,9 +1,24 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-const axios = require('axios');
-
 const defaultHeaders = {
   'Content-Type': 'application/json'
 };
+
+const errorMessages = new Set([
+  'Failed to fetch', // Chrome
+  'NetworkError when attempting to fetch resource.', // Firefox
+  'The Internet connection appears to be offline.', // Safari 16
+  'Network request failed', // `cross-fetch`
+  'fetch failed' // Undici (Node.js)
+]);
+
+function isNetworkError(error) {
+  const isValid = error && error.name === 'TypeError' && typeof error.message === 'string';
+
+  if (!isValid) {
+    return false;
+  }
+
+  return errorMessages.has(error.message);
+}
 
 async function retryExecutor(func) {
   let lastError = null;
@@ -13,7 +28,7 @@ async function retryExecutor(func) {
       return result;
     } catch (error) {
       lastError = error;
-      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.status || error.status >= 500) {
+      if (isNetworkError(error) || error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.status || error.status >= 500) {
         await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
         continue;
       }
@@ -30,136 +45,86 @@ class HttpClient {
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const logger = overrideLogger || { debug() {}, warn() {}, critical() {} };
+    this.logger = logger;
 
     const loginHostFullUrl = new URL(`https://${authressLoginCustomDomain.replace(/^(https?:\/+)/, '')}`);
-    const loginUrl = `${loginHostFullUrl.origin}/api`;
-    const client = axios.create({ baseURL: loginUrl });
-
-    client.interceptors.request.use(config => {
-      logger.debug({ title: 'HttpClient Request', online: navigator.onLine, requestId: config.requestId, method: config.method, url: config.url });
-
-      return config;
-    }, error => {
-      let notFound = false;
-      let newError = error;
-      let url;
-      let requestId;
-
-      if (error) {
-        newError = error.message;
-
-        if (error.response) {
-          newError = {
-            data: error.response.data,
-            status: error.response.status,
-            headers: error.response.headers
-          };
-          notFound = error.response.status === 404;
-        } else if (error.message) {
-          newError = {
-            message: error.message,
-            code: error.code,
-            stack: error.stack
-          };
-        }
-
-        if (error.config) {
-          url = error.config.url;
-          requestId = error.config.requestId;
-        } else {
-          requestId = error.request && error.request.config && error.request.config.requestId;
-        }
-      }
-
-      const logObject = { title: 'HttpClient Request Error', url, online: navigator.onLine, requestId, exception: newError };
-
-      if (notFound) {
-        logger.debug(logObject);
-      } else {
-        logger.warn(logObject);
-      }
-
-      throw newError;
-    });
-
-    client.interceptors.response.use(response => response, error => {
-      // Rewritten error object for easy consumption
-      if (error.re) {
-        throw error;
-      }
-
-      const newError = error && error.response && {
-        url: error.config && error.config.url,
-        data: error.response.data,
-        status: error.response.status,
-        headers: error.response.headers
-      } || error.message && { message: error.message, code: error.code, stack: error.stack } || error;
-      newError.re = true;
-      const requestId = error && (error.config && error.config.requestId || error.request && error.request.config && error.request.config.requestId);
-
-      let message = 'HttpClient Response Error';
-      let logMethod = 'warn';
-
-      if (!error) {
-        message = 'HttpClient Response Error - Unknown error occurred';
-      } else if (error.response && error.response.status === 404) {
-        logMethod = 'debug';
-      } else if (error.response && error.response.status === 401) {
-        message = 'HttpClient Response Error due to invalid token';
-      }
-
-      logger[logMethod]({ title: message, online: navigator.onLine, requestId, exception: newError, url: error && error.config && error.config.url });
-      throw newError;
-    });
-
-    this.client = client;
+    this.loginUrl = `${loginHostFullUrl.origin}/api`;
   }
 
-  get(url, withCredentials, headers, type = 'json') {
+  get(url, withCredentials, headers) {
     return retryExecutor(() => {
-      return this.client.get(url.toString(), {
-        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-        headers: Object.assign({}, defaultHeaders, headers),
-        responseType: type
-      });
+      return this.fetchWrapper('GET', url, null, headers, withCredentials);
     });
   }
 
-  delete(url, withCredentials, headers, type = 'json') {
+  delete(url, withCredentials, headers) {
     return retryExecutor(() => {
-      return this.client.delete(url.toString(), {
-        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-        headers: Object.assign({}, defaultHeaders, headers),
-        responseType: type
-      });
+      return this.fetchWrapper('DELETE', url, null, headers, withCredentials);
     });
   }
 
   post(url, withCredentials, data, headers) {
     return retryExecutor(() => {
-      return this.client.post(url.toString(), data, {
-        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-        headers: Object.assign({}, defaultHeaders, headers)
-      });
+      return this.fetchWrapper('POST', url, data, headers, withCredentials);
     });
   }
 
   put(url, withCredentials, data, headers) {
     return retryExecutor(() => {
-      return this.client.put(url.toString(), data, {
-        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-        headers: Object.assign({}, defaultHeaders, headers)
-      });
+      return this.fetchWrapper('PUT', url, data, headers, withCredentials);
     });
   }
 
   patch(url, withCredentials, data, headers) {
     return retryExecutor(() => {
-      return this.client.patch(url.toString(), data, {
-        withCredentials: window.location.hostname !== 'localhost' && !!withCredentials,
-        headers: Object.assign({}, defaultHeaders, headers)
-      });
+      return this.fetchWrapper('PATCH', url, data, headers, withCredentials);
     });
+  }
+
+  async fetchWrapper(rawMethod, urlObject, data, requestHeaders, withCredentials) {
+    const url = `${this.loginUrl}${urlObject.toString()}`;
+    const method = rawMethod.toUpperCase();
+    const headers = Object.assign({}, defaultHeaders, requestHeaders);
+    try {
+      this.logger.debug({ title: 'HttpClient Request', method, url });
+      const request = { method, headers };
+      if (data) {
+        request.body = JSON.stringify(data);
+      }
+      if (window.location.hostname !== 'localhost' && !!withCredentials) {
+        request.credentials = 'include';
+      }
+      const response = await fetch(url, request);
+
+      if (!response.ok) {
+        throw response;
+      }
+      return {
+        url,
+        headers: response.headers,
+        status: response.status,
+        data: await response.json()
+      };
+    } catch (error) {
+      const resolvedError = typeof error.json === 'function' ? await error.json().catch(e => e) : error;
+      const extensionErrorId = resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
+      if (extensionErrorId) {
+        this.logger.debug({ title: `Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
+        const newError = new Error(`Extension Error ID: ${extensionErrorId}`);
+        newError.code = 'BROWSER_EXTENSION_ERROR';
+        throw newError;
+      }
+
+      let message = 'HttpClient Response Error';
+      if (!error) {
+        message = 'HttpClient Response Error - Unknown error occurred';
+      } else if (error.response && error.response.status === 401) {
+        message = 'HttpClient Response Error due to invalid token';
+      }
+
+      this.logger.warn({ title: message, online: navigator.onLine, method, url, data, headers, error, resolvedError });
+      throw error || error;
+    }
   }
 }
 
