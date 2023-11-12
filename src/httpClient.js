@@ -107,7 +107,7 @@ class HttpClient {
       };
     } catch (error) {
       const resolvedError = typeof error.json === 'function' ? await error.json().catch(e => e) : error;
-      const extensionErrorId = resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
+      const extensionErrorId = resolvedError.stack && resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
       if (extensionErrorId) {
         this.logger.debug({ title: `Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
         const newError = new Error(`Extension Error ID: ${extensionErrorId}`);
@@ -123,7 +123,7 @@ class HttpClient {
       }
 
       this.logger.warn({ title: message, online: navigator.onLine, method, url, data, headers, error, resolvedError });
-      throw error || error;
+      throw error;
     }
   }
 }
