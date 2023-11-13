@@ -11,13 +11,7 @@ const errorMessages = new Set([
 ]);
 
 function isNetworkError(error) {
-  const isValid = error && error.name === 'TypeError' && typeof error.message === 'string';
-
-  if (!isValid) {
-    return false;
-  }
-
-  return errorMessages.has(error.message);
+  return error && error.message && errorMessages.has(error.message);
 }
 
 async function retryExecutor(func) {
