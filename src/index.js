@@ -30,7 +30,7 @@ class LoginClient {
     }
 
     this.hostUrl = `https://${hostUrl.replace(/^(https?:\/+)/, '')}`;
-    this.httpClient = new HttpClient(this.hostUrl);
+    this.httpClient = new HttpClient(this.hostUrl, this.logger);
     this.lastSessionCheck = 0;
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl, typeof window !== 'undefined' ? window : undefined);
