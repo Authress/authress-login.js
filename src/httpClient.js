@@ -21,8 +21,10 @@ async function retryExecutor(func) {
       const result = await func();
       return result;
     } catch (error) {
+      error.retryCount = iteration;
       lastError = error;
       if (isNetworkError(error) || error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.status || error.status >= 500) {
+        lastError.isNetworkError = true;
         await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
         continue;
       }
