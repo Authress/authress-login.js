@@ -139,7 +139,7 @@ class LoginClient {
       const deviceResult = await this.httpClient.get('/session/devices', this.enableCredentials, { Authorization: token && `Bearer ${token}` });
       return deviceResult.data.devices;
     } catch (error) {
-      return null;
+      return [];
     }
   }
 
@@ -150,7 +150,8 @@ class LoginClient {
       const token = await this.ensureToken();
       await this.httpClient.delete(`/session/devices/${encodeURIComponent(deviceId)}`, this.enableCredentials, { Authorization: token && `Bearer ${token}` });
     } catch (error) {
-      return null;
+      this.logger && this.logger.log({ title: 'Failed to delete device', error });
+      throw error;
     }
   }
 
