@@ -1,6 +1,9 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 2.3 ##
+* Add MFA device methods.
+
 ## 2.2 ##
 * Automatically retry on network connection issues.
 * Handle expired requests on code exchanges.

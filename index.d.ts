@@ -56,9 +56,18 @@ interface TokenParameters {
   timeoutInMillis?: number;
 }
 
+/** User credentials from the Authress Credentials Vault. */
 interface UserCredentials {
   /** User access token generated credentials for the connected provider used to log in */
   accessToken: string;
+}
+
+/** MFA device */
+interface Device {
+  /** Unique Device ID for the this user specified MFA device. */
+  deviceId: string;
+  /** User specified name for this device. */
+  name: string;
 }
 
 export class LoginClient {
@@ -81,6 +90,23 @@ export class LoginClient {
    * @return {Promise<UserCredentials?>} The user's connection credentials.
    */
   getConnectionCredentials(): Promise<UserCredentials | null>;
+
+  /**
+   * @description Fetch the list of the user's MFA devices.
+   */
+  getDevices(): Promise<Device>;
+
+  /**
+   * @description Remove a MFA device from the user's profile
+   * @param {string} deviceId The deviceId to delete from the user's profile.
+   */
+  deleteDevice(deviceId: string): Promise<void>;
+
+  /**
+   * @description Starts the MFA device registration flow, requesting the user to insert or attach their MFA device.
+   * @param {string} deviceName A user suggested name for this device
+   */
+  registerDevice(deviceName: string): Promise<void>;
 
   /**
    * @description Async wait for a user session to exist. Will block until {@link userSessionExists} or {@link authenticate} is called.

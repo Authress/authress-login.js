@@ -131,6 +131,95 @@ class LoginClient {
     }
   }
 
+  async getDevices() {
+    await this.waitForUserSession();
+
+    try {
+      const token = await this.ensureToken();
+      const deviceResult = await this.httpClient.get('/session/devices', this.enableCredentials, { Authorization: token && `Bearer ${token}` });
+      return deviceResult.data.devices;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async deleteDevice(deviceId) {
+    await this.waitForUserSession();
+
+    try {
+      const token = await this.ensureToken();
+      await this.httpClient.delete(`/session/devices/${encodeURIComponent(deviceId)}`, this.enableCredentials, { Authorization: token && `Bearer ${token}` });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async registerDevice(deviceName) {
+    await this.waitForUserSession();
+
+    const userIdentity = await this.getUserIdentity();
+    const userId = userIdentity.sub;
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/create
+    const publicKeyCredentialCreationOptions = {
+      challenge: Uint8Array.from(userId, c => c.charCodeAt(0)),
+      rp: {
+        name: 'WebAuthN Login'
+      },
+      user: {
+        id: Uint8Array.from(userId, c => c.charCodeAt(0)),
+        name: userId,
+        displayName: `Generated User ID: ${userId}`
+      },
+      // https://www.iana.org/assignments/cose/cose.xhtml#algorithms (Order Matters)
+      pubKeyCredParams: [
+        // Disabled in the library and not currently supported
+        // IMPORTANT: NEVER ADD TO THE FRONT OF THIS LIST - because we have no idea which algo public key we have saved in the DB, if we guess wrong there is going to be a mismatch.
+        // => So until we have a code to enable a retry and realistically, we can deterministically know which public key to type use, we must never prepend this list, only append unless the user data contains a preference order
+        // { type: 'public-key', alg: -8 }, /* EdDSA */
+        { type: 'public-key', alg: -36 }, /* ES512 */ { type: 'public-key', alg: -35 }, /* ES384 */ { type: 'public-key', alg: -7 }, /* ES256 */
+        // { type: 'public-key', alg: -39 }, /* PS512 */ { type: 'public-key', alg: -38 }, /* PS384 */ { type: 'public-key', alg: -37 }, /* PS256 */
+        { type: 'public-key', alg: -259 }, /* RS512 */ { type: 'public-key', alg: -258 }, /* RS384 */ { type: 'public-key', alg: -257 } /* RS256 */
+      ],
+      authenticatorSelection: {
+        residentKey: 'discouraged',
+        requireResidentKey: false,
+        userVerification: 'discouraged'
+        // authenticatorAttachment: 'cross-platform'
+      },
+      timeout: 60000,
+      attestation: 'direct'
+    };
+
+    const credential = await navigator.credentials.create({
+      publicKey: publicKeyCredentialCreationOptions
+    });
+
+    const webAuthNTokenRequest = {
+      authenticatorAttachment: credential.authenticatorAttachment,
+      credentialId: credential.id,
+      type: credential.type,
+      userId: userId,
+      attestation: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))),
+      client: JSON.parse(new TextDecoder('utf-8').decode(credential.response.clientDataJSON))
+    };
+
+    const request = {
+      name: deviceName,
+      code: webAuthNTokenRequest,
+      type: 'WebAuthN'
+    };
+
+    try {
+      const token = await this.ensureToken();
+      const deviceCreationResult = await this.httpClient.post('/session/devices', this.enableCredentials, request, { Authorization: token && `Bearer ${token}` });
+      return deviceCreationResult.data;
+    } catch (error) {
+      this.logger && this.logger.log({ title: 'Failed to register new device', error });
+      throw error;
+    }
+  }
+
   /**
    * @description Async wait for a user session to exist. Will block until {@link userSessionExists} or {@link authenticate} is called.
    * @return {Promise<void>}
