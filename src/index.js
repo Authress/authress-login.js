@@ -155,8 +155,8 @@ class LoginClient {
     }
   }
 
-  async openUserConfigurationScreen(options = { redirectUrl: null, startPage: 'PROFILE' }) {
-    const userConfigurationScreenUrl = new URL('/profile', this.hostUrl);
+  async openUserConfigurationScreen(options = { redirectUrl: null, startPage: 'Profile' }) {
+    const userConfigurationScreenUrl = new URL('/settings', this.hostUrl);
     userConfigurationScreenUrl.searchParams.set('client_id', this.settings.applicationId);
     userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || window.location.href);
     window.location.assign(userConfigurationScreenUrl.toString());
