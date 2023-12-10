@@ -1,11 +1,11 @@
-interface Settings {
+export interface Settings {
   /** Your Authress custom domain - see https://authress.io/app/#/setup?focus=domain */
   authressLoginHostUrl: string;
   /** The Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications */
   applicationId: string;
 }
 
-interface AuthenticationParameters {
+export interface AuthenticationParameters {
   /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
   connectionId?: string;
   /** Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants */
@@ -26,7 +26,7 @@ interface AuthenticationParameters {
   clearUserDataBeforeLogin?: boolean;
 }
 
-interface LinkIdentityParameters {
+export interface LinkIdentityParameters {
   /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
   connectionId?: string;
   /** Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants */
@@ -37,7 +37,7 @@ interface LinkIdentityParameters {
   connectionProperties?: Record<string, string>;
 }
 
-interface ExtensionAuthenticationParameters {
+export interface ExtensionAuthenticationParameters {
   /** The redirect to your login screen will contain two query parameters `state`. Pass the state into this method. (Default: **window.location.query.state**) */
   state?: string;
   /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
@@ -51,23 +51,40 @@ interface ExtensionAuthenticationParameters {
 }
 
 /** Options for getting a token including timeout configuration. */
-interface TokenParameters {
+export interface TokenParameters {
   /** Timeout waiting for user token to populate. After this time an error will be thrown. (Default: **5000**) */
   timeoutInMillis?: number;
 }
 
 /** User credentials from the Authress Credentials Vault. */
-interface UserCredentials {
+export interface UserCredentials {
   /** User access token generated credentials for the connected provider used to log in */
   accessToken: string;
 }
 
 /** MFA device */
-interface Device {
+export interface Device {
   /** Unique Device ID for the this user specified MFA device. */
   deviceId: string;
   /** User specified name for this device. */
   name: string;
+}
+
+export interface DeviceRegistrationParameters {
+  /** The user selected new device name. */
+  name: string;
+}
+
+export enum UserConfigurationScreen {
+  Profile = 'Profile',
+  MFA = 'MFA'
+}
+
+export interface UserConfigurationScreenParameters {
+  /** The return url, where Authress should redirect the user to after they have completed their profile updates. (Default: window.location.href) */
+  redirectUrl?: string;
+  /** The configuration page to directly navigate the user to. There are multiple Authress profile pages, this selects which one to navigate to. (Default: Profile) */
+  startPage: UserConfigurationScreen;
 }
 
 export class LoginClient {
@@ -103,10 +120,16 @@ export class LoginClient {
   deleteDevice(deviceId: string): Promise<void>;
 
   /**
-   * @description Starts the MFA device registration flow, requesting the user to insert or attach their MFA device.
-   * @param {string} deviceName A user suggested name for this device
+   * @description Redirects the user to the Authress profile screen to configure MFA and other security properties
+   * @param {UserConfigurationScreenParameters} settings Configuration parameters to specify which screen to start on.
    */
-  registerDevice(deviceName: string): Promise<void>;
+  openUserConfigurationScreen(settings: UserConfigurationScreenParameters): Promise<void>;
+
+  /**
+   * @description Starts the MFA device registration flow, requesting the user to insert or attach their MFA device.
+   * @param {DeviceRegistrationParameters} settings Configuration settings for the device registration
+   */
+  registerDevice(settings: DeviceRegistrationParameters): Promise<void>;
 
   /**
    * @description Async wait for a user session to exist. Will block until {@link userSessionExists} or {@link authenticate} is called.

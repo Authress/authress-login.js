@@ -1,6 +1,6 @@
 ## Advanced method documentation
 
-### [`userSessionExists()`](https://github.com/Authress/authress-login.js/blob/release/1.2/src/index.js#L99)
+### [`userSessionExists()`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L241)
 
 This method is the primary check to ensure that the current user is logged in. As detailed it should be called every time the user enters a part of the app in which they need to be logged in. Usually it should be called as part of the router route guard for these routes with API calls. In the case that the user is logged in already no extra calls are made to Authress which means 99% of the time this is an in memory/browser check for the user.
 
@@ -13,11 +13,14 @@ It will return `true`, if:
 * If the Authress `user` cookie for your app is set and not expired (We don't use the `authorization` cookie, because it is possible to prevent cookie access to js, by setting the `HttpOnly cookie flag` in the application configuration)
 * OR, The user has an active session (verified by a number of different things), in which case new `authorization` and new `user` cookies are set.
 
-### [`ensureToken()`](https://github.com/Authress/authress-login.js/blob/release/1.2/src/index.js#L270)
+### [`ensureToken()`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L585)
 Actually attempts to fetch the token from the `authorization` cookie and if it doesn't exists returns `null`, but it doesn't change any state. You can call this all day long and it will never redirect the user anywhere. Since calling this doesn't change state, it doesn't have any impact on your application. If you experience a state change, it is possible that the browser blocked a request, to `/session` or `authorization` preventing a check to Authress to start the login or continue an existing session.
 
-### [`authenticate(options)`](https://github.com/Authress/authress-login.js/blob/release/1.2/src/index.js#L201)
+### [`authenticate(options)`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L525)
 Validates that the user does not have an available session and then redirects to the user via the configured options to the Authress Login screen to actually log in. The result of this call will be the user ending up back in your app, at the specified redirect location. At that time **repeat the call to the `userSessionExists()` method above**. It is important as always to call `userSessionExists()` as soon as possible so that any login flow that might be in-progress gets completed.
 
-### [`updateExtensionAuthenticationRequest(options)`](https://github.com/Authress/authress-login.js/blob/release/1.2/src/index.js#L201)
+### [`updateExtensionAuthenticationRequest(options)`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L371)
 Works the same as `authenticate`, but expects to be called as part of the login flow for users coming from an extension login. Pass the expected parameters, and the user will be logged and redirected to the appropriate extension post login page.
+
+### [`openUserConfigurationScreen(options)`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L158)
+Navigate the user to the profile screen to configure their MFA options. A common usage is `await loginClient.openUserConfigurationScreen({ startPage: UserConfigurationScreen.MFA })

@@ -155,7 +155,15 @@ class LoginClient {
     }
   }
 
-  async registerDevice(deviceName) {
+  async openUserConfigurationScreen(options = { redirectUrl: null, startPage: 'PROFILE' }) {
+    const userConfigurationScreenUrl = new URL('/profile', this.hostUrl);
+    userConfigurationScreenUrl.searchParams.set('client_id', this.settings.applicationId);
+    userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || window.location.href);
+    window.location.assign(userConfigurationScreenUrl.toString());
+    await Promise.resolve();
+  }
+
+  async registerDevice(options = { name: '' }) {
     await this.waitForUserSession();
 
     const userIdentity = await this.getUserIdentity();
@@ -206,7 +214,7 @@ class LoginClient {
     };
 
     const request = {
-      name: deviceName,
+      name: options && options.name,
       code: webAuthNTokenRequest,
       type: 'WebAuthN'
     };
