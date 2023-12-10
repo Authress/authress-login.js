@@ -110,8 +110,9 @@ export class LoginClient {
 
   /**
    * @description Fetch the list of the user's MFA devices.
+   * @return {Promise<Array<Device>>} An array of the user's multifactor devices.
    */
-  getDevices(): Promise<Device>;
+  getDevices(): Promise<Array<Device>>;
 
   /**
    * @description Remove a MFA device from the user's profile
@@ -128,8 +129,9 @@ export class LoginClient {
   /**
    * @description Starts the MFA device registration flow, requesting the user to insert or attach their MFA device.
    * @param {DeviceRegistrationParameters} settings Configuration settings for the device registration
+   * @return {Promise<Device>} The newly registered device information.
    */
-  registerDevice(settings: DeviceRegistrationParameters): Promise<void>;
+  registerDevice(settings: DeviceRegistrationParameters): Promise<Device>;
 
   /**
    * @description Async wait for a user session to exist. Will block until {@link userSessionExists} or {@link authenticate} is called.
