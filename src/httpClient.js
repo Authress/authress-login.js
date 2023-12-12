@@ -111,14 +111,22 @@ class HttpClient {
         throw newError;
       }
 
+      const status = error.response && error.response.status;
+      let level = 'warn';
       let message = 'HttpClient Response Error';
       if (!error) {
         message = 'HttpClient Response Error - Unknown error occurred';
-      } else if (error.response && error.response.status === 401) {
+      } else if (status === 401) {
         message = 'HttpClient Response Error due to invalid token';
+        level = 'debug';
+      } else if (status === 404) {
+        message = 'HttpClient Response: Not Found';
+        level = 'debug';
       }
 
-      this.logger.warn({ title: message, online: navigator.onLine, method, url, data, headers, error, resolvedError });
+      if (this.logger[level]) {
+        this.logger[level]({ title: message, online: navigator.onLine, method, url, status, data, headers, error, resolvedError });
+      }
       throw error;
     }
   }
