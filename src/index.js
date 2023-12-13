@@ -168,6 +168,11 @@ class LoginClient {
 
   async registerDevice(options = { name: '' }) {
     const userIdentity = await this.getUserIdentity();
+    if (!userIdentity) {
+      const e = Error('User must be logged to configure user profile data.');
+      e.code = 'NotLoggedIn';
+      throw e;
+    }
     const userId = userIdentity.sub;
 
     // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/create
