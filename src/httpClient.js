@@ -111,7 +111,7 @@ class HttpClient {
         throw newError;
       }
 
-      const status = error.response && error.response.status || error.status;
+      const status = error.status;
       let level = 'warn';
       let message = 'HttpClient Response Error';
       if (!error) {
@@ -132,7 +132,7 @@ class HttpClient {
         url: url,
         status: status,
         data: resolvedError,
-        headers: error.response.headers || error.headers
+        headers: error.headers
       };
       throw httpError;
     }
