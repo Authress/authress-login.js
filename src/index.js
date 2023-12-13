@@ -160,7 +160,7 @@ class LoginClient {
 
     const userConfigurationScreenUrl = new URL('/settings', this.hostUrl);
     userConfigurationScreenUrl.searchParams.set('client_id', this.settings.applicationId);
-    userConfigurationScreenUrl.searchParams.set('start_page', options?.startPage || 'Profile');
+    userConfigurationScreenUrl.searchParams.set('start_page', options && options.startPage || 'Profile');
     userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || window.location.href);
     window.location.assign(userConfigurationScreenUrl.toString());
     await Promise.resolve();
