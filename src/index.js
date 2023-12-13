@@ -132,8 +132,6 @@ class LoginClient {
   }
 
   async getDevices() {
-    await this.waitForUserSession();
-
     try {
       const token = await this.ensureToken();
       const deviceResult = await this.httpClient.get('/session/devices', this.enableCredentials, { Authorization: token && `Bearer ${token}` });
@@ -144,8 +142,6 @@ class LoginClient {
   }
 
   async deleteDevice(deviceId) {
-    await this.waitForUserSession();
-
     try {
       const token = await this.ensureToken();
       await this.httpClient.delete(`/session/devices/${encodeURIComponent(deviceId)}`, this.enableCredentials, { Authorization: token && `Bearer ${token}` });
@@ -156,6 +152,12 @@ class LoginClient {
   }
 
   async openUserConfigurationScreen(options = { redirectUrl: null, startPage: 'Profile' }) {
+    if (!this.getUserIdentity()) {
+      const e = Error('User must be logged to configure user profile data.');
+      e.code = 'NotLoggedIn';
+      throw e;
+    }
+
     const userConfigurationScreenUrl = new URL('/settings', this.hostUrl);
     userConfigurationScreenUrl.searchParams.set('client_id', this.settings.applicationId);
     userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || window.location.href);
@@ -164,8 +166,6 @@ class LoginClient {
   }
 
   async registerDevice(options = { name: '' }) {
-    await this.waitForUserSession();
-
     const userIdentity = await this.getUserIdentity();
     const userId = userIdentity.sub;
 
@@ -423,7 +423,7 @@ class LoginClient {
     }
 
     if (!this.getUserIdentity()) {
-      const e = Error('User must be logged into to unlink an account.');
+      const e = Error('User must be logged in to unlink an account.');
       e.code = 'NotLoggedIn';
       throw e;
     }
