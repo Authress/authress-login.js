@@ -639,4 +639,10 @@ class LoginClient {
 }
 
 const ExtensionClient = require('./extensionClient');
-module.exports = { LoginClient, ExtensionClient };
+
+const UserConfigurationScreen = {
+  Profile: 'Profile',
+  MFA: 'MFA'
+};
+
+module.exports = { LoginClient, ExtensionClient, UserConfigurationScreen };
