@@ -404,9 +404,9 @@ class LoginClient {
 
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
-      if (error.status >= 400 && error.status < 500) {
-        const e = Error(error.data.title || error.data.errorCode);
-        e.code = error.data.errorCode;
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
         throw e;
       }
       throw (error.data || error);
@@ -452,9 +452,9 @@ class LoginClient {
     try {
       await this.httpClient.delete(`/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
     } catch (error) {
-      if (error.status >= 400 && error.status < 500) {
-        const e = Error(error.data.title || error.data.errorCode);
-        e.code = error.data.errorCode;
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
         throw e;
       }
       throw (error.data || error);
@@ -510,9 +510,9 @@ class LoginClient {
       }, headers);
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
-      if (error.status >= 400 && error.status < 500) {
-        const e = Error(error.data.title || error.data.errorCode);
-        e.code = error.data.errorCode;
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
         throw e;
       }
       throw error;
@@ -577,9 +577,9 @@ class LoginClient {
         window.location.assign(authResponse.data.authenticationUrl);
       }
     } catch (error) {
-      if (error.status >= 400 && error.status < 500) {
-        const e = Error(error.data.title || error.data.errorCode);
-        e.code = error.data.errorCode;
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
         throw e;
       }
       throw (error.data || error);
