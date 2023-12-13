@@ -128,11 +128,13 @@ class HttpClient {
         this.logger[level]({ title: message, online: navigator.onLine, method, url, status, data, headers, error, resolvedError });
       }
 
-      error.url = url;
-      error.status = status;
-      error.data = resolvedError;
-      error.headers = error.response.headers || error.headers;
-      throw error;
+      const httpError = {
+        url: url,
+        status: status,
+        data: resolvedError,
+        headers: error.response.headers || error.headers
+      };
+      throw httpError;
     }
   }
 }
