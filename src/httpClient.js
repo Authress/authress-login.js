@@ -99,7 +99,7 @@ class HttpClient {
         url,
         headers: response.headers,
         status: response.status,
-        data: await response.json()
+        data: await response.json().catch(e => e) || {}
       };
     } catch (error) {
       const resolvedError = typeof error.json === 'function' ? await error.json().catch(e => e) : error;
