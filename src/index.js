@@ -152,7 +152,7 @@ class LoginClient {
   }
 
   async openUserConfigurationScreen(options = { redirectUrl: null, startPage: 'Profile' }) {
-    if (!this.getUserIdentity()) {
+    if (!await this.userSessionExists()) {
       const e = Error('User must be logged to configure user profile data.');
       e.code = 'NotLoggedIn';
       throw e;
