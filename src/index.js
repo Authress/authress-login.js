@@ -179,6 +179,8 @@ class LoginClient {
     const publicKeyCredentialCreationOptions = {
       challenge: Uint8Array.from(userId, c => c.charCodeAt(0)),
       rp: {
+        // Allow all subdomains, this works because Authress always runs on a subdomain such as login.example.com, where the domain example.com is owned by the authress account owner.
+        id: this.hostUrl.split('.').slice(1).join('.'),
         name: 'WebAuthN Login'
       },
       user: {
