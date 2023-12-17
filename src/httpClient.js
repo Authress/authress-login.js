@@ -82,7 +82,7 @@ class HttpClient {
     const method = rawMethod.toUpperCase();
     const headers = Object.assign({}, defaultHeaders, requestHeaders);
     try {
-      this.logger.debug({ title: 'HttpClient Request', method, url });
+      this.logger && this.logger.debug && this.logger.debug({ title: 'HttpClient Request', method, url });
       const request = { method, headers };
       if (data) {
         request.body = JSON.stringify(data);
@@ -105,7 +105,7 @@ class HttpClient {
       const resolvedError = typeof error.json === 'function' ? await error.json().catch(e => e) : error;
       const extensionErrorId = resolvedError.stack && resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
       if (extensionErrorId) {
-        this.logger.debug({ title: `Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
+        this.logger && this.logger.debug && this.logger.debug({ title: `Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
         const newError = new Error(`Extension Error ID: ${extensionErrorId}`);
         newError.code = 'BROWSER_EXTENSION_ERROR';
         throw newError;
@@ -124,7 +124,7 @@ class HttpClient {
         level = 'debug';
       }
 
-      if (this.logger[level]) {
+      if (this.logger && this.logger[level]) {
         this.logger[level]({ title: message, online: navigator.onLine, method, url, status, data, headers, error, resolvedError });
       }
 
