@@ -3,6 +3,7 @@ const take = require('lodash.take');
 
 const HttpClient = require('./httpClient');
 const jwtManager = require('./jwtManager');
+const { sanitizeUrl } = require('./util');
 const userIdentityTokenStorageManager = require('./userIdentityTokenStorageManager');
 
 let userSessionResolver;
@@ -29,7 +30,7 @@ class LoginClient {
       throw Error('Missing required property "authressLoginHostUrl" in LoginClient constructor. Custom Authress Domain Host is required.');
     }
 
-    this.hostUrl = `https://${hostUrl.replace(/^(https?:\/+)/, '')}`;
+    this.hostUrl = sanitizeUrl(hostUrl);
     this.httpClient = new HttpClient(this.hostUrl, this.logger);
     this.lastSessionCheck = 0;
 

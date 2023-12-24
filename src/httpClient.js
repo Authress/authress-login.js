@@ -1,3 +1,5 @@
+const { sanitizeUrl } = require('./util');
+
 const defaultHeaders = {
   'Content-Type': 'application/json'
 };
@@ -43,7 +45,7 @@ class HttpClient {
     const logger = overrideLogger || { debug() {}, warn() {}, critical() {} };
     this.logger = logger;
 
-    const loginHostFullUrl = new URL(`https://${authressLoginCustomDomain.replace(/^(https?:\/+)/, '')}`);
+    const loginHostFullUrl = new URL(sanitizeUrl(authressLoginCustomDomain));
     this.loginUrl = `${loginHostFullUrl.origin}/api`;
   }
 

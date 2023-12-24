@@ -1,6 +1,7 @@
 const base64url = require('./base64url');
 
 const jwtManager = require('./jwtManager');
+const { sanitizeUrl } = require('./util');
 
 const AuthenticationRequestNonceKey = 'ExtensionRequestNonce';
 
@@ -23,7 +24,7 @@ class ExtensionClient {
       throw Error('Missing required property "extensionId" in ExtensionClient constructor. The extension is required for selecting the correct login method.');
     }
 
-    this.authressCustomDomain = `https://${authressCustomDomain.replace(/^(https?:\/+)/, '')}`;
+    this.authressCustomDomain = sanitizeUrl(authressCustomDomain);
     this.accessToken = null;
 
     window.onload = async () => {
