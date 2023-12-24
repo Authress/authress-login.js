@@ -22,7 +22,7 @@ describe('index.js', () => {
         yield {
           name: 'loginHost set correctly from http',
           url: 'http://login.test.com',
-          expectedBaseUrl: 'https://login.test.com/api'
+          expectedBaseUrl: 'http://login.test.com/api'
         };
 
         yield {
