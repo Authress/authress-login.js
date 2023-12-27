@@ -49,37 +49,37 @@ class HttpClient {
     this.loginUrl = `${loginHostFullUrl.origin}/api`;
   }
 
-  get(url, withCredentials, headers) {
+  get(url, withCredentials, headers, ignoreExpectedWarnings) {
     return retryExecutor(() => {
-      return this.fetchWrapper('GET', url, null, headers, withCredentials);
+      return this.fetchWrapper('GET', url, null, headers, withCredentials, ignoreExpectedWarnings);
     });
   }
 
-  delete(url, withCredentials, headers) {
+  delete(url, withCredentials, headers, ignoreExpectedWarnings) {
     return retryExecutor(() => {
-      return this.fetchWrapper('DELETE', url, null, headers, withCredentials);
+      return this.fetchWrapper('DELETE', url, null, headers, withCredentials, ignoreExpectedWarnings);
     });
   }
 
-  post(url, withCredentials, data, headers) {
+  post(url, withCredentials, data, headers, ignoreExpectedWarnings) {
     return retryExecutor(() => {
-      return this.fetchWrapper('POST', url, data, headers, withCredentials);
+      return this.fetchWrapper('POST', url, data, headers, withCredentials, ignoreExpectedWarnings);
     });
   }
 
-  put(url, withCredentials, data, headers) {
+  put(url, withCredentials, data, headers, ignoreExpectedWarnings) {
     return retryExecutor(() => {
-      return this.fetchWrapper('PUT', url, data, headers, withCredentials);
+      return this.fetchWrapper('PUT', url, data, headers, withCredentials, ignoreExpectedWarnings);
     });
   }
 
-  patch(url, withCredentials, data, headers) {
+  patch(url, withCredentials, data, headers, ignoreExpectedWarnings) {
     return retryExecutor(() => {
-      return this.fetchWrapper('PATCH', url, data, headers, withCredentials);
+      return this.fetchWrapper('PATCH', url, data, headers, withCredentials, ignoreExpectedWarnings);
     });
   }
 
-  async fetchWrapper(rawMethod, urlObject, data, requestHeaders, withCredentials) {
+  async fetchWrapper(rawMethod, urlObject, data, requestHeaders, withCredentials, ignoreExpectedWarnings) {
     const url = `${this.loginUrl}${urlObject.toString()}`;
     const method = rawMethod.toUpperCase();
     const headers = Object.assign({}, defaultHeaders, requestHeaders);
@@ -123,6 +123,8 @@ class HttpClient {
         level = 'debug';
       } else if (status === 404) {
         message = 'HttpClient Response: Not Found';
+        level = 'debug';
+      } else if (status < 500 && ignoreExpectedWarnings) {
         level = 'debug';
       }
 
