@@ -4,6 +4,7 @@ This is the changelog for [Authress Login](readme.md).
 ## 2.3 ##
 * Add MFA device methods.
 * Improve http error handling when there is an issue authenticating.
+* Reduce logging level for SESSION continuation.
 
 ## 2.2 ##
 * Automatically retry on network connection issues.

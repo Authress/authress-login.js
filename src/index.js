@@ -354,7 +354,7 @@ class LoginClient {
 
     if (!this.isLocalHost() && !backgroundTrigger) {
       try {
-        const sessionResult = await this.httpClient.patch('/session', this.enableCredentials, {});
+        const sessionResult = await this.httpClient.patch('/session', this.enableCredentials, {}, null, true);
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
