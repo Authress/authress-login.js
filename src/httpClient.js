@@ -97,14 +97,29 @@ class HttpClient {
       if (!response.ok) {
         throw response;
       }
+
+      let responseBody = {};
+      try {
+        responseBody = await response.text();
+        responseBody = JSON.parse(responseBody);
+      } catch (error) {
+        /* */
+      }
       return {
         url,
         headers: response.headers,
         status: response.status,
-        data: await response.json().catch(e => e) || {}
+        data: responseBody
       };
     } catch (error) {
-      const resolvedError = typeof error.json === 'function' ? await error.json().catch(e => e) : error;
+      let resolvedError = error;
+      try {
+        resolvedError = await error.text();
+        resolvedError = JSON.parse(resolvedError);
+      } catch (parseError) {
+        /* */
+      }
+
       const extensionErrorId = resolvedError.stack && resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
       if (extensionErrorId) {
         this.logger && this.logger.debug && this.logger.debug({ title: `Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
