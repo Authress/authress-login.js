@@ -311,9 +311,10 @@ class LoginClient {
           userSessionResolver();
           return true;
         } catch (error) {
+          this.logger && this.logger.log({ title: 'Failed exchange authentication response for a token.', error });
+
           // The code was expired, contaminated, or already exchanged.
           if (error.data && error.data.error === 'invalid_request') {
-            this.logger && this.logger.log({ title: 'Failed exchange authentication response for a token.', error });
             return false;
           }
           throw (error.data || error);
@@ -365,7 +366,9 @@ class LoginClient {
       } catch (error) {
         // On 400, 404, 409 we know that the session is no longer able to be continued.
         if (error.status !== 400 && error.status !== 404 && error.status !== 409) {
-          this.logger && this.logger.log({ title: 'Failed attempting to check if the user has an existing authentication session', error });
+          this.logger && this.logger.log && this.logger.log({ title: 'User does not have an existing authentication session', error });
+        } else {
+          this.logger && this.logger.log && this.logger.log({ title: 'Failed attempting to check if the user has an existing authentication session', error });
         }
       }
       const newUserData = this.getUserIdentity();
@@ -407,6 +410,7 @@ class LoginClient {
 
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
+      this.logger && this.logger.log && this.logger.log({ title: 'Failed to update extension authentication request', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -455,6 +459,7 @@ class LoginClient {
     try {
       await this.httpClient.delete(`/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
     } catch (error) {
+      this.logger && this.logger.log && this.logger.log({ title: 'Failed to unlink user identity', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -513,6 +518,7 @@ class LoginClient {
       }, headers);
       window.location.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
+      this.logger && this.logger.log && this.logger.log({ title: 'Failed to start user identity link', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -580,6 +586,7 @@ class LoginClient {
         window.location.assign(authResponse.data.authenticationUrl);
       }
     } catch (error) {
+      this.logger && this.logger.log && this.logger.log({ title: 'Failed to start authentication for user', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;

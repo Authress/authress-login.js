@@ -9,7 +9,8 @@ const errorMessages = new Set([
   'NetworkError when attempting to fetch resource.', // Firefox
   'The Internet connection appears to be offline.', // Safari 16
   'Network request failed', // `cross-fetch`
-  'fetch failed' // Undici (Node.js)
+  'fetch failed', // Undici (Node.js)
+  '<HTML DOCUMENT></HTML>' // Handle some HTML error page responses as well
 ]);
 
 function isNetworkError(error) {
