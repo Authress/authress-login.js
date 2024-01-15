@@ -1,8 +1,16 @@
+<p align="center">
+    <img src="https://github.com/Authress/authress-sdk.cs/assets/5056218/924fb776-9588-4d4a-adf7-33682fa29356" height="300px" alt="Authress Media Banner">
+</p>
+
 # Authress Login SDK for UIs
+
+<p align="center">
+    <a href=https://www.npmjs.com/package/@authress/login" alt="Authress SDK on npm"><img src="https://badge.fury.io/js/@authress%2Flogin.svg"></a>
+    <a href="./LICENSE" alt="Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
+    <a href="https://authress.io/community" alt="authress community"><img src="https://img.shields.io/badge/Community-Authress-fbaf0b.svg"></a>
+</p>
+
 The Authress Universal Login SDK for javascript app websites and user identity authentication. Used to integrate with the authentication as a service provider Authress at https://authress.io.
-
-
-[![npm version](https://badge.fury.io/js/@authress%2Flogin.svg)](https://www.npmjs.com/package/@authress/login)
 
 
 ## Usage
