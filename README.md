@@ -21,7 +21,7 @@ npm install @authress/login
 
 Then required the package:
 ```js
-const { LoginClient } = require('@authress/login');
+import { LoginClient } from '@authress/login';
 ```
 
 ### Troubleshooting usage
@@ -38,7 +38,7 @@ You'll want to create:
 
 On every route change check to see if the user exists, and if they don't redirect them to a login prompt.
 ```js
-const { LoginClient } = require('@authress/login');
+import { LoginClient } from '@authress/login';
 
 // What is my applicationId => https://authress.io/app/#/manage?focus=applications
 // What is my authressLoginHostUrl? => https://authress.io/app/#/setup?focus=domain
