@@ -41,8 +41,8 @@ On every route change check to see if the user exists, and if they don't redirec
 import { LoginClient } from '@authress/login';
 
 // What is my applicationId => https://authress.io/app/#/manage?focus=applications
-// What is my authressLoginHostUrl? => https://authress.io/app/#/setup?focus=domain
-const loginClient = new LoginClient({ authressLoginHostUrl: 'https://login.application.com', applicationId: 'YOUR_APPLICATION_ID' });
+// What is my authressApiUrl? => https://authress.io/app/#/setup?focus=domain
+const loginClient = new LoginClient({ authressApiUrl: 'https://login.application.com', applicationId: 'YOUR_APPLICATION_ID' });
 const isUserLoggedIn = await loginClient.userSessionExists();
 if (!isUserLoggedIn) {
   window.location.assign('/login');

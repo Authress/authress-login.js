@@ -17,17 +17,17 @@ class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
    * @param {Object} settings
-   * @param {String} settings.authressLoginHostUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
+   * @param {String} settings.authressApiUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
    * @param {String} settings.applicationId the Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
   constructor(settings, logger) {
     this.settings = Object.assign({ applicationId: 'app_default' }, settings);
     this.logger = logger || console;
-    const hostUrl = this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl || '';
+    const hostUrl = this.settings.authressApiUrl || this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl || '';
 
     if (!hostUrl) {
-      throw Error('Missing required property "authressLoginHostUrl" in LoginClient constructor. Custom Authress Domain Host is required.');
+      throw Error('Missing required property "authressApiUrl" in LoginClient constructor. Custom Authress Domain Host is required.');
     }
 
     this.hostUrl = sanitizeUrl(hostUrl);

@@ -47,13 +47,13 @@ describe('index.js', () => {
           name: 'loginHost not set',
           url: null,
           expectedBaseUrl: 'https://login.test.com/api',
-          expectedError: 'Missing required property "authressLoginHostUrl" in LoginClient constructor. Custom Authress Domain Host is required.'
+          expectedError: 'Missing required property "authressApiUrl" in LoginClient constructor. Custom Authress Domain Host is required.'
         };
       };
       for (let test of tests) {
         it(test.name, () => {
           try {
-            const loginClient = new LoginClient({ authressLoginHostUrl: test.url, skipBackgroundCredentialsCheck: true });
+            const loginClient = new LoginClient({ authressApiUrl: test.url, skipBackgroundCredentialsCheck: true });
             expect(loginClient.httpClient.loginUrl).to.eql(test.expectedBaseUrl);
             expect(test.expectedError).to.eql(undefined);
           } catch (error) {
@@ -66,41 +66,41 @@ describe('index.js', () => {
 
   describe('getMatchingDomainInfo()', () => {
     it('Adjacent domain returns true', () => {
-      const authressLoginHostUrl = 'https://security.application.com';
-      const loginClient = new LoginClient({ authressLoginHostUrl, skipBackgroundCredentialsCheck: true });
+      const authressApiUrl = 'https://security.application.com';
+      const loginClient = new LoginClient({ authressApiUrl, skipBackgroundCredentialsCheck: true });
       const window = {
         location: {
           protocol: 'https:',
           host: 'app.application.com'
         }
       };
-      const result = loginClient.getMatchingDomainInfo(authressLoginHostUrl, window);
+      const result = loginClient.getMatchingDomainInfo(authressApiUrl, window);
       expect(result).to.eql(true);
     });
 
     it('Top level domain returns true', () => {
-      const authressLoginHostUrl = 'https://security.application.com';
-      const loginClient = new LoginClient({ authressLoginHostUrl, skipBackgroundCredentialsCheck: true });
+      const authressApiUrl = 'https://security.application.com';
+      const loginClient = new LoginClient({ authressApiUrl, skipBackgroundCredentialsCheck: true });
       const window = {
         location: {
           protocol: 'https:',
           host: 'application.com'
         }
       };
-      const result = loginClient.getMatchingDomainInfo(authressLoginHostUrl, window);
+      const result = loginClient.getMatchingDomainInfo(authressApiUrl, window);
       expect(result).to.eql(true);
     });
 
     it('Cross domain returns false', () => {
-      const authressLoginHostUrl = 'https://security.application.com';
-      const loginClient = new LoginClient({ authressLoginHostUrl, skipBackgroundCredentialsCheck: true });
+      const authressApiUrl = 'https://security.application.com';
+      const loginClient = new LoginClient({ authressApiUrl, skipBackgroundCredentialsCheck: true });
       const window = {
         location: {
           protocol: 'https:',
           host: 'app.cross-domain.com'
         }
       };
-      const result = loginClient.getMatchingDomainInfo(authressLoginHostUrl, window);
+      const result = loginClient.getMatchingDomainInfo(authressApiUrl, window);
       expect(result).to.eql(false);
     });
   });
