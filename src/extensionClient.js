@@ -37,7 +37,7 @@ class ExtensionClient {
    * @return {Promise<Record<string, unknown>>} The user data object.
    */
   async getUserIdentity() {
-    const userData = await this.accessToken && jwtManager.decode(this.accessToken);
+    const userData = this.accessToken && await jwtManager.decode(this.accessToken);
     if (!userData) {
       return null;
     }

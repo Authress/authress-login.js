@@ -112,6 +112,14 @@ class LoginClient {
     if (!userData) {
       return null;
     }
+
+    // We use startsWith because the issuer will be limited to only the authress custom domain FQDN subdomain, the hostUrl could be a specific subdomain subdomain for the tenant.
+    if (!this.hostUrl.startsWith(userData.iss)) {
+      this.logger && this.logger.log && this.logger.log({ title: 'Token saved in browser is for a different issuer, discarding', currentHostUrl: this.hostUrl, savedUserData: userData });
+      userIdentityTokenStorageManager.clear();
+      return null;
+    }
+
     userData.userId = userData.sub;
     return userData;
   }
