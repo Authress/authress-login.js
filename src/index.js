@@ -1,6 +1,7 @@
 const cookieManager = require('cookie');
 const take = require('lodash.take');
 
+const windowManager = require('./windowManager');
 const HttpClient = require('./httpClient');
 const jwtManager = require('./jwtManager');
 const { sanitizeUrl } = require('./util');
@@ -34,38 +35,30 @@ class LoginClient {
     this.httpClient = new HttpClient(this.hostUrl, this.logger);
     this.lastSessionCheck = 0;
 
-    this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl, typeof window !== 'undefined' ? window : undefined);
+    this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
 
     if (!settings.skipBackgroundCredentialsCheck) {
-      window.onload = async () => {
+      windowManager.onLoad(async () => {
         await this.userSessionExists(true);
-      };
+      });
     }
   }
 
-  isLocalHost() {
-    const isLocalHost = typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    return isLocalHost;
-  }
-
-  getMatchingDomainInfo(hostUrlString, webWindow) {
+  getMatchingDomainInfo(hostUrlString) {
     const hostUrl = new URL(hostUrlString);
 
-    if (this.isLocalHost()) {
+    if (windowManager.isLocalHost()) {
       return false;
     }
 
-    if (typeof webWindow === 'undefined') {
-      return false;
-    }
-
-    if (webWindow.location.protocol !== 'https:') {
+    const currentLocation = windowManager.getCurrentLocation();
+    if (currentLocation.protocol !== 'https:') {
       return false;
     }
 
     const tokenUrlList = hostUrl.host.toLowerCase().split('.').reverse();
     // Login url may not be known all the time, in which case we will compare the token url to the appUrl
-    const appUrlList = webWindow.location.host.toLowerCase().split('.').reverse();
+    const appUrlList = currentLocation.host.toLowerCase().split('.').reverse();
 
     let reversedMatchSegments = [];
     for (let segment of tokenUrlList) {
@@ -170,8 +163,8 @@ class LoginClient {
     const userConfigurationScreenUrl = new URL('/settings', this.hostUrl);
     userConfigurationScreenUrl.searchParams.set('client_id', this.settings.applicationId);
     userConfigurationScreenUrl.searchParams.set('start_page', options && options.startPage || 'Profile');
-    userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || window.location.href);
-    window.location.assign(userConfigurationScreenUrl.toString());
+    userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || windowManager.getCurrentLocation().href);
+    windowManager.assign(userConfigurationScreenUrl.toString());
     await Promise.resolve();
   }
 
@@ -280,8 +273,8 @@ class LoginClient {
   }
 
   async userSessionContinuation(backgroundTrigger) {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const newUrl = new URL(window.location);
+    const urlSearchParams = new URLSearchParams(windowManager.getCurrentLocation().search);
+    const newUrl = new URL(windowManager.getCurrentLocation());
 
     let authRequest = {};
     try {
@@ -330,7 +323,7 @@ class LoginClient {
       }
     }
 
-    if (this.isLocalHost()) {
+    if (windowManager.isLocalHost()) {
       if (urlSearchParams.get('nonce') && urlSearchParams.get('access_token')) {
         newUrl.searchParams.delete('iss');
         newUrl.searchParams.delete('nonce');
@@ -361,7 +354,7 @@ class LoginClient {
       return true;
     }
 
-    if (!this.isLocalHost() && !backgroundTrigger) {
+    if (!windowManager.isLocalHost() && !backgroundTrigger) {
       try {
         const sessionResult = await this.httpClient.patch('/session', this.enableCredentials, {}, null, true);
         // In the case that the session contains non cookie based data, store it back to the cookie for this domain
@@ -403,7 +396,7 @@ class LoginClient {
       throw e;
     }
 
-    const urlSearchParams = new URLSearchParams(window.location.search);
+    const urlSearchParams = new URLSearchParams(windowManager.getCurrentLocation().search);
     const authenticationRequestId = state || urlSearchParams.get('state');
     if (!authenticationRequestId) {
       const e = Error('The `state` parameters must be specified to update this authentication request');
@@ -416,7 +409,7 @@ class LoginClient {
         connectionId, tenantLookupIdentifier, connectionProperties
       });
 
-      window.location.assign(requestOptions.data.authenticationUrl);
+      windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
       this.logger && this.logger.log && this.logger.log({ title: 'Failed to update extension authentication request', error });
       if (error.status && error.status >= 400 && error.status < 500) {
@@ -460,7 +453,7 @@ class LoginClient {
       }
     }
 
-    const headers = this.enableCredentials && !this.isLocalHost() ? {} : {
+    const headers = this.enableCredentials && !windowManager.isLocalHost() ? {} : {
       Authorization: `Bearer ${accessToken}`
     };
 
@@ -513,8 +506,8 @@ class LoginClient {
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
-      const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
-      const headers = this.enableCredentials && !this.isLocalHost() ? {} : {
+      const selectedRedirectUrl = normalizedRedirectUrl || windowManager.getCurrentLocation().href;
+      const headers = this.enableCredentials && !windowManager.isLocalHost() ? {} : {
         Authorization: `Bearer ${accessToken}`
       };
       const requestOptions = await this.httpClient.post('/authentication', this.enableCredentials, {
@@ -524,7 +517,7 @@ class LoginClient {
         connectionProperties,
         applicationId: this.settings.applicationId
       }, headers);
-      window.location.assign(requestOptions.data.authenticationUrl);
+      windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
       this.logger && this.logger.log && this.logger.log({ title: 'Failed to start user identity link', error });
       if (error.status && error.status >= 400 && error.status < 500) {
@@ -569,7 +562,7 @@ class LoginClient {
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
-      const selectedRedirectUrl = normalizedRedirectUrl || window.location.href;
+      const selectedRedirectUrl = normalizedRedirectUrl || windowManager.getCurrentLocation().href;
       if (clearUserDataBeforeLogin !== false) {
         userIdentityTokenStorageManager.clear();
       }
@@ -586,12 +579,12 @@ class LoginClient {
         enableCredentials: authResponse.data.enableCredentials, multiAccount
       }));
       if (openType === 'tab') {
-        const result = window.open(authResponse.data.authenticationUrl, '_blank');
+        const result = windowManager.open(authResponse.data.authenticationUrl, '_blank');
         if (!result || result.closed || typeof result.closed === 'undefined') {
-          window.location.assign(authResponse.data.authenticationUrl);
+          windowManager.assign(authResponse.data.authenticationUrl);
         }
       } else {
-        window.location.assign(authResponse.data.authenticationUrl);
+        windowManager.assign(authResponse.data.authenticationUrl);
       }
     } catch (error) {
       this.logger && this.logger.log && this.logger.log({ title: 'Failed to start authentication for user', error });
@@ -642,17 +635,17 @@ class LoginClient {
     if (this.enableCredentials) {
       try {
         await this.httpClient.delete('/session', this.enableCredentials);
-        if (redirectUrl && redirectUrl !== window.location.href) {
-          window.location.assign(redirectUrl);
+        if (redirectUrl && redirectUrl !== windowManager.getCurrentLocation().href) {
+          windowManager.assign(redirectUrl);
         }
         return;
       } catch (error) { /**/ }
     }
 
     const fullLogoutUrl = new URL('/logout', this.hostUrl);
-    fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || window.location.href);
+    fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || windowManager.getCurrentLocation().href);
     fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
-    window.location.assign(fullLogoutUrl.toString());
+    windowManager.assign(fullLogoutUrl.toString());
   }
 }
 
