@@ -1,4 +1,5 @@
 const { sanitizeUrl } = require('./util');
+const windowManager = require('./windowManager');
 
 const defaultHeaders = {
   'Content-Type': 'application/json'
@@ -90,7 +91,7 @@ class HttpClient {
       if (data) {
         request.body = JSON.stringify(data);
       }
-      if (window.location.hostname !== 'localhost' && !!withCredentials) {
+      if (!windowManager.isLocalHost() && !!withCredentials) {
         request.credentials = 'include';
       }
       const response = await fetch(url, request);
