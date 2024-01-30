@@ -32,15 +32,14 @@ Navigate the user to the profile screen to configure their MFA options. A common
 
 Make sure to set `use client` when using the the @authress/login SDK, and make sure to `use server` when using the @authress/sdk. These are specific to login and authorization calls.
 
-For server components, when you would like to check if the user is logged in, the `authorization` cookie is available:
+For server components, when you would like to check if the user is logged in, the `authorization` cookie is available. How to do this is going to depend explicitly on the type of Server Side context you have. Next.js has different functionality for each of `SSR App Routing`, `ServerComponents`, `Server Actions`, and `API Requests`. For more details about how to explicitly do it in the your example, check out the [Next.js cookie guide](https://nextjs.org/docs/app/api-reference/functions/cookies) and the [Next.js cookie library](https://github.com/andreizanik/cookies-next?tab=readme-ov-file#client-and-server).
 
 
 ```jsx
-import { cookies } from 'next/headers';
+import { hasCookie } from 'cookies-next';
 
 export default function Page() {
-  const cookieStore = cookies();
-  const userIsLoggedIn = !!cookieStore.has('authorization');
+  const userIsLoggedIn = !!hasCookie('authorization');
   if (userIsLoggedIn) {
     return <Page />;
   }

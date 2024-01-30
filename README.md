@@ -115,7 +115,9 @@ await userData = await this.getUserIdentity();
 ```
 
 ## Advanced
-Curious exactly how these methods work and when they should be used? We have some advanced guidance available for each of the methods on the [method documentation](./docs/advanced.md).
+Curious exactly how these methods work and when they should be used? We have some advanced guidance available for each of the methods on the:
+
+[Method documentation](./docs/advanced.md)
 
 ## Contributing
 
