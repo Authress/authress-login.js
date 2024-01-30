@@ -24,3 +24,27 @@ Works the same as `authenticate`, but expects to be called as part of the login 
 
 ### [`openUserConfigurationScreen(options)`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L158)
 Navigate the user to the profile screen to configure their MFA options. A common usage is `await loginClient.openUserConfigurationScreen({ startPage: UserConfigurationScreen.MFA })
+
+
+## Next.js recommendations
+
+- See also [Next.js Starter Kit](https://github.com/Authress/nextjs-starter-kit)
+
+Make sure to set `use client` when using the the @authress/login SDK, and make sure to `use server` when using the @authress/sdk. These are specific to login and authorization calls.
+
+For server components, when you would like to check if the user is logged in, the `authorization` cookie is available:
+
+
+```jsx
+import { cookies } from 'next/headers';
+
+export default function Page() {
+  const cookieStore = cookies();
+  const userIsLoggedIn = !!cookieStore.has('authorization');
+  if (userIsLoggedIn) {
+    return <Page />;
+  }
+
+  return <Unauthorized />;
+}
+```

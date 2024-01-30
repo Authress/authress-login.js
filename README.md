@@ -119,8 +119,4 @@ Curious exactly how these methods work and when they should be used? We have som
 
 ## Contributing
 
-### Validating index.d.ts type definitions
-For validation it helps to generate and compare the types to the generated files using:
-```sh
-npx typescript index.js --declaration --allowJs --emitDeclarationOnly --outDir types
-```
+If you are interested in contributing to the @authress/login SDK, feel fere to read the [contribution.md](./docs/contibution.md) guide.
