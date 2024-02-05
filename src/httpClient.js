@@ -146,7 +146,11 @@ class HttpClient {
       }
 
       if (this.logger && this.logger[level]) {
-        this.logger[level]({ title: message, online: navigator.onLine, method, url, status, data, headers, error, resolvedError });
+        this.logger[level]({
+          title: message,
+          online: typeof navigator === 'undefined' || navigator.onLine,
+          method, url, status, data, headers, error, resolvedError
+        });
       }
 
       const httpError = {
