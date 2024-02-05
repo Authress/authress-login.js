@@ -282,14 +282,16 @@ class LoginClient {
     const newUrl = new URL(windowManager.getCurrentLocation());
 
     let authRequest = {};
-    try {
-      authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
-      localStorage.removeItem(AuthenticationRequestNonceKey);
-      if (Object.hasOwnProperty.call(authRequest, 'enableCredentials')) {
-        this.enableCredentials = authRequest.enableCredentials;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        authRequest = JSON.parse(localStorage.getItem(AuthenticationRequestNonceKey) || '{}');
+        localStorage.removeItem(AuthenticationRequestNonceKey);
+        if (Object.hasOwnProperty.call(authRequest, 'enableCredentials')) {
+          this.enableCredentials = authRequest.enableCredentials;
+        }
+      } catch (error) {
+        this.logger && this.logger.debug && this.logger.debug({ title: 'LocalStorage failed in Browser', error });
       }
-    } catch (error) {
-      this.logger && this.logger.debug && this.logger.debug({ title: 'LocalStorage failed in Browser', error });
     }
 
     // Your app was redirected to from the Authress Hosted Login page. The next step is to show the user the login widget and enable them to login.

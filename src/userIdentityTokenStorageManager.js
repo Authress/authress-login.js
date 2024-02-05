@@ -4,12 +4,19 @@ const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
 class UserIdentityTokenStorageManager {
   getUserCookie() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return null;
+    }
     // Skip empty cookies when fetching
     const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === 'user').map(c => c.replace(/^user=/, '')).find(c => c && c.trim()) || null;
     return val;
   }
 
   set(value, expiry) {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
     try {
       const cookies = cookieManager.parse(document.cookie);
       localStorage.setItem(AuthenticationCredentialsStorageKey, JSON.stringify({ idToken: value, expiry: expiry && expiry.getTime(), jsCookies: !!cookies.authorization }));
@@ -20,6 +27,10 @@ class UserIdentityTokenStorageManager {
   }
 
   get() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return null;
+    }
+
     let cookies = {};
     try {
       cookies = cookieManager.parse(document.cookie);
@@ -71,7 +82,7 @@ class UserIdentityTokenStorageManager {
   }
 
   clearCookies(cookieName) {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
       return;
     }
 
