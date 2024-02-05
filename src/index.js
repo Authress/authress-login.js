@@ -32,7 +32,7 @@ class LoginClient {
     }
 
     this.hostUrl = sanitizeUrl(hostUrl);
-    this.httpClient = new HttpClient(this.hostUrl, this.logger);
+    this.httpClient = new HttpClient(this.hostUrl, logger);
     this.lastSessionCheck = 0;
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
