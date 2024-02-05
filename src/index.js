@@ -106,9 +106,14 @@ class LoginClient {
       return null;
     }
 
-    // We use startsWith because the issuer will be limited to only the authress custom domain FQDN subdomain, the hostUrl could be a specific subdomain subdomain for the tenant.
-    if (!this.hostUrl.startsWith(userData.iss)) {
-      this.logger && this.logger.log && this.logger.log({ title: 'Token saved in browser is for a different issuer, discarding', currentHostUrl: this.hostUrl, savedUserData: userData });
+    // We use endsWith because the issuer will be limited to only the authress custom domain FQDN subdomain, the hostUrl could be a specific subdomain subdomain for the tenant.
+    // * issuer = tenant.custom.domain, hostUrl = custom.domain => ✓
+    // * issuer = accountid.login.authress.io, hostUrl = login.authress.io => ✓
+
+    const issuerOrigin = new URL(userData.iss).hostname;
+    const hostUrlOrigin = new URL(this.hostUrl).hostname;
+    if (!issuerOrigin.endsWith(hostUrlOrigin) && !hostUrlOrigin.endsWith(issuerOrigin)) {
+      this.logger && this.logger.log && this.logger.log({ title: 'Token saved in browser is for a different issuer, discarding', issuerOrigin, hostUrlOrigin, savedUserData: userData });
       userIdentityTokenStorageManager.clear();
       return null;
     }
