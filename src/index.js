@@ -113,7 +113,7 @@ class LoginClient {
     const issuerOrigin = new URL(userData.iss).hostname;
     const hostUrlOrigin = new URL(this.hostUrl).hostname;
     if (!issuerOrigin.endsWith(hostUrlOrigin) && !hostUrlOrigin.endsWith(issuerOrigin)) {
-      this.logger && this.logger.log && this.logger.log({ title: 'Token saved in browser is for a different issuer, discarding', issuerOrigin, hostUrlOrigin, savedUserData: userData });
+      this.logger && this.logger.error && this.logger.error({ title: 'Token saved in browser is for a different issuer, discarding', issuerOrigin, hostUrlOrigin, savedUserData: userData });
       userIdentityTokenStorageManager.clear();
       return null;
     }
