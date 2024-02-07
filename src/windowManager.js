@@ -25,7 +25,7 @@ class WindowManager {
     if (typeof window === 'undefined') {
       return null;
     }
-    return window.location.open(newLocationUrl.toString());
+    return window.open(newLocationUrl.toString());
   }
 }
 
