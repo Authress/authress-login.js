@@ -23,21 +23,22 @@ class LoginClient {
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
   constructor(settings, logger) {
-    this.settings = Object.assign({ applicationId: 'app_default' }, settings);
+    const settingsWithDefault = Object.assign({ applicationId: 'app_default' }, settings);
     this.logger = logger || console;
-    const hostUrl = this.settings.authressApiUrl || this.settings.authressLoginHostUrl || this.settings.authenticationServiceUrl || '';
+    const hostUrl = settingsWithDefault.authressApiUrl || settingsWithDefault.authressLoginHostUrl || settingsWithDefault.authenticationServiceUrl || '';
 
     if (!hostUrl) {
       throw Error('Missing required property "authressApiUrl" in LoginClient constructor. Custom Authress Domain Host is required.');
     }
 
+    this.applicationId = settingsWithDefault.applicationId;
     this.hostUrl = sanitizeUrl(hostUrl);
     this.httpClient = new HttpClient(this.hostUrl, logger);
     this.lastSessionCheck = 0;
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
 
-    if (!settings.skipBackgroundCredentialsCheck) {
+    if (!settingsWithDefault.skipBackgroundCredentialsCheck) {
       windowManager.onLoad(async () => {
         await this.userSessionExists(true);
       });
@@ -166,7 +167,7 @@ class LoginClient {
     }
 
     const userConfigurationScreenUrl = new URL('/settings', this.hostUrl);
-    userConfigurationScreenUrl.searchParams.set('client_id', this.settings.applicationId);
+    userConfigurationScreenUrl.searchParams.set('client_id', this.applicationId);
     userConfigurationScreenUrl.searchParams.set('start_page', options && options.startPage || 'Profile');
     userConfigurationScreenUrl.searchParams.set('redirect_uri', options && options.redirectUrl || windowManager.getCurrentLocation().href);
     windowManager.assign(userConfigurationScreenUrl.toString());
@@ -309,7 +310,7 @@ class LoginClient {
       // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
       if (authRequest.nonce === urlSearchParams.get('nonce')) {
         const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
-        const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.settings.applicationId, code, code_verifier: authRequest.codeVerifier };
+        const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.applicationId, code, code_verifier: authRequest.codeVerifier };
         try {
           const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
           const idToken = jwtManager.decode(tokenResult.data.id_token);
@@ -522,7 +523,7 @@ class LoginClient {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
         connectionProperties,
-        applicationId: this.settings.applicationId
+        applicationId: this.applicationId
       }, headers);
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
@@ -578,7 +579,7 @@ class LoginClient {
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier, inviteId,
         connectionProperties,
-        applicationId: this.settings.applicationId,
+        applicationId: this.applicationId,
         responseLocation, flowType, multiAccount
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
@@ -651,7 +652,7 @@ class LoginClient {
 
     const fullLogoutUrl = new URL('/logout', this.hostUrl);
     fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || windowManager.getCurrentLocation().href);
-    fullLogoutUrl.searchParams.set('client_id', this.settings.applicationId);
+    fullLogoutUrl.searchParams.set('client_id', this.applicationId);
     windowManager.assign(fullLogoutUrl.toString());
   }
 }
