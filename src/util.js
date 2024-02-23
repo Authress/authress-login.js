@@ -1,7 +1,15 @@
-module.exports.sanitizeUrl = function sanitizeUrl(url) {
-  if (url.startsWith('http')) {
-    return url;
+module.exports.sanitizeUrl = function sanitizeUrl(rawUrlStrng) {
+  let sanitizedUrl = rawUrlStrng;
+  if (!sanitizedUrl.startsWith('http')) {
+    sanitizedUrl = `https://${sanitizedUrl}`;
   }
 
-  return `https://${url}`;
+  const url = new URL(sanitizedUrl);
+  const domainBaseUrlMatch = url.host.match(/^([a-z0-9-]+)[.][a-z0-9-]+[.]authress[.]io$/);
+  if (domainBaseUrlMatch) {
+    url.host = `${domainBaseUrlMatch[1]}.login.authress.io`;
+    sanitizedUrl = url.toString();
+  }
+
+  return sanitizedUrl.replace(/[/]+$/, '');
 };
