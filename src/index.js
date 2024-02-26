@@ -199,12 +199,16 @@ class LoginClient {
       // https://www.iana.org/assignments/cose/cose.xhtml#algorithms (Order Matters)
       pubKeyCredParams: [
         // Disabled in the library and not currently supported
-        // IMPORTANT: NEVER ADD TO THE FRONT OF THIS LIST - because we have no idea which algo public key we have saved in the DB, if we guess wrong there is going to be a mismatch.
-        // => So until we have a code to enable a retry and realistically, we can deterministically know which public key to type use, we must never prepend this list, only append unless the user data contains a preference order
         // { type: 'public-key', alg: -8 }, /* EdDSA */
-        { type: 'public-key', alg: -36 }, /* ES512 */ { type: 'public-key', alg: -35 }, /* ES384 */ { type: 'public-key', alg: -7 }, /* ES256 */
-        // { type: 'public-key', alg: -39 }, /* PS512 */ { type: 'public-key', alg: -38 }, /* PS384 */ { type: 'public-key', alg: -37 }, /* PS256 */
-        { type: 'public-key', alg: -259 }, /* RS512 */ { type: 'public-key', alg: -258 }, /* RS384 */ { type: 'public-key', alg: -257 } /* RS256 */
+        // { type: 'public-key', alg: -36 }, /* ES512 */
+        // { type: 'public-key', alg: -35 }, /* ES384 */
+        { type: 'public-key', alg: -7 }, /* ES256 */
+        // { type: 'public-key', alg: -39 }, /* PS512 */
+        // { type: 'public-key', alg: -38 }, /* PS384 */
+        // { type: 'public-key', alg: -37 }, /* PS256 */
+        // { type: 'public-key', alg: -259 }, /* RS512 */
+        // { type: 'public-key', alg: -258 }, /* RS384 */
+        { type: 'public-key', alg: -257 } /* RS256 */
       ],
       authenticatorSelection: {
         residentKey: 'discouraged',
