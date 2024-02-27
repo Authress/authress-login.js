@@ -184,6 +184,7 @@ class LoginClient {
     const userId = userIdentity.sub;
 
     // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/create
+    // Development Note: To actually test to see if this works on your local development machine, run this code on an https domain in the Web Inspector Console tab.
     const publicKeyCredentialCreationOptions = {
       challenge: Uint8Array.from(userId, c => c.charCodeAt(0)),
       rp: {
@@ -230,7 +231,7 @@ class LoginClient {
       type: credential.type,
       userId: userId,
       attestation: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))),
-      client: JSON.parse(new TextDecoder('utf-8').decode(credential.response.clientDataJSON))
+      client: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON)))
     };
 
     const request = {
@@ -244,7 +245,7 @@ class LoginClient {
       const deviceCreationResult = await this.httpClient.post('/session/devices', this.enableCredentials, request, { Authorization: token && `Bearer ${token}` });
       return deviceCreationResult.data;
     } catch (error) {
-      this.logger && this.logger.log({ title: 'Failed to register new device', error });
+      this.logger && this.logger.log({ title: 'Failed to register new device', error, request, credential });
       throw error;
     }
   }
