@@ -79,6 +79,22 @@ export interface Device {
 export interface DeviceRegistrationParameters {
   /** The user selected new device name. */
   name: string;
+  /** The device type */
+  type?: DeviceType;
+  /** Device data required for registering a TOTP device */
+  totp?: TotpData;
+}
+
+export interface TotpData {
+  /** The shared secret used to generate TOTP codes. */
+  secret: string;
+  /** Verification code used to validate that the secret has been stored safely. */
+  verificationCode?: string;
+}
+
+export enum DeviceType {
+  TOTP = 'TOTP',
+  WebAuthN = 'WebAuthN'
 }
 
 export enum UserConfigurationScreen {

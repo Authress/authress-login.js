@@ -1,5 +1,3 @@
-const base64url = require('./base64url');
-
 const jwtManager = require('./jwtManager');
 const { sanitizeUrl } = require('./util');
 const windowManager = require('./windowManager');

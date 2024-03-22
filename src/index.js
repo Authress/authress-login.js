@@ -174,78 +174,94 @@ class LoginClient {
     await Promise.resolve();
   }
 
-  async registerDevice(options = { name: '' }) {
+  async registerDevice(options = { name: '', type: '', totpData: {} }) {
     const userIdentity = await this.getUserIdentity();
     if (!userIdentity) {
       const e = Error('User must be logged to configure user profile data.');
       e.code = 'NotLoggedIn';
       throw e;
     }
-    const userId = userIdentity.sub;
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/create
-    // Development Note: To actually test to see if this works on your local development machine, run this code on an https domain in the Web Inspector Console tab.
-    const publicKeyCredentialCreationOptions = {
-      challenge: Uint8Array.from(userId, c => c.charCodeAt(0)),
-      rp: {
-        // Allow all subdomains, this works because Authress always runs on a subdomain such as login.example.com, where the domain example.com is owned by the authress account owner.
-        id: this.hostUrl.split('.').slice(1).join('.'),
-        name: 'WebAuthN Login'
-      },
-      user: {
-        id: Uint8Array.from(userId, c => c.charCodeAt(0)),
-        name: userId,
-        displayName: `Generated User ID: ${userId}`
-      },
-      // https://www.iana.org/assignments/cose/cose.xhtml#algorithms (Order Matters)
-      pubKeyCredParams: [
-        // Disabled in the library and not currently supported
-        // { type: 'public-key', alg: -8 }, /* EdDSA */
-        // { type: 'public-key', alg: -36 }, /* ES512 */
-        // { type: 'public-key', alg: -35 }, /* ES384 */
-        { type: 'public-key', alg: -7 }, /* ES256 */
-        // { type: 'public-key', alg: -39 }, /* PS512 */
-        // { type: 'public-key', alg: -38 }, /* PS384 */
-        // { type: 'public-key', alg: -37 }, /* PS256 */
-        // { type: 'public-key', alg: -259 }, /* RS512 */
-        // { type: 'public-key', alg: -258 }, /* RS384 */
-        { type: 'public-key', alg: -257 } /* RS256 */
-      ],
-      authenticatorSelection: {
-        residentKey: 'discouraged',
-        requireResidentKey: false,
-        userVerification: 'discouraged'
-        // authenticatorAttachment: 'cross-platform'
-      },
-      timeout: 60000,
-      attestation: 'direct'
-    };
+    if (!options) {
+      const e = Error("Register Device missing required parameter: 'Options'");
+      e.code = 'InvalidInput';
+      throw e;
+    }
 
-    const credential = await navigator.credentials.create({
-      publicKey: publicKeyCredentialCreationOptions
-    });
+    let request;
+    if (!options.type || options.type === 'WebAuthN') {
+      const userId = userIdentity.sub;
 
-    const webAuthNTokenRequest = {
-      authenticatorAttachment: credential.authenticatorAttachment,
-      credentialId: credential.id,
-      type: credential.type,
-      userId: userId,
-      attestation: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))),
-      client: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON)))
-    };
+      // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/create
+      // Development Note: To actually test to see if this works on your local development machine, run this code on an https domain in the Web Inspector Console tab.
+      const publicKeyCredentialCreationOptions = {
+        challenge: Uint8Array.from(userId, c => c.charCodeAt(0)),
+        rp: {
+          // Allow all subdomains, this works because Authress always runs on a subdomain such as login.example.com, where the domain example.com is owned by the authress account owner.
+          id: this.hostUrl.split('.').slice(1).join('.'),
+          name: 'WebAuthN Login'
+        },
+        user: {
+          id: Uint8Array.from(userId, c => c.charCodeAt(0)),
+          name: userId,
+          displayName: `Generated User ID: ${userId}`
+        },
+        // https://www.iana.org/assignments/cose/cose.xhtml#algorithms (Order Matters)
+        pubKeyCredParams: [
+          // Disabled in the library and not currently supported
+          // { type: 'public-key', alg: -8 }, /* EdDSA */
+          // { type: 'public-key', alg: -36 }, /* ES512 */
+          // { type: 'public-key', alg: -35 }, /* ES384 */
+          { type: 'public-key', alg: -7 }, /* ES256 */
+          // { type: 'public-key', alg: -39 }, /* PS512 */
+          // { type: 'public-key', alg: -38 }, /* PS384 */
+          // { type: 'public-key', alg: -37 }, /* PS256 */
+          // { type: 'public-key', alg: -259 }, /* RS512 */
+          // { type: 'public-key', alg: -258 }, /* RS384 */
+          { type: 'public-key', alg: -257 } /* RS256 */
+        ],
+        authenticatorSelection: {
+          residentKey: 'discouraged',
+          requireResidentKey: false,
+          userVerification: 'discouraged'
+          // authenticatorAttachment: 'cross-platform'
+        },
+        timeout: 60000,
+        attestation: 'direct'
+      };
 
-    const request = {
-      name: options && options.name,
-      code: webAuthNTokenRequest,
-      type: 'WebAuthN'
-    };
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions
+      });
+
+      const webAuthNTokenRequest = {
+        authenticatorAttachment: credential.authenticatorAttachment,
+        credentialId: credential.id,
+        type: credential.type,
+        userId: userId,
+        attestation: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))),
+        client: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON)))
+      };
+
+      request = {
+        name: options && options.name,
+        code: webAuthNTokenRequest,
+        type: 'WebAuthN'
+      };
+    } else if (options.type === 'TOTP') {
+      request = {
+        name: options.name,
+        totpData: options.totpData,
+        type: 'TOTP'
+      };
+    }
 
     try {
       const token = await this.ensureToken();
       const deviceCreationResult = await this.httpClient.post('/session/devices', this.enableCredentials, request, { Authorization: token && `Bearer ${token}` });
       return deviceCreationResult.data;
     } catch (error) {
-      this.logger && this.logger.log({ title: 'Failed to register new device', error, request, credential });
+      this.logger && this.logger.log({ title: 'Failed to register new device', error, request });
       throw error;
     }
   }

@@ -6,6 +6,7 @@ This is the changelog for [Authress Login](readme.md).
 * Improve http error handling when there is an issue authenticating.
 * Reduce logging level for SESSION continuation.
 * Temporarily remove encouragement for generating non-256 backed webauthn keys as some browsers don't support more complex options.
+* Support missing TOTP saving of devices.
 
 ## 2.2 ##
 * Automatically retry on network connection issues.
