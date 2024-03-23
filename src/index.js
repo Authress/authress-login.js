@@ -174,7 +174,7 @@ class LoginClient {
     await Promise.resolve();
   }
 
-  async registerDevice(options = { name: '', type: '', totpData: {} }) {
+  async registerDevice(options = { name: '', type: '', totp: {} }) {
     const userIdentity = await this.getUserIdentity();
     if (!userIdentity) {
       const e = Error('User must be logged to configure user profile data.');
@@ -251,7 +251,8 @@ class LoginClient {
     } else if (options.type === 'TOTP') {
       request = {
         name: options.name,
-        totpData: options.totpData,
+        code: options.totp.verificationCode,
+        totpData: options.totp,
         type: 'TOTP'
       };
     }
