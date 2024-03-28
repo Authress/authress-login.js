@@ -1,6 +1,9 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 2.4 ##
+* Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
+
 ## 2.3 ##
 * Add MFA device methods.
 * Improve http error handling when there is an issue authenticating.
