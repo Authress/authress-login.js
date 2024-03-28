@@ -585,6 +585,19 @@ class LoginClient {
     }
 
     if (!force && !multiAccount && await this.userSessionExists()) {
+      const existingJwtTokenString = await this.ensureToken();
+      const jwtPayload = jwtManager.decode(existingJwtTokenString);
+      if (connectionId && jwtPayload && jwtPayload.azp && connectionId !== jwtPayload.azp) {
+        this.logger && this.logger.log && this.logger.log({ title: 'Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
+        Recommended Options:
+          (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
+          (2) If the goal is link their current identity with a new from the new connection, use the linkIdentity() method.
+          (3) If the goal is skip log in if they are already logged in or force log in with the connectionId, first check if userSessionExists() and then only if "false", call authenticate().`);
+        e.code = 'AuthenticationConstraintContention';
+        throw e;
+      }
+
       return true;
     }
 
