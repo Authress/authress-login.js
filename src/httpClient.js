@@ -1,8 +1,10 @@
 const { sanitizeUrl } = require('./util');
 const windowManager = require('./windowManager');
+const packageInfo = require('../package.json');
 
 const defaultHeaders = {
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
+  'X-Powered-By': `Authress Login SDK; Javascript; ${packageInfo.version}`
 };
 
 const errorMessages = new Set([
