@@ -32,6 +32,12 @@ class LoginClient {
     }
 
     this.applicationId = settingsWithDefault.applicationId;
+    if (!this.applicationId || this.applicationId.match(/^(sc_|ext_)/)) {
+      const error = Error("You have incorrectly specified an Authress Service Client or Extension as the applicationId instead of a valid application. The applicationId is your application that your users will log into, usually hosted on your domain https://example.yourdomain.com. Users cannot log *into* a Service Client, but they can log in *with* one. Users can use a Service Client to log in, by setting the connection ID in the *authenticate({ connectionId })* method to be the Authress Service Client.\n(1) If you are building an Custom Login Portal, then the application ID should correspond to this login portal.\n(2) If you are replacing or extending an Authress connection, then specify the Service Client as the connectionId and the end user application as the applicationId.\n(3) If you are building a platform or plugin marketplace, where users will log into third party extensions or apps, then distribute in your SDK a wrapper for the Authress Extension Client using: import { extensionClient } from '@authress/login' found within this SDK.");
+      error.code = 'InvalidApplication';
+      throw error;
+    }
+
     this.hostUrl = sanitizeUrl(hostUrl);
     this.httpClient = new HttpClient(this.hostUrl, logger);
     this.lastSessionCheck = 0;
