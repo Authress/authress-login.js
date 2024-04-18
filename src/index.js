@@ -604,7 +604,7 @@ class LoginClient {
         throw e;
       }
 
-      return true;
+      return null;
     }
 
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
@@ -655,7 +655,7 @@ class LoginClient {
 
     // Prevent the current UI from taking any action once we decided we need to log in.
     await new Promise(resolve => setTimeout(resolve, 5000));
-    return false;
+    return null;
   }
 
   /**
