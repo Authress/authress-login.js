@@ -424,7 +424,7 @@ class LoginClient {
    * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
    * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
-   * @return {Promise<AuthenticateResponse?>} The authentication response.
+   * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async updateExtensionAuthenticationRequest({ state, connectionId, tenantLookupIdentifier, connectionProperties }) {
     if (!connectionId && !tenantLookupIdentifier) {
@@ -589,7 +589,7 @@ class LoginClient {
    * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
    * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
-   * @return {Promise<AuthenticateResponse?>} The authentication response.
+   * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async authenticate(options = {}) {
     const { connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin } = (options || {});

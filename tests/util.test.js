@@ -2,8 +2,6 @@ const { describe, it, beforeEach, afterEach } = require('mocha');
 const sinon = require('sinon');
 const { expect } = require('chai');
 
-const { LoginClient } = require('../src/index');
-const windowManager = require('../src/windowManager');
 const { sanitizeUrl } = require('../src/util');
 
 let sandbox;

@@ -170,9 +170,9 @@ export class LoginClient {
   /**
    * @description When a platform extension attempts to log a user in, the Authress Login page will redirect to your Platform defaultAuthenticationUrl. At this point, show the user the login screen, and then pass the results of the login to this method.
    * @param {ExtensionAuthenticationParameters} settings Parameters for controlling how and when users should be authenticated for the app.
-   * @return {Promise<AuthenticateResponse?>} Automatically redirects the user to the appropriate location, unless the connectionId matches a legacy authentication flow.
+   * @return {Promise<AuthenticateResponse | null>} Automatically redirects the user to the appropriate location, unless the connectionId matches a legacy authentication flow.
    */
-  updateExtensionAuthenticationRequest(settings: ExtensionAuthenticationParameters): Promise<AuthenticateResponse?>;
+  updateExtensionAuthenticationRequest(settings: ExtensionAuthenticationParameters): Promise<AuthenticateResponse | null>;
 
   /**
    * @description Unlink an identity from the user's account.
@@ -191,9 +191,9 @@ export class LoginClient {
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}. If neither the {@link connectionId} nor the {@link tenantLookupIdentifier} is specified the user will be directed to the Authress hosted login page to select their preferred login method.
    * @param {AuthenticationParameters} [settings] Parameters for controlling how and when users should be authenticated for the app.
-   * @return {Promise<AuthenticateResponse?>} Automatically redirects the user to the appropriate location, unless the connectionId matches a legacy authentication flow.
+   * @return {Promise<AuthenticateResponse | null>} Automatically redirects the user to the appropriate location, unless the connectionId matches a legacy authentication flow.
    */
-  authenticate(settings?: AuthenticationParameters): Promise<AuthenticateResponse?>;
+  authenticate(settings?: AuthenticationParameters): Promise<AuthenticateResponse | null>;
 
   /**
    * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.
