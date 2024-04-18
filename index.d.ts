@@ -1,9 +1,4 @@
 export interface Settings {
-  /**
-   * @deprecated Use the @see authressApiUrl property instead.
-  */
-  authressLoginHostUrl?: string;
-
   /** Your Authress custom domain - see https://authress.io/app/#/setup?focus=domain */
   authressApiUrl?: string;
 
