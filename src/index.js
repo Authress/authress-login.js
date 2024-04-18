@@ -32,7 +32,7 @@ class LoginClient {
     }
 
     this.applicationId = settingsWithDefault.applicationId;
-    if (!this.applicationId || this.applicationId.match(/^(ext_)/)) {
+    if (!this.applicationId || this.applicationId.match(/^(sc_|ext_)/)) {
       const error = Error("You have incorrectly specified an Authress Service Client or Extension as the applicationId instead of a valid application. The applicationId is your application that your users will log into, usually hosted on your domain https://example.yourdomain.com. Users cannot log *into* a Service Client, but they can log in *with* one. Users can use a Service Client to log in, by setting the connection ID in the *authenticate({ connectionId })* method to be the Authress Service Client.\n(1) If you are building an Custom Login Portal, then the application ID should correspond to this login portal.\n(2) If you are replacing or extending an Authress connection, then specify the Service Client as the connectionId and the end user application as the applicationId.\n(3) If you are building a platform or plugin marketplace, where users will log into third party extensions or apps, then distribute in your SDK a wrapper for the Authress Extension Client using: import { extensionClient } from '@authress/login' found within this SDK.\n(4) If you aren't sure what to do here to fix the problem, the fastest and usually correct solution is go to https://authress.io/app/#/settings?focus=applications create a new application, specify your site in the application url property and then update the value here.");
       error.code = 'InvalidApplication';
       throw error;
@@ -424,6 +424,7 @@ class LoginClient {
    * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
    * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
+   * @return {Promise<AuthenticateResponse?>} The authentication response.
    */
   async updateExtensionAuthenticationRequest({ state, connectionId, tenantLookupIdentifier, connectionProperties }) {
     if (!connectionId && !tenantLookupIdentifier) {
@@ -445,6 +446,13 @@ class LoginClient {
         connectionId, tenantLookupIdentifier, connectionProperties
       });
 
+      // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the curernt UI, there is no need to do anything special.
+      if (new URL(requestOptions.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
+        return {
+          authenticationUrl: requestOptions.data.authenticationUrl
+        };
+      }
+
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
       this.logger && this.logger.log && this.logger.log({ title: 'Failed to update extension authentication request', error });
@@ -458,6 +466,7 @@ class LoginClient {
 
     // Prevent the current UI from taking any action once we decided we need to log in.
     await new Promise(resolve => setTimeout(resolve, 5000));
+    return null;
   }
 
   /**
@@ -580,7 +589,7 @@ class LoginClient {
    * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
    * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
-   * @return {Promise<void | AuthenticateResponse>} The authentication response.
+   * @return {Promise<AuthenticateResponse?>} The authentication response.
    */
   async authenticate(options = {}) {
     const { connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin } = (options || {});
@@ -628,8 +637,8 @@ class LoginClient {
         enableCredentials: authResponse.data.enableCredentials, multiAccount
       }));
 
-      // If the current application is actually the same as the connection then just return the authentication data filtered by the properties which are actually usable
-      if (this.applicationId === connectionId) {
+      // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the curernt UI, there is no need to do anything special.
+      if (new URL(authResponse.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
         return {
           authenticationUrl: authResponse.data.authenticationUrl
         };

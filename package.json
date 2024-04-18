@@ -73,7 +73,9 @@
     "extension",
     "Authress",
     "Authress client",
-    "user security"
+    "user security",
+    "DBSC",
+    "Device Bound Session Credentials"
   ],
   "author": "Authress Developers <developers@authress.io> (https://authress.io)",
   "license": "Apache-2.0",
