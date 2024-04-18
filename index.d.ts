@@ -11,6 +11,11 @@ export interface Settings {
   applicationId: string;
 }
 
+export interface AuthenticateResponse {
+  /** The second step of the authentication flow requires the user to log in with their selected provider. Redirect the user to this location. If you are using a Service Client (sc_clientId) to support a legacy authentication flow as described in https://authress.io/knowledge-base/docs/authentication/connecting-providers-idp/oauth-setup-guide-part-3, this url should match your existing application, and allows following the next step in that guide. If you are not following that guide and just logging the user in, you can ignore this property. */
+  authenticationUrl?: string;
+}
+
 export interface AuthenticationParameters {
   /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
   connectionId?: string;
@@ -191,9 +196,9 @@ export class LoginClient {
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}. If neither the {@link connectionId} nor the {@link tenantLookupIdentifier} is specified the user will be directed to the Authress hosted login page to select their preferred login method.
    * @param {AuthenticationParameters} [settings] Parameters for controlling how and when users should be authenticated for the app.
-   * @return {Promise<boolean>} Is there a valid existing session.
+   * @return {Promise<void | AuthenticateResponse>} Automatically redirects the user to the appropriate location, unless the connectionId matches a legacy authentication flow.
    */
-  authenticate(settings?: AuthenticationParameters): Promise<boolean>;
+  authenticate(settings?: AuthenticationParameters): Promise<void | AuthenticateResponse>;
 
   /**
    * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.

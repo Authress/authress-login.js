@@ -4,6 +4,7 @@ This is the changelog for [Authress Login](readme.md).
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
 * Throw error on invalid application specified from inside the SDK for improved debugging.
+* Support returning the `authenticationUrl` via the `authenticate` response for implementations that don't require a redirect.
 
 ## 2.3 ##
 * Add MFA device methods.
