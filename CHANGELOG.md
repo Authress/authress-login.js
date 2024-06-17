@@ -1,6 +1,9 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 2.5 ##
+* Handle `<HTML DOCUMENT></HTML>` improved with better error investigation into the `error.data` property as well.
+
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
 * Throw error on invalid application specified from inside the SDK for improved debugging.

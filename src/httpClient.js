@@ -13,11 +13,12 @@ const errorMessages = new Set([
   'The Internet connection appears to be offline.', // Safari 16
   'Network request failed', // `cross-fetch`
   'fetch failed', // Undici (Node.js)
-  '<HTML DOCUMENT></HTML>' // Handle some HTML error page responses as well
+  '<HTML DOCUMENT></HTML>' // Handle some HTML error page responses as well, or sometimes CDN is having problems, if the response includes an HTML Document, then for sure there was an issue
 ]);
 
 function isNetworkError(error) {
-  return error && error.message && errorMessages.has(error.message);
+  return error && error.message && typeof error.message === 'string' && errorMessages.has(error.message)
+    || error && error.data && typeof error.data === 'string' && errorMessages.has(error.data);
 }
 
 async function retryExecutor(func) {
