@@ -89,7 +89,7 @@ class UserIdentityTokenStorageManager {
     const cookies = document.cookie.split('; ');
     for (const cookie of cookies) {
       // Remove only the cookies that are relevant to the client
-      if (!['user', 'authorization', 'auth-code'].includes(cookie.split('=')[0]) || cookieName && cookie.split('=')[0] !== cookieName) {
+      if (!['user', 'authorization', 'auth-code', 'AuthUserId'].includes(cookie.split('=')[0]) || cookieName && cookie.split('=')[0] !== cookieName) {
         continue;
       }
 
