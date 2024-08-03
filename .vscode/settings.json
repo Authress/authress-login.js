@@ -3,6 +3,7 @@
         "builtins",
         "embeddable",
         "esbuild",
-        "filemanager"
+        "filemanager",
+        "totp"
     ]
 }

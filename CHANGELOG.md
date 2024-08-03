@@ -4,6 +4,7 @@ This is the changelog for [Authress Login](readme.md).
 ## 2.5 ##
 * Handle `<HTML DOCUMENT></HTML>` improved with better error investigation into the `error.data` property as well.
 * Also remove the `AuthUserId` cookie when removing other cookies.
+* Add `antiAbuseHash` generation as part of authentication requests
 
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
