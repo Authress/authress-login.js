@@ -115,7 +115,7 @@ class LoginClient {
 
     // We use endsWith because the issuer will be limited to only the authress custom domain FQDN subdomain, the hostUrl could be a specific subdomain subdomain for the tenant.
     // * issuer = tenant.custom.domain, hostUrl = custom.domain => ✓
-    // * issuer = accountid.login.authress.io, hostUrl = login.authress.io => ✓
+    // * issuer = accountId.login.authress.io, hostUrl = login.authress.io => ✓
 
     const issuerOrigin = new URL(userData.iss).hostname;
     const hostUrlOrigin = new URL(this.hostUrl).hostname;
@@ -442,11 +442,13 @@ class LoginClient {
     }
 
     try {
+      const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier });
       const requestOptions = await this.httpClient.patch(`/authentication/${authenticationRequestId}`, true, {
+        antiAbuseHash,
         connectionId, tenantLookupIdentifier, connectionProperties
       });
 
-      // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the curernt UI, there is no need to do anything special.
+      // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the current UI, there is no need to do anything special.
       if (new URL(requestOptions.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
         return {
           authenticationUrl: requestOptions.data.authenticationUrl
@@ -548,6 +550,7 @@ class LoginClient {
     }
 
     const { codeChallenge } = await jwtManager.getAuthCodes();
+    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier, applicationId: this.applicationId });
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
@@ -556,6 +559,7 @@ class LoginClient {
         Authorization: `Bearer ${accessToken}`
       };
       const requestOptions = await this.httpClient.post('/authentication', this.enableCredentials, {
+        antiAbuseHash,
         linkIdentity: true,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier,
@@ -617,6 +621,7 @@ class LoginClient {
     }
 
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
+    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier, inviteId, applicationId: this.applicationId });
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
@@ -626,6 +631,7 @@ class LoginClient {
       }
 
       const authResponse = await this.httpClient.post('/authentication', false, {
+        antiAbuseHash,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier, inviteId,
         connectionProperties,
@@ -637,7 +643,7 @@ class LoginClient {
         enableCredentials: authResponse.data.enableCredentials, multiAccount
       }));
 
-      // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the curernt UI, there is no need to do anything special.
+      // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the current UI, there is no need to do anything special.
       if (new URL(authResponse.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
         return {
           authenticationUrl: authResponse.data.authenticationUrl

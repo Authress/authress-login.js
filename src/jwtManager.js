@@ -63,6 +63,22 @@ class JwtManager {
     const codeChallenge = base64url.encode(hashBuffer);
     return { codeVerifier, codeChallenge };
   }
+
+  async calculateAntiAbuseHash(props) {
+    const timestamp = Date.now();
+    const valueString = Object.values(props).filter(v => v).join('|');
+
+    let fineTuner = 0;
+    let hash = null;
+    while (++fineTuner) {
+      hash = base64url.encode(await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(`${timestamp};${fineTuner};${valueString}`)));
+      if (hash.match(/^00/)) {
+        break;
+      }
+    }
+
+    return `v1;${timestamp};${fineTuner};${hash}`;
+  }
 }
 
 module.exports = new JwtManager();
