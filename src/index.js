@@ -95,6 +95,8 @@ class LoginClient {
    * @return {Object} The user data object.
    */
   getUserIdentity() {
+    // Implementor's Note: Do not log in this method as it is frequently called from loggers and therefore would introduce an infinite loop.
+
     const idToken = userIdentityTokenStorageManager.getUserCookie();
     // Cache the ID Token in the local storage as soon as we attempt to check for it.
     // * We need this in the cache, and the best way to do this is right here, so it's in one place
@@ -120,7 +122,6 @@ class LoginClient {
     const issuerOrigin = new URL(userData.iss).hostname;
     const hostUrlOrigin = new URL(this.hostUrl).hostname;
     if (!issuerOrigin.endsWith(hostUrlOrigin) && !hostUrlOrigin.endsWith(issuerOrigin)) {
-      this.logger && this.logger.error && this.logger.error({ title: 'Token saved in browser is for a different issuer, discarding', issuerOrigin, hostUrlOrigin, savedUserData: userData });
       userIdentityTokenStorageManager.clear();
       return null;
     }
