@@ -329,12 +329,18 @@ class LoginClient {
       return false;
     }
 
-    if (authRequest.nonce && urlSearchParams.get('code')) {
-      newUrl.searchParams.delete('nonce');
+    // We are in the Authress authentication context. We might not have a code and we might not have other properties depending on the login path, so this check let's us ensure we delete all url parameters that aren't necessary
+    if (authRequest.nonce) {
       newUrl.searchParams.delete('iss');
+      newUrl.searchParams.delete('nonce');
       newUrl.searchParams.delete('code');
+      newUrl.searchParams.delete('expires_in');
+      newUrl.searchParams.delete('access_token');
+      newUrl.searchParams.delete('id_token');
       history.replaceState({}, undefined, newUrl.toString());
+    }
 
+    if (authRequest.nonce && urlSearchParams.get('code')) {
       // Compare the initial authentication requestId to the returned one. If they don't match either the nonce has been tampered with or this isn't the latest authentication request
       // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
       if (authRequest.nonce === urlSearchParams.get('nonce')) {
@@ -362,13 +368,6 @@ class LoginClient {
 
     if (windowManager.isLocalHost()) {
       if (urlSearchParams.get('nonce') && urlSearchParams.get('access_token')) {
-        newUrl.searchParams.delete('iss');
-        newUrl.searchParams.delete('nonce');
-        newUrl.searchParams.delete('expires_in');
-        newUrl.searchParams.delete('access_token');
-        newUrl.searchParams.delete('id_token');
-        history.replaceState({}, undefined, newUrl.toString());
-
         // Compare the initial authentication requestId to the returned one. If they don't match either the nonce has been tampered with or this isn't the latest authentication request
         // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
         if (!authRequest.nonce || authRequest.nonce === urlSearchParams.get('nonce')) {
