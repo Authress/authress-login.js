@@ -707,6 +707,7 @@ class LoginClient {
     if (this.enableCredentials) {
       try {
         await this.httpClient.delete('/session', this.enableCredentials);
+        this.lastSessionCheck = 0;
         if (redirectUrl && redirectUrl !== windowManager.getCurrentLocation().href) {
           windowManager.assign(redirectUrl);
         }
@@ -718,6 +719,11 @@ class LoginClient {
     fullLogoutUrl.searchParams.set('redirect_uri', redirectUrl || windowManager.getCurrentLocation().href);
     fullLogoutUrl.searchParams.set('client_id', this.applicationId);
     windowManager.assign(fullLogoutUrl.toString());
+
+    this.lastSessionCheck = 0;
+
+    // Prevent the current UI from taking any action once we decided we need to log out.
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 }
 
