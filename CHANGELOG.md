@@ -6,6 +6,7 @@ This is the changelog for [Authress Login](readme.md).
 * Also remove the `AuthUserId` cookie when removing other cookies.
 * Add `antiAbuseHash` generation as part of authentication requests
 * clear the `nonce` and `iss` parameters from the URL when they are set.
+* [Fix] Force a sessionCheck after a logout.
 
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
