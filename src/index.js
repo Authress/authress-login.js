@@ -309,7 +309,6 @@ class LoginClient {
 
   async userSessionContinuation(backgroundTrigger) {
     const urlSearchParams = new URLSearchParams(windowManager.getCurrentLocation().search);
-    const newUrl = new URL(windowManager.getCurrentLocation());
 
     let authRequest = {};
     if (typeof localStorage !== 'undefined') {
@@ -329,15 +328,9 @@ class LoginClient {
       return false;
     }
 
-    // We are in the Authress authentication context. We might not have a code and we might not have other properties depending on the login path, so this check let's us ensure we delete all url parameters that aren't necessary
-    if (authRequest.nonce) {
-      newUrl.searchParams.delete('iss');
-      newUrl.searchParams.delete('nonce');
-      newUrl.searchParams.delete('code');
-      newUrl.searchParams.delete('expires_in');
-      newUrl.searchParams.delete('access_token');
-      newUrl.searchParams.delete('id_token');
-      history.replaceState({}, undefined, newUrl.toString());
+    // We are in the Authress authentication context. We might not have a code and we might not have other properties depending on the login path, so this check let's us ensure we delete all url parameters that aren't necessary, and since this will happen even outside of an auth exchange, let's also check for containing the matching iss
+    if (authRequest.nonce || urlSearchParams.get('iss').includes(this.hostUrl)) {
+      this.sanitizeQueryParameters();
     }
 
     if (authRequest.nonce && urlSearchParams.get('code')) {
@@ -702,6 +695,9 @@ class LoginClient {
   async logout(redirectUrl) {
     userIdentityTokenStorageManager.clear();
 
+    // Terminate all query parameters in the URL which might trick the app into thinking that the user is still logged in. Any property that is associated with Authress should be removed.
+    this.sanitizeQueryParameters();
+
     // Reset user local session
     userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
     if (this.enableCredentials) {
@@ -724,6 +720,17 @@ class LoginClient {
 
     // Prevent the current UI from taking any action once we decided we need to log out.
     await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  sanitizeQueryParameters() {
+    const newUrl = new URL(windowManager.getCurrentLocation());
+    newUrl.searchParams.delete('iss');
+    newUrl.searchParams.delete('nonce');
+    newUrl.searchParams.delete('code');
+    newUrl.searchParams.delete('expires_in');
+    newUrl.searchParams.delete('access_token');
+    newUrl.searchParams.delete('id_token');
+    history.replaceState({}, undefined, newUrl.toString());
   }
 }
 

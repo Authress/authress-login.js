@@ -1,5 +1,5 @@
-module.exports.sanitizeUrl = function sanitizeUrl(rawUrlStrng) {
-  let sanitizedUrl = rawUrlStrng;
+module.exports.sanitizeUrl = function sanitizeUrl(rawUrlString) {
+  let sanitizedUrl = rawUrlString;
   if (!sanitizedUrl.startsWith('http')) {
     sanitizedUrl = `https://${sanitizedUrl}`;
   }
