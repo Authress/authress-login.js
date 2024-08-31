@@ -691,8 +691,26 @@ class LoginClient {
   /**
    * @description Log the user out removing the current user's session. If the user is not logged in this has no effect. If the user is logged in via secure session, the the redirect url will be ignored. If the user is logged in without a secure session the user agent will be redirected to the hosted login and then redirected to the {@link redirectUrl}.
    * @param {String} [redirectUrl='window.location.href'] Optional redirect location to return the user to after logout. Will only be used for cross domain sessions.
+   * @throws InvalidRedirectUrl - When the passed in redirect url is not a valid url.
    */
-  async logout(redirectUrl) {
+  async logout(requestedRedirectUrl) {
+    let redirectUrl;
+    if (requestedRedirectUrl) {
+      try {
+        // eslint-disable-next-line no-new
+        new URL(requestedRedirectUrl);
+        redirectUrl = requestedRedirectUrl;
+      } catch (error) {
+        try {
+          redirectUrl = new URL(requestedRedirectUrl, windowManager.getCurrentLocation().href).toString();
+        } catch (relativeRedirectUrlAlsoFailed) {
+          const e = Error(`The logout redirect url is not valid URL: ${requestedRedirectUrl}`);
+          e.code = 'InvalidRedirectUrl';
+          throw e;
+        }
+      }
+    }
+
     userIdentityTokenStorageManager.clear();
 
     // Terminate all query parameters in the URL which might trick the app into thinking that the user is still logged in. Any property that is associated with Authress should be removed.
@@ -704,8 +722,10 @@ class LoginClient {
       try {
         await this.httpClient.delete('/session', this.enableCredentials);
         this.lastSessionCheck = 0;
-        if (redirectUrl && redirectUrl !== windowManager.getCurrentLocation().href) {
-          windowManager.assign(redirectUrl);
+        // We use the requestedRedirectUrl here and not the redirectUrl because `windowManager.assign` actually accepts relative urls
+        // * AND we don't want to force a navigation if we are already in the right location.
+        if (requestedRedirectUrl && requestedRedirectUrl !== windowManager.getCurrentLocation().href) {
+          windowManager.assign(requestedRedirectUrl);
         }
         return;
       } catch (error) { /**/ }
