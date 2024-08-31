@@ -12,7 +12,7 @@
   "scripts": {
     "build": "node make.js build && NODE_ENV=production webpack --mode=production",
     "lint": "eslint --ext .js,.ts src tests make.js index.d.ts",
-    "test": "check-dts index.d.ts && mocha tests/**/*.test.js -R spec"
+    "test": "check-dts index.d.ts && mocha tests/*.test.js tests/**/*.test.js -R spec"
   },
   "dependencies": {
     "cookie": "^0.5.0",
