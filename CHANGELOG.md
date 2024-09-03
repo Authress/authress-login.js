@@ -8,6 +8,7 @@ This is the changelog for [Authress Login](readme.md).
 * clear the `nonce` and `iss` parameters from the URL when they are set.
 * [Fix] Force a sessionCheck after a logout.
 * Validate logout redirect urls to ensure they are valid before attempting to log the user out.
+* [Fix] enable iOS 'Load Failed' non-compliant HTTP Fetch retries.
 
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
