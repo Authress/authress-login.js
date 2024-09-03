@@ -13,6 +13,7 @@ const errorMessages = new Set([
   'The Internet connection appears to be offline.', // Safari 16
   'Network request failed', // `cross-fetch`
   'fetch failed', // Undici (Node.js)
+  'Load failed', // iOS Fetch failed to respond - https://stackoverflow.com/questions/71280168/javascript-typeerror-load-failed-error-when-calling-fetch-on-ios
   '<HTML DOCUMENT></HTML>' // Handle some HTML error page responses as well, or sometimes CDN is having problems, if the response includes an HTML Document, then for sure there was an issue
 ]);
 
