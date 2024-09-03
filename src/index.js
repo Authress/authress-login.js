@@ -329,7 +329,7 @@ class LoginClient {
     }
 
     // We are in the Authress authentication context. We might not have a code and we might not have other properties depending on the login path, so this check let's us ensure we delete all url parameters that aren't necessary, and since this will happen even outside of an auth exchange, let's also check for containing the matching iss
-    if (authRequest.nonce || urlSearchParams.get('iss').includes(this.hostUrl)) {
+    if (authRequest.nonce || urlSearchParams.get('iss') && urlSearchParams.get('iss').includes(this.hostUrl)) {
       this.sanitizeQueryParameters();
     }
 
