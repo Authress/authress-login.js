@@ -670,13 +670,22 @@ class LoginClient {
    * @description Ensures the user's bearer token exists. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.
    * @param {Object} [options] Options for getting a token including timeout configuration.
    * @param {Number} [options.timeoutInMillis=5000] Timeout waiting for user token to populate. After this time an error will be thrown.
-   * @return {Promise<String>} The Authorization Bearer token if allowed otherwise null.
+   * @return {Promise<String>} The Authorization Bearer token
+   * @throws {TokenTimeout} After the timeout if no session was found. By default waits for 5000 for another thread to continue the session, after which if still no token exists, will throw
    */
   async ensureToken(options) {
+    // Using this function blocks all ensureToken calls on a single session continuation, this is required.
     await this.userSessionExists();
+
+    // Timeout after the timeout so that all threads don't "get stuck" in an unexpected way for consumers of the library.
     const inputOptions = Object.assign({ timeoutInMillis: 5000 }, options || {});
     const sessionWaiterAsync = this.waitForUserSession();
-    const timeoutAsync = new Promise((resolve, reject) => setTimeout(reject, inputOptions.timeoutInMillis || 0));
+
+    // The max timeout is -1 or Infinity, however `setTimeout` does really like that, often the max allowed value is 2**31 - 1 (MAX_INT), so we'll use that instead
+    // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#maximum_delay_value
+    const timeoutInMillis = inputOptions.timeoutInMillis === -1 || inputOptions.timeoutInMillis > (2 ** 31 - 1) ? (2 ** 31 - 1) : inputOptions.timeoutInMillis;
+
+    const timeoutAsync = new Promise((resolve, reject) => setTimeout(reject, timeoutInMillis || 0));
     try {
       await Promise.race([sessionWaiterAsync, timeoutAsync]);
     } catch (timeout) {

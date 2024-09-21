@@ -4,6 +4,7 @@
         "embeddable",
         "esbuild",
         "filemanager",
+        "multifactor",
         "totp"
     ]
 }
