@@ -113,6 +113,7 @@ class HttpClient {
       }
       return {
         url,
+        method,
         headers: response.headers,
         status: response.status,
         data: responseBody
@@ -158,8 +159,9 @@ class HttpClient {
       }
 
       const httpError = {
-        url: url,
-        status: status,
+        url,
+        method,
+        status,
         data: resolvedError,
         headers: error.headers
       };
