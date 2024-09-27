@@ -674,6 +674,20 @@ class LoginClient {
    * @throws {TokenTimeout} After the timeout if no session was found. By default waits for 5000 for another thread to continue the session, after which if still no token exists, will throw
    */
   async ensureToken(options) {
+    // When the time is set to zero, don't race the promises, instead just directly check if the token likely exists and return it. Otherwise throw.
+    // * We do this to avoid a scenario where the Promise.race(setTimeout(0)) immediately returns first even if the session is available.
+    if (options?.timeoutInMillis === 0) {
+      const userIdentity = this.getUserIdentity();
+      const cookies = cookieManager.parse(document.cookie);
+      if (userIdentity) {
+        return cookies.authorization !== 'undefined' && cookies.authorization;
+      }
+
+      const error = Error('No token retrieved after timeout');
+      error.code = 'TokenTimeout';
+      throw error;
+    }
+
     // Using this function blocks all ensureToken calls on a single session continuation, this is required.
     await this.userSessionExists();
 
