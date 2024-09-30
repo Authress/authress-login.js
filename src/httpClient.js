@@ -18,28 +18,34 @@ const errorMessages = new Set([
 ]);
 
 function isNetworkError(error) {
-  return error && error.message && typeof error.message === 'string' && errorMessages.has(error.message)
-    || error && error.data && typeof error.data === 'string' && errorMessages.has(error.data);
+  return error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.status || error.status >= 500
+    || typeof error.message === 'string' && errorMessages.has(error.message)
+    || typeof error.data === 'string' && errorMessages.has(error.data);
 }
 
 async function retryExecutor(func) {
-  let lastError = null;
+  let lastNetworkError = null;
   for (let iteration = 0; iteration < 5; iteration++) {
     try {
       const result = await func();
       return result;
     } catch (error) {
       error.retryCount = iteration;
-      lastError = error;
-      if (isNetworkError(error) || error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.status || error.status >= 500) {
-        lastError.isNetworkError = true;
-        await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
-        continue;
+
+      if (!isNetworkError(error)) {
+        throw error;
       }
-      throw error;
+      
+      lastNetworkError = error;
+      lastNetworkError.isNetworkError = true;
+      await new Promise(resolve => setTimeout(resolve, 10 * 2 ** iteration));
+      continue;
     }
   }
-  throw lastError;
+
+  const customError = new Error('[Authress Login SDK] Http Request failed due to a Network Error even after multiple retries', { cause: lastNetworkError });
+  customError.code = 'AuthressSdkNetworkError';
+  throw customError;
 }
 
 class HttpClient {
@@ -90,7 +96,7 @@ class HttpClient {
     const method = rawMethod.toUpperCase();
     const headers = Object.assign({}, defaultHeaders, requestHeaders);
     try {
-      this.logger && this.logger.debug && this.logger.debug({ title: 'HttpClient Request', method, url });
+      this.logger && this.logger.debug && this.logger.debug({ title: '[Authress Login SDK] HttpClient Request', method, url });
       const request = { method, headers };
       if (data) {
         request.body = JSON.stringify(data);
@@ -129,7 +135,7 @@ class HttpClient {
 
       const extensionErrorId = resolvedError.stack && resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
       if (extensionErrorId) {
-        this.logger && this.logger.debug && this.logger.debug({ title: `Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
+        this.logger && this.logger.debug && this.logger.debug({ title: `[Authress Login SDK] Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
         const newError = new Error(`Extension Error ID: ${extensionErrorId}`);
         newError.code = 'BROWSER_EXTENSION_ERROR';
         throw newError;
@@ -137,14 +143,14 @@ class HttpClient {
 
       const status = error.status;
       let level = 'warn';
-      let message = 'HttpClient Response Error';
+      let message = '[Authress Login SDK] HttpClient Response Error';
       if (!error) {
-        message = 'HttpClient Response Error - Unknown error occurred';
+        message = '[Authress Login SDK] HttpClient Response Error - Unknown error occurred';
       } else if (status === 401) {
-        message = 'HttpClient Response Error due to invalid token';
+        message = '[Authress Login SDK] HttpClient Response Error due to invalid token';
         level = 'debug';
       } else if (status === 404) {
-        message = 'HttpClient Response: Not Found';
+        message = '[Authress Login SDK] HttpClient Response: Not Found';
         level = 'debug';
       } else if (status < 500 && ignoreExpectedWarnings) {
         level = 'debug';
