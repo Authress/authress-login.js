@@ -676,7 +676,7 @@ class LoginClient {
   async ensureToken(options) {
     // When the time is set to zero, don't race the promises, instead just directly check if the token likely exists and return it. Otherwise throw.
     // * We do this to avoid a scenario where the Promise.race(setTimeout(0)) immediately returns first even if the session is available.
-    if (options?.timeoutInMillis === 0) {
+    if (options && options.timeoutInMillis === 0) {
       const userIdentity = this.getUserIdentity();
       const cookies = cookieManager.parse(document.cookie);
       if (userIdentity) {
