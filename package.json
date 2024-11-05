@@ -15,7 +15,7 @@
     "test": "check-dts index.d.ts && mocha tests/*.test.js tests/**/*.test.js -R spec"
   },
   "dependencies": {
-    "cookie": "^0.5.0",
+    "cookie": "<1",
     "lodash.take": "^4.1.1"
   },
   "devDependencies": {
@@ -84,6 +84,6 @@
   },
   "homepage": "https://authress.io",
   "engines": {
-    "node": ">=14"
+    "node": ">=16"
   }
 }
