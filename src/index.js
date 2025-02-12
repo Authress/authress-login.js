@@ -161,7 +161,7 @@ class LoginClient {
       const token = await this.ensureToken();
       await this.httpClient.delete(`/session/devices/${encodeURIComponent(deviceId)}`, this.enableCredentials, { Authorization: token && `Bearer ${token}` });
     } catch (error) {
-      this.logger && this.logger.log({ title: 'Failed to delete device', error });
+      this.logger && this.logger.log({ title: '[Authress Login SDK] Failed to delete device', error });
       throw error;
     }
   }
@@ -269,7 +269,7 @@ class LoginClient {
       const deviceCreationResult = await this.httpClient.post('/session/devices', this.enableCredentials, request, { Authorization: token && `Bearer ${token}` });
       return deviceCreationResult.data;
     } catch (error) {
-      this.logger && this.logger.log({ title: 'Failed to register new device', error, request });
+      this.logger && this.logger.log({ title: '[Authress Login SDK] Failed to register new device', error, request });
       throw error;
     }
   }
@@ -319,7 +319,7 @@ class LoginClient {
           this.enableCredentials = authRequest.enableCredentials;
         }
       } catch (error) {
-        this.logger && this.logger.debug && this.logger.debug({ title: 'LocalStorage failed in Browser', error });
+        this.logger && this.logger.debug && this.logger.debug({ title: '[Authress Login SDK] LocalStorage failed in Browser', error });
       }
     }
 
@@ -348,7 +348,7 @@ class LoginClient {
           userSessionResolver();
           return true;
         } catch (error) {
-          this.logger && this.logger.log({ title: 'Failed exchange authentication response for a token.', error });
+          this.logger && this.logger.log({ title: '[Authress Login SDK] Failed exchange authentication response for a token.', error });
 
           // The code was expired, contaminated, or already exchanged.
           if (error.data && error.data.error === 'invalid_request') {
@@ -396,9 +396,9 @@ class LoginClient {
       } catch (error) {
         // On 400, 404, 409 we know that the session is no longer able to be continued.
         if (error.status === 400 || error.status === 404 || error.status === 409) {
-          this.logger && this.logger.log && this.logger.log({ title: 'User does not have an existing authentication session', error });
+          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] User does not have an existing authentication session', error });
         } else {
-          this.logger && this.logger.log && this.logger.log({ title: 'Failed attempting to check if the user has an existing authentication session', error });
+          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed attempting to check if the user has an existing authentication session', error });
         }
       }
       const newUserData = this.getUserIdentity();
@@ -450,7 +450,7 @@ class LoginClient {
 
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: 'Failed to update extension authentication request', error });
+      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to update extension authentication request', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -500,7 +500,7 @@ class LoginClient {
     try {
       await this.httpClient.delete(`/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: 'Failed to unlink user identity', error });
+      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to unlink user identity', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -561,7 +561,7 @@ class LoginClient {
       }, headers);
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: 'Failed to start user identity link', error });
+      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -600,7 +600,7 @@ class LoginClient {
       const existingJwtTokenString = await this.ensureToken();
       const jwtPayload = jwtManager.decode(existingJwtTokenString);
       if (connectionId && jwtPayload && jwtPayload.azp && connectionId !== jwtPayload.azp) {
-        this.logger && this.logger.log && this.logger.log({ title: 'Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
         const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
         Recommended Options:
           (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
@@ -652,7 +652,7 @@ class LoginClient {
         windowManager.assign(authResponse.data.authenticationUrl);
       }
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: 'Failed to start authentication for user', error });
+      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
