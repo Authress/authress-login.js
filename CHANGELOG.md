@@ -2,6 +2,7 @@
 This is the changelog for [Authress Login](readme.md).
 
 ## 2.5 ##
+* Minimum supported NodeJs compiler version: 18
 * Handle `<HTML DOCUMENT></HTML>` improved with better error investigation into the `error.data` property as well.
 * Also remove the `AuthUserId` cookie when removing other cookies.
 * Add `antiAbuseHash` generation as part of authentication requests
