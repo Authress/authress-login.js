@@ -338,7 +338,8 @@ class LoginClient {
       // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
       if (authRequest.nonce === urlSearchParams.get('nonce')) {
         const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
-        const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.applicationId, code, code_verifier: authRequest.codeVerifier };
+        const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ client_id: this.applicationId, authenticationRequestId: authRequest.nonce, code });
+        const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.applicationId, code, code_verifier: authRequest.codeVerifier, antiAbuseHash };
         try {
           const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
           const idToken = jwtManager.decode(tokenResult.data.id_token);
@@ -435,7 +436,7 @@ class LoginClient {
     }
 
     try {
-      const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier });
+      const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier, authenticationRequestId });
       const requestOptions = await this.httpClient.patch(`/authentication/${authenticationRequestId}`, true, {
         antiAbuseHash,
         connectionId, tenantLookupIdentifier, connectionProperties

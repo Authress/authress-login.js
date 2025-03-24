@@ -77,7 +77,7 @@ class JwtManager {
       }
     }
 
-    return `v1;${timestamp};${fineTuner};${hash}`;
+    return `v2;${timestamp};${fineTuner};${hash}`;
   }
 }
 
