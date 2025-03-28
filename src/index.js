@@ -597,7 +597,8 @@ class LoginClient {
       throw e;
     }
 
-    if (!force && !multiAccount && await this.userSessionExists()) {
+    // We include inviteId here because inviteId also allow linking to tenants and capturing groups and access records associated with the invite
+    if (!inviteId && !force && !multiAccount && await this.userSessionExists()) {
       const existingJwtTokenString = await this.ensureToken();
       const jwtPayload = jwtManager.decode(existingJwtTokenString);
       if (connectionId && jwtPayload && jwtPayload.azp && connectionId !== jwtPayload.azp) {
