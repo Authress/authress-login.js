@@ -624,7 +624,7 @@ class LoginClient {
         userIdentityTokenStorageManager.clear();
       }
 
-      const authResponse = await this.httpClient.post('/authentication', false, {
+      const authResponse = await this.httpClient.post('/authentication', this.enableCredentials, {
         antiAbuseHash,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier, inviteId,
