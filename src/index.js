@@ -44,6 +44,8 @@ class LoginClient {
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
 
+    userIdentityTokenStorageManager.retainUserCookie = settings.retainUserCookie;
+
     if (!settingsWithDefault.skipBackgroundCredentialsCheck) {
       windowManager.onLoad(async () => {
         await this.userSessionExists(true);
