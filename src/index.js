@@ -627,7 +627,8 @@ class LoginClient {
         userIdentityTokenStorageManager.clear();
       }
 
-      const authResponse = await this.httpClient.post('/authentication', this.enableCredentials, {
+      // this.enableCredentials must be false as long as the response from the Authress Token Service do not include access-control-allow-credentials: true in the response to errors
+      const authResponse = await this.httpClient.post('/authentication', false, {
         antiAbuseHash,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
         connectionId, tenantLookupIdentifier, inviteId,
