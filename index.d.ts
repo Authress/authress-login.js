@@ -9,6 +9,25 @@ export interface Settings {
 export interface AuthenticateResponse {
   /** The second step of the authentication flow requires the user to log in with their selected provider. Redirect the user to this location. If you are using a Service Client (sc_clientId) to support a legacy authentication flow as described in https://authress.io/knowledge-base/docs/authentication/connecting-providers-idp/oauth-setup-guide-part-3, this url should match your existing application, and allows following the next step in that guide. If you are not following that guide and just logging the user in, you can ignore this property. */
   authenticationUrl?: string;
+
+  authenticationRequestId: string;
+}
+
+export interface OneTimeCodeAuthenticateParameters {
+  /** Specify which service client will be used to complete the passwordless authentication. */
+  serviceClientId?: string;
+  /** Invite to use to login, only one of the connectionId, tenantLookupIdentifier, or the inviteId is required. Takes precedent over the tenantLookupIdentifier, if the invite includes the defaultLoginTenantId parameter. */
+  inviteId?: string;
+  /** Store the credentials response in the specified location. Options are either 'cookie' or 'query'. (Default: **cookie**) */
+  responseLocation?: string;
+  /** The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow. (Default: **token id_token**) */
+  flowType?: string;
+  /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
+  redirectUrl?: string;
+  /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
+  force?: boolean;
+  /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
+  clearUserDataBeforeLogin?: boolean;
 }
 
 export interface AuthenticationParameters {
@@ -189,6 +208,13 @@ export class LoginClient {
    * @return {Promise<void>}
    */
   linkIdentity(settings: LinkIdentityParameters): Promise<void>;
+
+  /**
+   * @description Logs a user in, if the user is not logged in, will begin the passwordless flow as documented at: https://authress.io/knowledge-base/docs/authentication/connecting-providers-idp/oauth-setup-guide-part-3, then redirect back to the {@link redirectUrl}.
+   * @param {OneTimeCodeAuthenticateParameters} [settings] Parameters for controlling how and when users should be authenticated for the app.
+   * @return {Promise<AuthenticateResponse | null>} Returns the necessary properties for authentication unless the user is already logged in.
+   */
+  authenticateWithOneTimeCode(settings: OneTimeCodeAuthenticateParameters): Promise<AuthenticateResponse | null>;
 
   /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}. If neither the {@link connectionId} nor the {@link tenantLookupIdentifier} is specified the user will be directed to the Authress hosted login page to select their preferred login method.

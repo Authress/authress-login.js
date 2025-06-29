@@ -578,6 +578,86 @@ class LoginClient {
   }
 
   /**
+   * @description Logs a user in, if the user is not logged in, will begin the passwordless flow as documented at: https://authress.io/knowledge-base/docs/authentication/connecting-providers-idp/oauth-setup-guide-part-3, then redirect back to the {@link redirectUrl}.
+   * @param {String} [serviceClientId] Specify which service client will be used to complete the passwordless authentication.
+   * @param {String} [inviteId] Invite to use to login, only one of the connectionId, tenantLookupIdentifier, or the inviteId is required.
+   * @param {String} [responseLocation=cookie] Store the credentials response in the specified location. Options are either 'cookie' or 'query'.
+   * @param {String} [flowType=token id_token] The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow.
+   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
+   * @param {Boolean} [force=false] Force getting new credentials.
+   * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
+   * @return {Promise<AuthenticateResponse | null>} The authentication response.
+   */
+  async authenticateWithOneTimeCode(options = {}) {
+    const { serviceClientId, inviteId, redirectUrl, force, responseLocation, flowType, clearUserDataBeforeLogin } = (options || {});
+    if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
+      const e = Error('Authentication response location is not valid');
+      e.code = 'InvalidResponseLocation';
+      throw e;
+    }
+
+    if (!serviceClientId) {
+      const e = Error('The Passwordless Service Client ID is required');
+      e.code = 'InvalidInput';
+      throw e;
+    }
+
+    // We include inviteId here because inviteId also allow linking to tenants and capturing groups and access records associated with the invite
+    if (!inviteId && !force && await this.userSessionExists()) {
+      const existingJwtTokenString = await this.ensureToken();
+      const jwtPayload = jwtManager.decode(existingJwtTokenString);
+      if (jwtPayload && jwtPayload.azp && serviceClientId !== jwtPayload.azp) {
+        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
+        Recommended Options:
+          (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
+          (2) If the goal is link their current identity with a new from the new connection, use the linkIdentity() method.
+          (3) If the goal is skip log in if they are already logged in or force log in with the connectionId, first check if userSessionExists() and then only if "false", call authenticate().`);
+        e.code = 'AuthenticationConstraintContention';
+        throw e;
+      }
+
+      return null;
+    }
+
+    const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
+    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ serviceClientId, inviteId, applicationId: this.applicationId });
+
+    try {
+      const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
+      const selectedRedirectUrl = normalizedRedirectUrl || windowManager.getCurrentLocation().href;
+      if (clearUserDataBeforeLogin !== false) {
+        userIdentityTokenStorageManager.clear();
+      }
+
+      const authResponse = await this.httpClient.post('/authentication', this.enableCredentials, {
+        antiAbuseHash,
+        redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
+        connectionId: serviceClientId, inviteId,
+        applicationId: this.applicationId,
+        responseLocation, flowType
+      });
+      localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
+        nonce: authResponse.data.authenticationRequestId, codeVerifier, lastConnectionId: serviceClientId, redirectUrl: selectedRedirectUrl,
+        enableCredentials: authResponse.data.enableCredentials
+      }));
+
+      return {
+        authenticationUrl: authResponse.data.authenticationUrl,
+        authenticationRequestId: authResponse.data.authenticationRequestId
+      };
+    } catch (error) {
+      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
+        throw e;
+      }
+      throw (error.data || error);
+    }
+  }
+
+  /**
    * @description Logs a user in, if the user is not logged in, will redirect the user to their selected connection/provider and then redirect back to the {@link redirectUrl}.
    * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
    * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
@@ -644,7 +724,8 @@ class LoginClient {
       // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the current UI, there is no need to do anything special.
       if (new URL(authResponse.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
         return {
-          authenticationUrl: authResponse.data.authenticationUrl
+          authenticationUrl: authResponse.data.authenticationUrl,
+          authenticationRequestId: authResponse.data.authenticationRequestId
         };
       }
 
