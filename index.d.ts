@@ -183,7 +183,7 @@ export class LoginClient {
   waitForUserSession(): Promise<void>;
 
   /**
-   * @description Call this function on every route change. It will check if the user just logged in or is still logged in.
+   * @description Checks if the user's auth session is still valid, meaning they are still logged in, even if their current access token is expired. This will make an API call to Authress to validate their current auth session. Recommendation: Call this function on every route change.
    * @return {Promise<boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
   userSessionExists(): Promise<boolean>;
