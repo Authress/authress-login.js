@@ -10,7 +10,8 @@ const userIdentityTokenStorageManager = require('./userIdentityTokenStorageManag
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
 
-let userSessionSequencePromise = null;
+let userSessionSequencePromise = Promise.resolve();
+let userSessionCheckIsInProgress = false;
 
 const AuthenticationRequestNonceKey = 'AuthenticationRequestNonce';
 
@@ -290,23 +291,36 @@ class LoginClient {
   }
 
   /**
-   * @description Call this function on every route change. It will check if the user just logged in or is still logged in.
+   * @description Checks if the user's auth session is still valid, meaning they are still logged in, even if their current access token is expired. This will make an API call to Authress to validate their current auth session. Recommendation: Call this function on every route change.
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
   userSessionExists(backgroundTrigger) {
-    if (userSessionSequencePromise) {
-      // Prevent duplicate calls to checking the user session when they happen within the same 50ms time span
-      if (Date.now() - this.lastSessionCheck < 50) {
-        return userSessionSequencePromise;
-      }
-
-      this.lastSessionCheck = Date.now();
-      return userSessionSequencePromise = userSessionSequencePromise
-      .catch(() => { /* ignore since we always want to continue even after a failure */ })
-      .then(() => this.userSessionContinuation(backgroundTrigger));
+    // Prevent duplicate calls to checking the user session when they happen within the same 50ms time span
+    if (Date.now() - this.lastSessionCheck < 50) {
+      return userSessionSequencePromise;
     }
+
+    // Or if one is already in progress
+    if (userSessionCheckIsInProgress) {
+      return userSessionSequencePromise;
+    }
+
+    // These can be set here because the single threaded nature, there is no way that userSessionCheckIsInProgress can be true, but the userSessionSequencePromise to not have been updated. So we don't need any complex locking here, which javascript does not even support
     this.lastSessionCheck = Date.now();
-    return userSessionSequencePromise = this.userSessionContinuation(backgroundTrigger);
+    userSessionCheckIsInProgress = true;
+
+    return userSessionSequencePromise = userSessionSequencePromise
+    .catch(() => { /* ignore since we always want to continue even after a failure */ })
+    .then(async () => {
+      try {
+        const result = await this.userSessionContinuation(backgroundTrigger);
+        userSessionCheckIsInProgress = false;
+        return result;
+      } catch (error) {
+        userSessionCheckIsInProgress = false;
+        throw error;
+      }
+    });
   }
 
   async userSessionContinuation(backgroundTrigger) {
@@ -774,7 +788,8 @@ class LoginClient {
       throw error;
     }
 
-    // Using this function blocks all ensureToken calls on a single session continuation, this is required.
+    // This isn't strictly required, but firing it off, puts the session in waiting until we get confirmation back, that means that the next part will block on waiting sessions
+    // * We could delegate calling this to the application, but it's possible for them to get that wrong, instead, all requests to userSessionExists will be collapsed and ensure only one is run in serial. This has the secondary benefit of avoiding multiple token exchanges and accidentally race-condition on multiple exchanges of the same auth session token.
     await this.userSessionExists();
 
     // Timeout after the timeout so that all threads don't "get stuck" in an unexpected way for consumers of the library.
