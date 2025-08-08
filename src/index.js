@@ -736,7 +736,7 @@ class LoginClient {
       }));
 
       // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the current UI, there is no need to do anything special.
-      if (new URL(authResponse.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
+      if (!authResponse.data.authenticationUrl || new URL(authResponse.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
         return {
           authenticationUrl: authResponse.data.authenticationUrl,
           authenticationRequestId: authResponse.data.authenticationRequestId
