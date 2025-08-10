@@ -49,7 +49,7 @@ class LoginClient {
 
     if (!settingsWithDefault.skipBackgroundCredentialsCheck) {
       windowManager.onLoad(async () => {
-        await this.userSessionExists(true);
+        await this.userSessionExists({ backgroundTrigger: true });
       });
     }
   }
@@ -294,7 +294,7 @@ class LoginClient {
    * @description Checks if the user's auth session is still valid, meaning they are still logged in, even if their current access token is expired. This will make an API call to Authress to validate their current auth session. Recommendation: Call this function on every route change.
    * @return {Promise<Boolean>} Returns truthy if there a valid existing session, falsy otherwise.
    */
-  userSessionExists(backgroundTrigger) {
+  userSessionExists(options = { backgroundTrigger: false }) {
     // Prevent duplicate calls to checking the user session when they happen within the same 50ms time span
     if (Date.now() - this.lastSessionCheck < 50) {
       return userSessionSequencePromise;
@@ -313,7 +313,7 @@ class LoginClient {
     .catch(() => { /* ignore since we always want to continue even after a failure */ })
     .then(async () => {
       try {
-        const result = await this.userSessionContinuation(backgroundTrigger);
+        const result = await this.userSessionContinuation(options?.backgroundTrigger);
         userSessionCheckIsInProgress = false;
         return result;
       } catch (error) {
