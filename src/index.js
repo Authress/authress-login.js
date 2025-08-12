@@ -528,6 +528,68 @@ class LoginClient {
   }
 
   /**
+   * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection. Starts the identity linking flow which follows the same as the passwordless flow documented at https://authress.io/knowledge-base/docs/authentication/connecting-providers-idp/oauth-setup-guide-part-3, then redirect back to the {@link redirectUrl}.
+   * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
+   * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
+   * @return {Promise<void>} Is there a valid existing session.
+   */
+  async linkIdentityWithOneTimeCode({ connectionId, redirectUrl }) {
+    if (!connectionId) {
+      const e = Error('connectionId must be specified');
+      e.code = 'InvalidConnection';
+      throw e;
+    }
+
+    if (!this.getUserIdentity()) {
+      const e = Error('User must be logged into an existing account before linking a second account.');
+      e.code = 'NotLoggedIn';
+      throw e;
+    }
+
+    let accessToken;
+    try {
+      accessToken = await this.ensureToken({ timeoutInMillis: 100 });
+    } catch (error) {
+      if (error.code === 'TokenTimeout') {
+        const e = Error('User must be logged into an existing account before linking a second account.');
+        e.code = 'NotLoggedIn';
+        throw e;
+      }
+    }
+
+    const { codeChallenge } = await jwtManager.getAuthCodes();
+    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, applicationId: this.applicationId });
+
+    try {
+      const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
+      const selectedRedirectUrl = normalizedRedirectUrl || windowManager.getCurrentLocation().href;
+      const headers = this.enableCredentials && !windowManager.isLocalHost() ? {} : {
+        Authorization: `Bearer ${accessToken}`
+      };
+      const requestOptions = await this.httpClient.post('/authentication', this.enableCredentials, {
+        antiAbuseHash,
+        linkIdentity: true,
+        redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
+        connectionId,
+        applicationId: this.applicationId
+      }, headers);
+
+      return {
+        authenticationUrl: requestOptions.data.authenticationUrl,
+        authenticationRequestId: requestOptions.data.authenticationRequestId
+      };
+    } catch (error) {
+      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
+        throw e;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.
    * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
    * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
