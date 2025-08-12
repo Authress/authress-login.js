@@ -64,6 +64,13 @@ export interface LinkIdentityParameters {
   connectionProperties?: Record<string, string>;
 }
 
+export interface OneTimeCodeLinkIdentityParameters {
+  /** Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections */
+  connectionId?: string;
+  /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
+  redirectUrl?: string;
+}
+
 export interface ExtensionAuthenticationParameters {
   /** The redirect to your login screen will contain two query parameters `state`. Pass the state into this method. (Default: **window.location.query.state**) */
   state?: string;
@@ -201,6 +208,13 @@ export class LoginClient {
    * @return {Promise<void>} Throws an error if identity cannot be unlinked.
    */
   unlinkIdentity(identityId: string): Promise<void>;
+
+  /**
+   * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.
+   * @param {OneTimeCodeLinkIdentityParameters} settings Parameters for selecting which identity of a user should be linked.
+   * @return {Promise<void>}
+   */
+  linkIdentityWithOneTimeCode(settings: OneTimeCodeLinkIdentityParameters): Promise<AuthenticateResponse>;
 
   /**
    * @description Link a new identity to the currently logged in user. The user will be asked to authenticate to a new connection.
