@@ -43,7 +43,7 @@ export interface AuthenticationParameters {
   flowType?: string;
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
-  /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
+  /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
   /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
   force?: boolean;
@@ -60,7 +60,7 @@ export interface LinkIdentityParameters {
   tenantLookupIdentifier?: string;
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
-  /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
+  /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
 }
 
@@ -80,7 +80,7 @@ export interface ExtensionAuthenticationParameters {
   tenantLookupIdentifier?: string;
   /** Invite to use to login, only one of the connectionId, tenantLookupIdentifier, or the inviteId is required. */
   inviteId?: string;
-  /** Connection specific properties to pass to the identity provider. Can be used to override default scopes for example. */
+  /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
 }
 
