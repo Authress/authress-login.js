@@ -840,14 +840,19 @@ class LoginClient {
     // * We do this to avoid a scenario where the Promise.race(setTimeout(0)) immediately returns first even if the session is available.
     if (options && options.timeoutInMillis === 0) {
       const userIdentity = this.getUserIdentity();
-      const cookies = cookieManager.parse(document.cookie);
-      if (userIdentity) {
-        return cookies.authorization !== 'undefined' && cookies.authorization;
+      if (!userIdentity) {
+        const error = Error('No token retrieved after timeout');
+        error.code = 'TokenTimeout';
+        throw error;
       }
 
-      const error = Error('No token retrieved after timeout');
-      error.code = 'TokenTimeout';
-      throw error;
+      const cookies = cookieManager.parse(document.cookie);
+      if (cookies.authorization !== 'undefined') {
+        return cookies.authorization;
+      }
+
+      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use this method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.' });
+      return null;
     }
 
     // This isn't strictly required, but firing it off, puts the session in waiting until we get confirmation back, that means that the next part will block on waiting sessions
