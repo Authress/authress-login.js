@@ -846,12 +846,32 @@ class LoginClient {
         throw error;
       }
 
-      const cookies = cookieManager.parse(document.cookie);
-      if (cookies.authorization !== 'undefined') {
-        return cookies.authorization;
+      const authorizationValues = userIdentityTokenStorageManager.getAuthorizationTokens();
+      const matchingAuthorizationToken = authorizationValues.find(token => {
+        try {
+          const jwtPayload = jwtManager.decode(token);
+          if (jwtPayload.iss === this.hostUrl) {
+            return true;
+          }
+
+          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+          return false;
+        } catch (error) {
+          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token });
+          return false;
+        }
+      });
+
+      if (matchingAuthorizationToken) {
+        return matchingAuthorizationToken;
       }
 
-      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use this method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.' });
+      if (authorizationValues.length) {
+        this.logger && this.logger.error && this.logger.log({ title: '[Authress Login SDK] No matching issuer token found, returning the first valid token instead.' });
+        return authorizationValues[0];
+      }
+
+      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.' });
       return null;
     }
 
@@ -863,7 +883,7 @@ class LoginClient {
     const inputOptions = Object.assign({ timeoutInMillis: 5000 }, options || {});
     const sessionWaiterAsync = this.waitForUserSession();
 
-    // The max timeout is -1 or Infinity, however `setTimeout` does really like that, often the max allowed value is 2**31 - 1 (MAX_INT), so we'll use that instead
+    // The max timeout is -1 or Infinity, however `setTimeout` doesn't really like that, often the max allowed value is 2**31 - 1 (MAX_INT), so we'll use that instead
     // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#maximum_delay_value
     const timeoutInMillis = inputOptions.timeoutInMillis === -1 || inputOptions.timeoutInMillis > (2 ** 31 - 1) ? (2 ** 31 - 1) : inputOptions.timeoutInMillis;
 
@@ -875,8 +895,34 @@ class LoginClient {
       error.code = 'TokenTimeout';
       throw error;
     }
-    const cookies = cookieManager.parse(document.cookie);
-    return cookies.authorization !== 'undefined' && cookies.authorization;
+
+    const authorizationValues = userIdentityTokenStorageManager.getAuthorizationTokens();
+    const matchingAuthorizationToken = authorizationValues.find(token => {
+      try {
+        const jwtPayload = jwtManager.decode(token);
+        if (jwtPayload.iss === this.hostUrl) {
+          return true;
+        }
+
+        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        return false;
+      } catch (error) {
+        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token });
+        return false;
+      }
+    });
+
+    if (matchingAuthorizationToken) {
+      return matchingAuthorizationToken;
+    }
+
+    if (authorizationValues.length) {
+      this.logger && this.logger.error && this.logger.log({ title: '[Authress Login SDK] No matching issuer token found, returning the first valid token instead.' });
+      return authorizationValues[0];
+    }
+
+    this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.' });
+    return null;
   }
 
   /**

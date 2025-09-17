@@ -6,18 +6,7 @@ class JwtManager {
       return null;
     }
 
-    try {
-      const parsedToken = JSON.parse(base64url.decode(token.split('.')[1]));
-      // If the identity expires in less than 10 seconds from now, assume it is already expired.
-      // * This blocks issues with intermittent access, and subsequent issues when the token has a limited finite lifetime
-      // * All the Authress token server returns 5 second long JWT lifetimes to prevent issues with browsers refusing 0 second long lifetimes, so a buffer is required
-      if (parsedToken.exp) {
-        parsedToken.exp = parsedToken.exp - 10;
-      }
-      return parsedToken;
-    } catch (error) {
-      return null;
-    }
+    return this.decodeFull(token)?.payload;
   }
 
   decodeOrParse(token) {

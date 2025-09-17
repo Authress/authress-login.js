@@ -2,6 +2,13 @@ const cookieManager = require('cookie');
 
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
+const cookieKeys = {
+  user: 'user',
+  authorization: 'authorization',
+  authCode: 'auth-code',
+  authUserId: 'AuthUserId'
+};
+
 class UserIdentityTokenStorageManager {
   constructor() {
     this.retainUserCookie = false;
@@ -12,8 +19,17 @@ class UserIdentityTokenStorageManager {
       return null;
     }
     // Skip empty cookies when fetching
-    const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === 'user').map(c => c.replace(/^user=/, '')).find(c => c && c.trim()) || null;
+    const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.user).map(c => c.replace(/^user=/, '')).find(c => c && c.trim()) || null;
     return val;
+  }
+
+  getAuthorizationTokens() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return [];
+    }
+    // Skip empty cookies when fetching
+    const authorizationTokens = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.authorization).map(c => c.replace(/^authorization=/, '')).filter(c => c && c.trim());
+    return authorizationTokens;
   }
 
   set(value, expiry) {
@@ -25,7 +41,7 @@ class UserIdentityTokenStorageManager {
       const cookies = cookieManager.parse(document.cookie);
       localStorage.setItem(AuthenticationCredentialsStorageKey, JSON.stringify({ idToken: value, expiry: expiry && expiry.getTime(), jsCookies: !!cookies.authorization }));
       if (!this.retainUserCookie) {
-        this.clearCookies('user');
+        this.clearCookies(cookieKeys.user);
       }
     } catch (error) {
       console.debug('LocalStorage failed in Browser', error);
@@ -76,7 +92,7 @@ class UserIdentityTokenStorageManager {
     }
 
     try {
-      this.clearCookies('user');
+      this.clearCookies(cookieKeys.user);
     } catch (error) {
       console.debug('CookieManagement failed in Browser', error);
     }
@@ -95,7 +111,7 @@ class UserIdentityTokenStorageManager {
     const cookies = document.cookie.split('; ');
     for (const cookie of cookies) {
       // Remove only the cookies that are relevant to the client
-      if (!['user', 'authorization', 'auth-code', 'AuthUserId'].includes(cookie.split('=')[0]) || cookieName && cookie.split('=')[0] !== cookieName) {
+      if (!Object.values(cookieKeys).includes(cookie.split('=')[0]) || cookieName && cookie.split('=')[0] !== cookieName) {
         continue;
       }
 
