@@ -850,14 +850,14 @@ class LoginClient {
       const matchingAuthorizationToken = authorizationValues.find(token => {
         try {
           const jwtPayload = jwtManager.decode(token);
-          if (jwtPayload.iss === this.hostUrl) {
+          if (jwtPayload?.iss === this.hostUrl) {
             return true;
           }
 
           this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
           return false;
         } catch (error) {
-          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token });
+          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer a valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token, error });
           return false;
         }
       });
@@ -900,14 +900,14 @@ class LoginClient {
     const matchingAuthorizationToken = authorizationValues.find(token => {
       try {
         const jwtPayload = jwtManager.decode(token);
-        if (jwtPayload.iss === this.hostUrl) {
+        if (jwtPayload?.iss === this.hostUrl) {
           return true;
         }
 
         this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
         return false;
       } catch (error) {
-        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token });
+        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer a valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token, error });
         return false;
       }
     });

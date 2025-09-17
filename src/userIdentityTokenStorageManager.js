@@ -19,7 +19,7 @@ class UserIdentityTokenStorageManager {
       return null;
     }
     // Skip empty cookies when fetching
-    const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.user).map(c => c.replace(/^user=/, '')).find(c => c && c.trim()) || null;
+    const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.user).map(c => c.trim().replace(/^user=/, '')).find(c => c && c.trim()) || null;
     return val;
   }
 
@@ -28,7 +28,7 @@ class UserIdentityTokenStorageManager {
       return [];
     }
     // Skip empty cookies when fetching
-    const authorizationTokens = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.authorization).map(c => c.replace(/^authorization=/, '')).filter(c => c && c.trim());
+    const authorizationTokens = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.authorization).map(c => c.trim().replace(/^authorization=/, '')).filter(c => c && c.trim());
     return authorizationTokens;
   }
 
