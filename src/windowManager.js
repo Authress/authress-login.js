@@ -14,6 +14,13 @@ class WindowManager {
     return typeof window !== 'undefined' && new URL(window.location) || new URL('http://localhost:8080');
   }
 
+  getDocument() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return null;
+    }
+    return document;
+  }
+
   assign(newLocationUrl) {
     if (typeof window === 'undefined') {
       return null;

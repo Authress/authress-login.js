@@ -30,8 +30,14 @@ class JwtManager {
       return null;
     }
 
+    let header = null;
     try {
-      const header = JSON.parse(base64url.decode(token.split('.')[0]));
+      header = JSON.parse(base64url.decode(token.split('.')[0]));
+    } catch (error) {
+      /* Ignore header errors, because there is a mode where the header actually does not exist */
+    }
+
+    try {
       const payload = JSON.parse(base64url.decode(token.split('.')[1]));
       // If the identity expires in less than 10 seconds from now, assume it is already expired.
       // * This blocks issues with intermittent access, and subsequent issues when the token has a limited finite lifetime

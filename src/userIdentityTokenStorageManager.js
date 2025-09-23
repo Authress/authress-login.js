@@ -1,4 +1,5 @@
 const cookieManager = require('cookie');
+const windowManager = require('./windowManager');
 
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
@@ -15,9 +16,11 @@ class UserIdentityTokenStorageManager {
   }
 
   getUserCookie() {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
+    const document = windowManager.getDocument();
+    if (!document) {
       return null;
     }
+
     // Skip empty cookies when fetching
     const val = document.cookie.split(';').filter(c => c.split('=')[0].trim() === cookieKeys.user).map(c => c.trim().replace(/^user=/, '')).find(c => c && c.trim()) || null;
     return val;
