@@ -5,7 +5,6 @@ const { expect } = require('chai');
 const { LoginClient } = require('../../src/index');
 const windowManager = require('../../src/windowManager');
 const userIdentityTokenStorageManager = require('../../src/userIdentityTokenStorageManager.js');
-const httpClient = require('../../src/httpClient.js');
 
 let sandbox;
 beforeEach(() => { sandbox = sinon.createSandbox(); });
