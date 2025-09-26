@@ -433,11 +433,12 @@ class LoginClient {
    * @param {String} [state] The redirect to your login screen will contain two query parameters `state` and `flow`. Pass the state into this method.
    * @param {String} [connectionId] Specify which provider connection that user would like to use to log in - see https://authress.io/app/#/manage?focus=connections
    * @param {String} [tenantLookupIdentifier] Instead of connectionId, specify the tenant lookup identifier to log the user with the mapped tenant - see https://authress.io/app/#/manage?focus=tenants
+   * @param {String} [hint] Instead of connectionId or tenant lookup identifier, specify the user's domain or the full email for the user to dynamically identify and log the user with the mapped tenant.
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
-  async updateExtensionAuthenticationRequest({ state, connectionId, tenantLookupIdentifier, connectionProperties }) {
-    if (!connectionId && !tenantLookupIdentifier) {
+  async updateExtensionAuthenticationRequest({ state, connectionId, tenantLookupIdentifier, connectionProperties, hint }) {
+    if (!connectionId && !tenantLookupIdentifier && !hint) {
       const e = Error('connectionId or tenantLookupIdentifier must be specified');
       e.code = 'InvalidConnection';
       throw e;
