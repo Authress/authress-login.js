@@ -453,10 +453,13 @@ class LoginClient {
     }
 
     try {
-      const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier, authenticationRequestId });
+      const resolvedTenantLookupIdentifier = hint || tenantLookupIdentifier;
+      const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier: resolvedTenantLookupIdentifier, authenticationRequestId });
       const requestOptions = await this.httpClient.patch(`/authentication/${authenticationRequestId}`, true, {
         antiAbuseHash,
-        connectionId, tenantLookupIdentifier, connectionProperties
+        connectionId,
+        tenantLookupIdentifier: resolvedTenantLookupIdentifier,
+        connectionProperties
       });
 
       // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the current UI, there is no need to do anything special.
