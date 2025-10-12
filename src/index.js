@@ -669,7 +669,7 @@ class LoginClient {
    * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async authenticateWithOneTimeCode(options = {}) {
-    const { serviceClientId, inviteId, redirectUrl, force, responseLocation, flowType, clearUserDataBeforeLogin } = (options || {});
+    const { serviceClientId, inviteId, redirectUrl, force, responseLocation, flowType, clearUserDataBeforeLogin, audiences } = (options || {});
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
@@ -701,7 +701,7 @@ class LoginClient {
     }
 
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
-    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ serviceClientId, inviteId, applicationId: this.applicationId });
+    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ serviceClientId, inviteId, applicationId: this.applicationId, audiences });
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
@@ -713,6 +713,7 @@ class LoginClient {
       const authResponse = await this.httpClient.post('/authentication', this.enableCredentials, {
         antiAbuseHash,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
+        audiences,
         connectionId: serviceClientId, inviteId,
         applicationId: this.applicationId,
         responseLocation, flowType
@@ -752,7 +753,10 @@ class LoginClient {
    * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async authenticate(options = {}) {
-    const { connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin } = (options || {});
+    const {
+      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences
+    } = (options || {});
+
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
@@ -778,7 +782,7 @@ class LoginClient {
     }
 
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
-    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier, inviteId, applicationId: this.applicationId });
+    const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier, inviteId, applicationId: this.applicationId, audiences });
 
     try {
       const normalizedRedirectUrl = redirectUrl && new URL(redirectUrl).toString();
@@ -791,6 +795,7 @@ class LoginClient {
       const authResponse = await this.httpClient.post('/authentication', false, {
         antiAbuseHash,
         redirectUrl: selectedRedirectUrl, codeChallengeMethod: 'S256', codeChallenge,
+        audiences,
         connectionId, tenantLookupIdentifier, inviteId,
         connectionProperties,
         applicationId: this.applicationId,

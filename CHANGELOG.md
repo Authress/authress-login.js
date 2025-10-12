@@ -11,6 +11,7 @@ This is the changelog for [Authress Login](readme.md).
 * Validate logout redirect urls to ensure they are valid before attempting to log the user out.
 * [Fix] enable iOS 'Load Failed' non-compliant HTTP Fetch retries.
 * [Fix] Improve support for timeoutInMillis for long values.
+* Add audience support via the `audience` property for `authenticate`.
 
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.
