@@ -25,7 +25,7 @@ export interface OneTimeCodeAuthenticateParameters {
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
   /** A list of audiences to add to the JWT in the `aud` claim. This list must be a subset of the audiences defined for the application. To allow additional audiences, see https://authress.io/app/#/manage?focus=applications */
-  audiences?: string[];
+  audiences?: Array<string>;
   /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
   force?: boolean;
   /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
@@ -46,7 +46,7 @@ export interface AuthenticationParameters {
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
   /** A list of audiences to add to the JWT in the `aud` claim. This list must be a subset of the audiences defined for the application. To allow additional audiences, see https://authress.io/app/#/manage?focus=applications */
-  audiences?: string[];
+  audiences?: Array<string>;
   /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
   /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
