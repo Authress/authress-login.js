@@ -8,9 +8,13 @@ on:
     - main
     - 'release/**'
 
+permissions:
+  id-token: write
+  contents: read
+  
 jobs:
   nodejs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -29,8 +33,6 @@ jobs:
     - name: Deploy to NPM
       if: github.ref != 'refs/heads/main' && github.event_name == 'push'
       run: npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
     - name: After build
       if: github.ref != 'refs/heads/main' && github.event_name == 'push'
