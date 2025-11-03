@@ -880,7 +880,7 @@ class LoginClient {
         return authorizationValues[0];
       }
 
-      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.' });
+      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.', options });
       return null;
     }
 
@@ -930,7 +930,7 @@ class LoginClient {
       return authorizationValues[0];
     }
 
-    this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.' });
+    this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.', options });
     return null;
   }
 
