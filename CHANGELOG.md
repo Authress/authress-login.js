@@ -12,6 +12,7 @@ This is the changelog for [Authress Login](readme.md).
 * [Fix] enable iOS 'Load Failed' non-compliant HTTP Fetch retries.
 * [Fix] Improve support for timeoutInMillis for long values.
 * Add audience support via the `audience` property for `authenticate`.
+* Update documentation to clarify `EnsureToken` waits for timeout for 5 seconds, and if a timeout occurs why exactly that is.
 
 ## 2.4 ##
 * Prevent silent returns from `authenticate` when a different connectionId is used to have the user log in.

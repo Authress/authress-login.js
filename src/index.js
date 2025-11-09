@@ -850,7 +850,7 @@ class LoginClient {
     if (options && options.timeoutInMillis === 0) {
       const userIdentity = this.getUserIdentity();
       if (!userIdentity) {
-        const error = Error('No token retrieved after timeout');
+        const error = Error('No token available because the user is not logged in.');
         error.code = 'TokenTimeout';
         throw error;
       }
@@ -900,7 +900,7 @@ class LoginClient {
     try {
       await Promise.race([sessionWaiterAsync, timeoutAsync]);
     } catch (timeout) {
-      const error = Error('No token retrieved after timeout');
+      const error = Error('No token available because the user is still not logged in and the timeout has been exceeded. If you are seeing this error, it is because you have called ensureToken() without first validating that the user is logged. Review the route guards and checks for user sessions in your source code. ensureToken() should only ever be called after you have verified that the user is logged in.');
       error.code = 'TokenTimeout';
       throw error;
     }
@@ -930,7 +930,14 @@ class LoginClient {
       return authorizationValues[0];
     }
 
-    this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.', options });
+    // If there is no user identity then we hit a race condition and there is nothing more that can be done, just return.
+    const userIdentity = this.getUserIdentity();
+    if (!userIdentity) {
+      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] User completed login but the user identity still does not exist. This happened because there is a race condition in your code and why waiting for ensureToken() to complete, the user was logged out. Returning null.' });
+      return null;
+    }
+
+    this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] Your Authress Application access token configuration has blocked the returning of a valid token because the setting HttpOnly has been enabled. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. (LocalHost Note: This setting does not affect localhost development, and you may still see ensureToken work successfully during development, but fail with this error in production. This is because HttpOnly does not work for LocalHost)', options });
     return null;
   }
 
