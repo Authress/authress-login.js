@@ -32,7 +32,7 @@ class LoginClient {
       throw Error('Missing required property "authressApiUrl" in LoginClient constructor. Custom Authress Domain Host is required.');
     }
 
-    this.applicationId = settingsWithDefault.applicationId;
+    this.applicationId = settingsWithDefault.applicationId?.trim();
     if (!this.applicationId) {
       const error = Error('Application ID is required.');
       error.code = 'InvalidApplication';
