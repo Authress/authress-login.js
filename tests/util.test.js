@@ -1,8 +1,8 @@
-const { describe, it, beforeEach, afterEach } = require('mocha');
-const sinon = require('sinon');
-const { expect } = require('chai');
+import { describe, it, beforeEach, afterEach } from 'mocha';
+import sinon from 'sinon';
+import { expect } from 'chai';
 
-const { sanitizeUrl } = require('../src/util');
+import { sanitizeUrl } from '../src/util';
 
 let sandbox;
 beforeEach(() => { sandbox = sinon.createSandbox(); });

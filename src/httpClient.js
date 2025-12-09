@@ -1,6 +1,6 @@
-const { sanitizeUrl } = require('./util');
-const windowManager = require('./windowManager');
-const packageInfo = require('../package.json');
+import { sanitizeUrl } from './util';
+import windowManager from './windowManager';
+import packageInfo from '../package.json';
 
 const defaultHeaders = {
   'Content-Type': 'application/json',
@@ -53,9 +53,8 @@ class HttpClient {
     if (!authressLoginCustomDomain) {
       throw Error('Custom Authress Domain Host is required');
     }
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const logger = overrideLogger || { debug() {}, warn() {}, critical() {} };
-    this.logger = logger;
+
+    this.logger = overrideLogger;
 
     const loginHostFullUrl = new URL(sanitizeUrl(authressLoginCustomDomain));
     this.loginUrl = `${loginHostFullUrl.origin}/api`;
@@ -96,7 +95,7 @@ class HttpClient {
     const method = rawMethod.toUpperCase();
     const headers = Object.assign({}, defaultHeaders, requestHeaders);
     try {
-      this.logger && this.logger.debug && this.logger.debug({ title: '[Authress Login SDK] HttpClient Request', method, url });
+      this.logger.debug({ title: '[Authress Login SDK] HttpClient Request', method, url });
       const request = { method, headers };
       if (data) {
         request.body = JSON.stringify(data);
@@ -114,7 +113,7 @@ class HttpClient {
       try {
         responseBody = await response.text();
         responseBody = JSON.parse(responseBody);
-      } catch (error) {
+      } catch (_) {
         /* */
       }
       return {
@@ -129,13 +128,13 @@ class HttpClient {
       try {
         resolvedError = await error.text();
         resolvedError = JSON.parse(resolvedError);
-      } catch (parseError) {
+      } catch (_) {
         /* */
       }
 
       const extensionErrorId = resolvedError.stack && resolvedError.stack.match(/chrome-extension:[/][/](\w+)[/]/);
       if (extensionErrorId) {
-        this.logger && this.logger.debug && this.logger.debug({ title: `[Authress Login SDK] Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
+        this.logger.debug({ title: `[Authress Login SDK] Fetch failed due to a browser extension - ${method} - ${url}`, method, url, data, headers, error, resolvedError, extensionErrorId });
         const newError = new Error(`Extension Error ID: ${extensionErrorId}`);
         newError.code = 'BROWSER_EXTENSION_ERROR';
         throw newError;

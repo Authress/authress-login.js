@@ -1,9 +1,9 @@
-const { describe, it, beforeEach, afterEach } = require('mocha');
-const sinon = require('sinon');
-const { expect } = require('chai');
+import { describe, it, beforeEach, afterEach } from 'mocha';
+import sinon from 'sinon';
+import { expect } from 'chai';
 
-const { LoginClient } = require('../src/index');
-const windowManager = require('../src/windowManager');
+import { LoginClient } from '../src/index';
+import windowManager from '../src/windowManager';
 
 let sandbox;
 beforeEach(() => { sandbox = sinon.createSandbox(); });

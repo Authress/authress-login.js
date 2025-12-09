@@ -1,11 +1,11 @@
-const cookieManager = require('cookie');
-const take = require('lodash.take');
+import cookieManager from 'cookie';
+import take from 'lodash.take';
 
-const windowManager = require('./windowManager');
-const HttpClient = require('./httpClient');
-const jwtManager = require('./jwtManager');
-const { sanitizeUrl } = require('./util');
-const userIdentityTokenStorageManager = require('./userIdentityTokenStorageManager');
+import windowManager from './windowManager';
+import HttpClient from './httpClient';
+import jwtManager from './jwtManager';
+import { sanitizeUrl } from './util';
+import userIdentityTokenStorageManager from './userIdentityTokenStorageManager';
 
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
@@ -25,7 +25,8 @@ class LoginClient {
    */
   constructor(settings, logger) {
     const settingsWithDefault = Object.assign({ applicationId: 'app_default' }, settings);
-    this.logger = logger || console;
+    const loggerWithFallbacks = Object.assign({ debug() {}, log() {}, error() {}, warn() {}, critical() {} }, logger || console);
+    this.logger = loggerWithFallbacks;
     const hostUrl = settingsWithDefault.authressApiUrl || settingsWithDefault.authressLoginHostUrl || settingsWithDefault.authenticationServiceUrl || '';
 
     if (!hostUrl) {
@@ -46,7 +47,7 @@ class LoginClient {
     }
 
     this.hostUrl = sanitizeUrl(hostUrl);
-    this.httpClient = new HttpClient(this.hostUrl, logger);
+    this.httpClient = new HttpClient(this.hostUrl, loggerWithFallbacks);
     this.lastSessionCheck = 0;
 
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
@@ -150,7 +151,7 @@ class LoginClient {
       const token = await this.ensureToken();
       const credentialsResult = await this.httpClient.get('/session/credentials', this.enableCredentials, { Authorization: token && `Bearer ${token}` });
       return credentialsResult.data;
-    } catch (error) {
+    } catch (_) {
       return null;
     }
   }
@@ -160,7 +161,7 @@ class LoginClient {
       const token = await this.ensureToken();
       const deviceResult = await this.httpClient.get('/session/devices', this.enableCredentials, { Authorization: token && `Bearer ${token}` });
       return deviceResult.data.devices;
-    } catch (error) {
+    } catch (_) {
       return [];
     }
   }
@@ -170,7 +171,7 @@ class LoginClient {
       const token = await this.ensureToken();
       await this.httpClient.delete(`/session/devices/${encodeURIComponent(deviceId)}`, this.enableCredentials, { Authorization: token && `Bearer ${token}` });
     } catch (error) {
-      this.logger && this.logger.log({ title: '[Authress Login SDK] Failed to delete device', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to delete device', error });
       throw error;
     }
   }
@@ -278,7 +279,7 @@ class LoginClient {
       const deviceCreationResult = await this.httpClient.post('/session/devices', this.enableCredentials, request, { Authorization: token && `Bearer ${token}` });
       return deviceCreationResult.data;
     } catch (error) {
-      this.logger && this.logger.log({ title: '[Authress Login SDK] Failed to register new device', error, request });
+      this.logger.log({ title: '[Authress Login SDK] Failed to register new device', error, request });
       throw error;
     }
   }
@@ -291,7 +292,7 @@ class LoginClient {
     try {
       await userSessionPromise;
       return true;
-    } catch (error) {
+    } catch (_) {
       return false;
     }
   }
@@ -341,7 +342,7 @@ class LoginClient {
           this.enableCredentials = authRequest.enableCredentials;
         }
       } catch (error) {
-        this.logger && this.logger.debug && this.logger.debug({ title: '[Authress Login SDK] LocalStorage failed in Browser', error });
+        this.logger.debug({ title: '[Authress Login SDK] LocalStorage failed in Browser', error });
       }
     }
 
@@ -366,7 +367,7 @@ class LoginClient {
           userSessionResolver();
           return true;
         } catch (error) {
-          this.logger && this.logger.log({ title: '[Authress Login SDK] Failed exchange authentication response for a token.', error });
+          this.logger.log({ title: '[Authress Login SDK] Failed exchange authentication response for a token.', error });
 
           // The code was expired, contaminated, or already exchanged.
           if (error.data && error.data.error === 'invalid_request') {
@@ -414,9 +415,9 @@ class LoginClient {
       } catch (error) {
         // On 400, 404, 409 we know that the session is no longer able to be continued.
         if (error.status === 400 || error.status === 404 || error.status === 409) {
-          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] User does not have an existing authentication session', error });
+          this.logger.log({ title: '[Authress Login SDK] User does not have an existing authentication session', error });
         } else {
-          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed attempting to check if the user has an existing authentication session', error });
+          this.logger.log({ title: '[Authress Login SDK] Failed attempting to check if the user has an existing authentication session', error });
         }
       }
       const newUserData = this.getUserIdentity();
@@ -472,7 +473,7 @@ class LoginClient {
 
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to update extension authentication request', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to update extension authentication request', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -522,7 +523,7 @@ class LoginClient {
     try {
       await this.httpClient.delete(`/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to unlink user identity', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to unlink user identity', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -584,7 +585,7 @@ class LoginClient {
         authenticationRequestId: requestOptions.data.authenticationRequestId
       };
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -645,7 +646,7 @@ class LoginClient {
       }, headers);
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -688,7 +689,7 @@ class LoginClient {
       const existingJwtTokenString = await this.ensureToken();
       const jwtPayload = jwtManager.decode(existingJwtTokenString);
       if (jwtPayload && jwtPayload.azp && serviceClientId !== jwtPayload.azp) {
-        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
         const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
         Recommended Options:
           (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
@@ -729,7 +730,7 @@ class LoginClient {
         authenticationRequestId: authResponse.data.authenticationRequestId
       };
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -769,7 +770,7 @@ class LoginClient {
       const existingJwtTokenString = await this.ensureToken();
       const jwtPayload = jwtManager.decode(existingJwtTokenString);
       if (connectionId && jwtPayload && jwtPayload.azp && connectionId !== jwtPayload.azp) {
-        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
         const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
         Recommended Options:
           (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
@@ -823,7 +824,7 @@ class LoginClient {
         windowManager.assign(authResponse.data.authenticationUrl);
       }
     } catch (error) {
-      this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
+      this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
       if (error.status && error.status >= 400 && error.status < 500) {
         const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
         e.code = error.data && error.data.errorCode;
@@ -863,10 +864,10 @@ class LoginClient {
             return true;
           }
 
-          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+          this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
           return false;
         } catch (error) {
-          this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer a valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token, error });
+          this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer a valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token, error });
           return false;
         }
       });
@@ -876,11 +877,11 @@ class LoginClient {
       }
 
       if (authorizationValues.length) {
-        this.logger && this.logger.error && this.logger.log({ title: '[Authress Login SDK] No matching issuer token found, returning the first valid token instead.' });
+        this.logger.log({ title: '[Authress Login SDK] No matching issuer token found, returning the first valid token instead.' });
         return authorizationValues[0];
       }
 
-      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.', options });
+      this.logger.error({ title: '[Authress Login SDK] HttpOnly access token configuration has blocked the returning of a valid token. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. Note: This setting does not affect localhost.', options });
       return null;
     }
 
@@ -899,7 +900,7 @@ class LoginClient {
     const timeoutAsync = new Promise((resolve, reject) => setTimeout(reject, timeoutInMillis || 0));
     try {
       await Promise.race([sessionWaiterAsync, timeoutAsync]);
-    } catch (timeout) {
+    } catch (_) {
       const error = Error('No token available because the user is still not logged in and the timeout has been exceeded. If you are seeing this error, it is because you have called ensureToken() without first validating that the user is logged. Review the route guards and checks for user sessions in your source code. ensureToken() should only ever be called after you have verified that the user is logged in.');
       error.code = 'TokenTimeout';
       throw error;
@@ -913,10 +914,10 @@ class LoginClient {
           return true;
         }
 
-        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
+        this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because the issuer does not match the library configured value.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
         return false;
       } catch (error) {
-        this.logger && this.logger.log && this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer a valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token, error });
+        this.logger.log({ title: '[Authress Login SDK] Skipping stored authorization cookie because it is no longer a valid token.', requestedAuthenticationOptions: options, currentAuthenticationSessionDataToken: token, error });
         return false;
       }
     });
@@ -926,18 +927,18 @@ class LoginClient {
     }
 
     if (authorizationValues.length) {
-      this.logger && this.logger.error && this.logger.log({ title: '[Authress Login SDK] No matching issuer token found, returning the first valid token instead.' });
+      this.logger.log({ title: '[Authress Login SDK] No matching issuer token found, returning the first valid token instead.' });
       return authorizationValues[0];
     }
 
     // If there is no user identity then we hit a race condition and there is nothing more that can be done, just return.
     const userIdentity = this.getUserIdentity();
     if (!userIdentity) {
-      this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] User completed login but the user identity still does not exist. This happened because there is a race condition in your code and why waiting for ensureToken() to complete, the user was logged out. Returning null.' });
+      this.logger.error({ title: '[Authress Login SDK] User completed login but the user identity still does not exist. This happened because there is a race condition in your code and why waiting for ensureToken() to complete, the user was logged out. Returning null.' });
       return null;
     }
 
-    this.logger && this.logger.error && this.logger.error({ title: '[Authress Login SDK] Your Authress Application access token configuration has blocked the returning of a valid token because the setting HttpOnly has been enabled. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. (LocalHost Note: This setting does not affect localhost development, and you may still see ensureToken work successfully during development, but fail with this error in production. This is because HttpOnly does not work for LocalHost)', options });
+    this.logger.error({ title: '[Authress Login SDK] Your Authress Application access token configuration has blocked the returning of a valid token because the setting HttpOnly has been enabled. The application specified in the Authress LoginClient constructor has been configured to block returning access tokens via the enableAccessToToken property. To use the loginClient.ensureToken() method in production, please set the enableAccessToToken to true. (LocalHost Note: This setting does not affect localhost development, and you may still see ensureToken work successfully during development, but fail with this error in production. This is because HttpOnly does not work for LocalHost)', options });
     return null;
   }
 
@@ -953,10 +954,10 @@ class LoginClient {
         // eslint-disable-next-line no-new
         new URL(requestedRedirectUrl);
         redirectUrl = requestedRedirectUrl;
-      } catch (error) {
+      } catch (_ /* original requested redirect url is not a url */) {
         try {
           redirectUrl = new URL(requestedRedirectUrl, windowManager.getCurrentLocation().href).toString();
-        } catch (relativeRedirectUrlAlsoFailed) {
+        } catch (__ /* relativeRedirectUrlAlsoFailed */) {
           const e = Error(`The logout redirect url is not valid URL: ${requestedRedirectUrl}`);
           e.code = 'InvalidRedirectUrl';
           throw e;
@@ -981,7 +982,7 @@ class LoginClient {
           windowManager.assign(requestedRedirectUrl);
         }
         return;
-      } catch (error) { /**/ }
+      } catch (_) { /**/ }
     }
 
     const fullLogoutUrl = new URL('/logout', this.hostUrl);
@@ -1007,7 +1008,7 @@ class LoginClient {
   }
 }
 
-const ExtensionClient = require('./extensionClient');
+import ExtensionClient from './extensionClient';
 
 const UserConfigurationScreen = {
   Profile: 'Profile',

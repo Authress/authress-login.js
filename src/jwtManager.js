@@ -1,4 +1,4 @@
-const base64url = require('./base64url');
+import base64url from './base64url';
 
 class JwtManager {
   decode(token) {
@@ -20,7 +20,7 @@ class JwtManager {
 
     try {
       return JSON.parse(token);
-    } catch (error) {
+    } catch (_) {
       return this.decode(token);
     }
   }
@@ -33,7 +33,7 @@ class JwtManager {
     let header = null;
     try {
       header = JSON.parse(base64url.decode(token.split('.')[0]));
-    } catch (error) {
+    } catch (_) {
       /* Ignore header errors, because there is a mode where the header actually does not exist */
     }
 
@@ -46,7 +46,7 @@ class JwtManager {
         payload.exp = payload.exp - 10;
       }
       return { header, payload };
-    } catch (error) {
+    } catch (_) {
       return null;
     }
   }

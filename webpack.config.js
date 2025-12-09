@@ -1,10 +1,18 @@
-const webpack = require('webpack');
-const CompressionPlugin = require('compression-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
+import webpack from 'webpack';
+import CompressionPlugin from 'compression-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
+import fs from 'fs-extra';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-const path = require('path');
+const underscoreDirname = path.dirname(fileURLToPath(import.meta.url));
+const packageMetadataFile = path.join(underscoreDirname, 'package.json');
+const packageMetadata = await fs.readJson(packageMetadataFile);
 
-const version = JSON.stringify(require('./package.json').version).replace(/"/g, '');
+const webpackBabelConfigFile = path.join(underscoreDirname, 'webpack.babelrc.json');
+const webpackBabelConfig = await fs.readJson(webpackBabelConfigFile);
+
+const version = packageMetadata.version.replace(/"/g, '');
 
 const commonPlugins = [
   new webpack.ProvidePlugin({ Buffer: ['buffer', 'Buffer'] }),
@@ -27,7 +35,7 @@ if (process.env.NODE_ENV === 'production') {
   }));
 }
 
-module.exports = {
+export default {
   mode: 'production',
   entry: './src/index.js',
   devtool: process.env.NODE_ENV ? undefined : 'cheap-module-source-map',
@@ -82,7 +90,7 @@ module.exports = {
           {
             loader: 'babel-loader',
             // eslint-disable-next-line global-require
-            options: require('./webpack.babelrc.json')
+            options: webpackBabelConfig
           }
         ]
       },
@@ -106,7 +114,7 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      path: require.resolve('path-browserify')
+      // path: require.resolve('path-browserify')
     },
     alias: {
       '~': path.resolve(__dirname, 'src')

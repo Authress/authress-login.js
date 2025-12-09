@@ -1,6 +1,6 @@
-const jwtManager = require('./jwtManager');
-const { sanitizeUrl } = require('./util');
-const windowManager = require('./windowManager');
+import jwtManager from './jwtManager';
+import { sanitizeUrl } from './util';
+import windowManager from './windowManager';
 
 const AuthenticationRequestNonceKey = 'ExtensionRequestNonce';
 

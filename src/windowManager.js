@@ -1,3 +1,4 @@
+
 class WindowManager {
   onLoad(callback) {
     if (typeof window !== 'undefined') {

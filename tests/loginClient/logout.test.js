@@ -1,11 +1,11 @@
-const { describe, it, beforeEach, afterEach } = require('mocha');
-const sinon = require('sinon');
-const { expect } = require('chai');
+import { describe, it, beforeEach, afterEach } from 'mocha';
+import sinon from 'sinon';
+import { expect } from 'chai';
 
-const { LoginClient } = require('../../src/index');
-const windowManager = require('../../src/windowManager');
-const userIdentityTokenStorageManager = require('../../src/userIdentityTokenStorageManager.js');
-const httpClient = require('../../src/httpClient.js');
+import { LoginClient } from '../../src/index';
+import windowManager from '../../src/windowManager';
+import userIdentityTokenStorageManager from '../../src/userIdentityTokenStorageManager.js';
+import httpClient from '../../src/httpClient.js';
 
 let sandbox;
 beforeEach(() => { sandbox = sinon.createSandbox(); });

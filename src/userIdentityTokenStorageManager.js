@@ -1,5 +1,5 @@
-const cookieManager = require('cookie');
-const windowManager = require('./windowManager');
+import cookieManager from 'cookie';
+import windowManager from './windowManager';
 
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 

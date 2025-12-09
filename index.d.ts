@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 export interface Settings {
   /** Your Authress custom domain - see https://authress.io/app/#/setup?focus=domain */
   authressApiUrl?: string;
@@ -149,7 +151,6 @@ export class LoginClient {
    * @param {Settings} settings Authress LoginClient settings
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(settings: Settings, logger?: unknown);
 
   /**
@@ -273,7 +274,6 @@ export class ExtensionClient {
    * @param {string} authressCustomDomain Your Authress custom domain - see https://authress.io/app/#/manage?focus=domain
    * @param {string} extensionId The platform extensionId for this app - see https://authress.io/app/#/manage?focus=extensions
    */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(authressCustomDomain: string, extensionId: string);
 
   /**

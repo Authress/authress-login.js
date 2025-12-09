@@ -79,7 +79,7 @@ On the service API side, pull in the Authress service client companion library, 
 * Then verify the incoming tokens from the Authorization header:
 
 ```js
-const { TokenVerifier } = require('authress-sdk');
+import { TokenVerifier } from '@authress/sdk';
 
 try {
   // Grab authorization token from the request header, the best way to do this will be framework specific.
@@ -96,7 +96,7 @@ try {
 The goal of the platform extension is to make it easy for your platform extension developers to login with Authress. Embed the `ExtensionClient` in your javascript UI SDK, and pass in the `extensionId`.
 
 ```js
-const { ExtensionClient } = require('@authress/login');
+import { ExtensionClient } from '@authress/login';
 
 // What is my custom Domain? => https://authress.io/app/#/setup?focus=domain
 // What is my extensionId => https://authress.io/app/#/manage?focus=extensions
