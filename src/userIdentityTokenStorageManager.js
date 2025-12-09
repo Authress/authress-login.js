@@ -1,5 +1,5 @@
 import cookieManager from 'cookie';
-import windowManager from './windowManager';
+import windowManager from './windowManager.js';
 
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
 
@@ -146,4 +146,4 @@ class UserIdentityTokenStorageManager {
   }
 }
 
-module.exports = new UserIdentityTokenStorageManager();
+export default new UserIdentityTokenStorageManager();

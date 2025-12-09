@@ -1,4 +1,4 @@
-module.exports.sanitizeUrl = function sanitizeUrl(rawUrlString) {
+export function sanitizeUrl(rawUrlString) {
   let sanitizedUrl = rawUrlString;
   if (!sanitizedUrl.startsWith('http')) {
     sanitizedUrl = `https://${sanitizedUrl}`;
@@ -12,4 +12,4 @@ module.exports.sanitizeUrl = function sanitizeUrl(rawUrlString) {
   }
 
   return sanitizedUrl.replace(/[/]+$/, '');
-};
+}

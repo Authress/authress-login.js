@@ -1,5 +1,5 @@
-import { sanitizeUrl } from './util';
-import windowManager from './windowManager';
+import { sanitizeUrl } from './util.js';
+import windowManager from './windowManager.js';
 import packageInfo from '../package.json';
 
 const defaultHeaders = {
@@ -175,4 +175,4 @@ class HttpClient {
   }
 }
 
-module.exports = HttpClient;
+export default HttpClient;

@@ -14,11 +14,11 @@ function decodeBase64(str) {
   return decodeURIComponent(Array.from(atob(str), byteToPercent).join(''));
 }
 
-module.exports.decode = function decode(str) {
+function decode(str) {
   return decodeBase64(str.replace(/-/g, '+').replace(/_/g, '/'));
-};
+}
 
-module.exports.encode = function encode(str) {
+function encode(str) {
   if (str && typeof str === 'object') {
     return btoa(String.fromCharCode(...new Uint8Array(str))).replace(/\//g, '_')
     .replace(/\+/g, '-')
@@ -29,4 +29,6 @@ module.exports.encode = function encode(str) {
   .replace(/\//g, '_')
   .replace(/\+/g, '-')
   .replace(/=+$/, '');
-};
+}
+
+export default { decode, encode };

@@ -1,6 +1,6 @@
-import jwtManager from './jwtManager';
-import { sanitizeUrl } from './util';
-import windowManager from './windowManager';
+import jwtManager from './jwtManager.js';
+import { sanitizeUrl } from './util.js';
+import windowManager from './windowManager.js';
 
 const AuthenticationRequestNonceKey = 'ExtensionRequestNonce';
 
@@ -147,4 +147,4 @@ class ExtensionClient {
   }
 }
 
-module.exports = ExtensionClient;
+export default ExtensionClient;

@@ -2,7 +2,7 @@ import { describe, it, beforeEach, afterEach } from 'mocha';
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-import { sanitizeUrl } from '../src/util';
+import { sanitizeUrl } from '../src/util.js';
 
 let sandbox;
 beforeEach(() => { sandbox = sinon.createSandbox(); });

@@ -37,4 +37,4 @@ class WindowManager {
   }
 }
 
-module.exports = new WindowManager();
+export default new WindowManager();

@@ -2,8 +2,8 @@ import { describe, it, beforeEach, afterEach } from 'mocha';
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-import { LoginClient } from '../../src/index';
-import windowManager from '../../src/windowManager';
+import { LoginClient } from '../../src/index.js';
+import windowManager from '../../src/windowManager.js';
 import userIdentityTokenStorageManager from '../../src/userIdentityTokenStorageManager.js';
 
 let sandbox;

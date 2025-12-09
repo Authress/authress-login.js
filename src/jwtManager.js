@@ -1,4 +1,4 @@
-import base64url from './base64url';
+import base64url from './base64url.js';
 
 class JwtManager {
   decode(token) {
@@ -76,4 +76,4 @@ class JwtManager {
   }
 }
 
-module.exports = new JwtManager();
+export default new JwtManager();

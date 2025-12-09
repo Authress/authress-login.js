@@ -1,12 +1,11 @@
 import cookieManager from 'cookie';
 import take from 'lodash.take';
 
-import windowManager from './windowManager';
-import HttpClient from './httpClient';
-import jwtManager from './jwtManager';
-import { sanitizeUrl } from './util';
-import userIdentityTokenStorageManager from './userIdentityTokenStorageManager';
-
+import windowManager from './windowManager.js';
+import HttpClient from './httpClient.js';
+import jwtManager from './jwtManager.js';
+import { sanitizeUrl } from './util.js';
+import userIdentityTokenStorageManager from './userIdentityTokenStorageManager.js';
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
 
@@ -15,7 +14,7 @@ let userSessionCheckIsInProgress = false;
 
 const AuthenticationRequestNonceKey = 'AuthenticationRequestNonce';
 
-class LoginClient {
+export class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
    * @param {Object} settings
@@ -1008,11 +1007,9 @@ class LoginClient {
   }
 }
 
-import ExtensionClient from './extensionClient';
-
-const UserConfigurationScreen = {
+export const UserConfigurationScreen = {
   Profile: 'Profile',
   MFA: 'MFA'
 };
 
-module.exports = { LoginClient, ExtensionClient, UserConfigurationScreen };
+export * from './extensionClient.js';

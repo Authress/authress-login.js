@@ -3,6 +3,8 @@ This is the changelog for [Authress Login](readme.md).
 
 ## 2.6 ##
 * [Bug] Self-Hosted Login pages will now correctly report the user as still logged in. This means taht requests to `authenticate()` will fail without the `force` flag, if the user is already logged in and new parameters do not match the logged in user. Make sure to always call `userSessionExists()` before `authenticate()`.
+* Minimum supported NodeJs compiler version: 20
+* Converted library to be a module
 
 ## 2.5 ##
 * Minimum supported NodeJs compiler version: 18
