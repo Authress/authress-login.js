@@ -329,7 +329,7 @@ class LoginClient {
     });
   }
 
-  async userSessionContinuation(backgroundTrigger) {
+  async userSessionContinuation(backgroundTrigger = false) {
     const urlSearchParams = new URLSearchParams(windowManager.getCurrentLocation().search);
 
     let authRequest = {};
@@ -343,11 +343,6 @@ class LoginClient {
       } catch (error) {
         this.logger && this.logger.debug && this.logger.debug({ title: '[Authress Login SDK] LocalStorage failed in Browser', error });
       }
-    }
-
-    // Your app was redirected to from the Authress Hosted Login page. The next step is to show the user the login widget and enable them to login.
-    if (urlSearchParams.get('state') && urlSearchParams.get('flow') === 'oauthLogin') {
-      return false;
     }
 
     // We are in the Authress authentication context. We might not have a code and we might not have other properties depending on the login path, so this check let's us ensure we delete all url parameters that aren't necessary, and since this will happen even outside of an auth exchange, let's also check for containing the matching iss
