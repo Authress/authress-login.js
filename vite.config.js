@@ -22,7 +22,7 @@ const babelConfig = {
     [
       "@babel/preset-env",
       {
-        "targets": { /* Using the same targets as your webpack.babelrc.json */
+        "targets": {
           "esmodules": true,
           "android": "80",
           "chrome": "85",

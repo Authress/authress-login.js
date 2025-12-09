@@ -1,5 +1,4 @@
 import globals from 'globals';
-// import babelParser from '@babel/eslint-parser';
 import typescriptParser from '@typescript-eslint/parser';
 import tseslint from 'typescript-eslint';
 
