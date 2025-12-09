@@ -1,17 +1,15 @@
-import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
+import { describe, it, afterEach, expect, vi } from 'vitest';
 import { sanitizeUrl } from '../src/util.js';
 
 afterEach(() => {
-  vi.restoreAllMocks(); 
+  vi.restoreAllMocks();
 });
-
-
 describe('util.js', () => {
   describe('sanitizeUrl()', () => {
     it('Returns http for localhost', () => {
       const authressApiUrl = 'http://localhost:8080';
       const result = sanitizeUrl(authressApiUrl);
-      expect(result).toEqual('http://localhost:8080'); 
+      expect(result).toEqual('http://localhost:8080');
     });
 
     it('Returns http for localstack', () => {

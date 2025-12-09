@@ -6,11 +6,9 @@ import windowManager from '../src/windowManager.js';
 let windowManagerMock;
 
 beforeEach(() => {
-  // Use vi.mock to mock the module, or vi.spyOn to mock methods
   windowManagerMock = vi.spyOn(windowManager, 'onLoad').mockImplementation(() => {});
 });
 afterEach(() => {
-  // Use vi.restoreAllMocks for cleanup
   vi.restoreAllMocks();
 });
 
@@ -60,17 +58,16 @@ describe('index.js', () => {
       for (let test of tests) {
         // eslint-disable-next-line no-loop-func
         it(test.name, () => {
-          // Reset mock implementation for each test
           windowManagerMock.mockClear();
           
           if (test.expectedError) {
-            // Use expect().toThrow() for expected errors
             expect(() => {
+              // eslint-disable-next-line no-new
               new LoginClient({ authressApiUrl: test.url });
             }).toThrow(test.expectedError);
             
             // Verify onLoad was NOT called (0 times)
-            expect(windowManagerMock).not.toHaveBeenCalled(); 
+            expect(windowManagerMock).not.toHaveBeenCalled();
           } else {
             // Assert that the function does NOT throw
             const loginClient = new LoginClient({ authressApiUrl: test.url });
@@ -89,7 +86,7 @@ describe('index.js', () => {
   describe('getMatchingDomainInfo()', () => {
     beforeEach(() => {
       // Restore onLoad mock for this describe block and spy on getCurrentLocation
-      vi.restoreAllMocks(); 
+      vi.restoreAllMocks();
     });
 
     it('Adjacent domain returns true', () => {
@@ -107,7 +104,7 @@ describe('index.js', () => {
       // Verify call count (Sinon expects.exactly(1) becomes Vitest's toHaveBeenCalledTimes(1))
       expect(getCurrentLocationMock).toHaveBeenCalledTimes(1);
       // Use toEqual for deep equality check (similar to Chai's to.eql)
-      expect(result).toEqual(true); 
+      expect(result).toEqual(true);
     });
 
     it('Top level domain returns true', () => {

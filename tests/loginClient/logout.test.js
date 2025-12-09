@@ -204,7 +204,7 @@ describe('loginClient.js', () => {
       expect(clearSpy).toHaveBeenCalledOnce();
       
       // Should be called twice by the implementation to resolve the relative URL
-      expect(windowManagerLocationSpy).toHaveBeenCalledTimes(2); 
+      expect(windowManagerLocationSpy).toHaveBeenCalledTimes(2);
       expect(windowManagerAssignSpy).toHaveBeenCalledOnce();
       expect(windowManagerAssignSpy).toHaveBeenCalledWith(expectedUrl);
     });
@@ -248,7 +248,7 @@ describe('loginClient.js', () => {
       const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
       loginClient.lastSessionCheck = 12345;
-      const logoutAsync = loginClient.logout(requestedRedirectUrl);      
+      const logoutAsync = loginClient.logout(requestedRedirectUrl);
       vi.runAllTimers();
       await logoutAsync;
 
@@ -273,7 +273,7 @@ describe('loginClient.js', () => {
       const logoutPromise = loginClient.logout(requestedRedirectUrl);
       
       // Advance time by 500ms
-      vi.advanceTimersByTime(500); 
+      vi.advanceTimersByTime(500);
       
       // Now the setTimeout callback should have executed
       await logoutPromise;
