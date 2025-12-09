@@ -1,245 +1,286 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
-import sinon from 'sinon';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 
 import { LoginClient } from '../../src/index.js';
 import windowManager from '../../src/windowManager.js';
 import userIdentityTokenStorageManager from '../../src/userIdentityTokenStorageManager.js';
 import httpClient from '../../src/httpClient.js';
 
-let sandbox;
-beforeEach(() => { sandbox = sinon.createSandbox(); });
-afterEach(() => sandbox.restore());
+let requestedRedirectUrl = 'https://valid-redirect.url';
 
-let requestedRedirectUrl;
-
-requestedRedirectUrl = 'https://valid-redirect.url';
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe('loginClient.js', () => {
   describe('logout', () => {
     it('should clear the user identity token storage and sanitize query parameters', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      // Spy on clear() and assert call expectations
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://unit-test.authress.io', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      // Stub the internal method
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
-      await loginClient.logout(requestedRedirectUrl);
+      const logoutAsync = loginClient.logout(requestedRedirectUrl);
+      
+      vi.runAllTimers();
+      await logoutAsync;
 
-      expect(setTimeoutStub.calledOnce).to.eql(true);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
     });
 
     it('should attempt to delete the session if credentials are enabled', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
-
-      const deleteMock = sandbox.mock(httpClient.prototype).expects('delete').once().withArgs('/session', true);
-      const assignMock = sandbox.mock(windowManager).expects('assign').once().withArgs(requestedRedirectUrl);
-
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
-
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+      
+      // Spy on clear()
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
+      
+      // Mock the HTTP client prototype delete method
+      const deleteSpy = vi.spyOn(httpClient.prototype, 'delete').mockResolvedValue(undefined);
+      
+      // Mock windowManager.assign
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      
       const loginClient = new LoginClient({ authressApiUrl: 'https://unit-test.authress.io', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
       loginClient.enableCredentials = true;
       await loginClient.logout(requestedRedirectUrl);
 
-      expect(setTimeoutStub.calledOnce).to.eql(false);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      deleteMock.verify();
-      assignMock.verify();
+      expect(setTimeoutSpy).not.toHaveBeenCalled();
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      // Verify delete call arguments
+      expect(deleteSpy).toHaveBeenCalledOnce();
+      expect(deleteSpy).toHaveBeenCalledWith('/session', true);
+      
+      // Verify assign call arguments
+      expect(assignSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).toHaveBeenCalledWith(requestedRedirectUrl);
     });
 
     it('should attempt to delete the session if credentials are enabled and work for relative urls as well', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
-
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+      
       const relativeUrl = '/relative-url';
 
-      const deleteMock = sandbox.mock(httpClient.prototype).expects('delete').once().withArgs('/session', true);
-      const assignMock = sandbox.mock(windowManager).expects('assign').once().withArgs(relativeUrl);
-
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const deleteSpy = vi.spyOn(httpClient.prototype, 'delete').mockResolvedValue(undefined);
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://unit-test.authress.io', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
       loginClient.enableCredentials = true;
-      await loginClient.logout(relativeUrl);
+      const logoutAsync = loginClient.logout(relativeUrl);
 
-      expect(setTimeoutStub.calledOnce).to.eql(false);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      deleteMock.verify();
-      assignMock.verify();
+      expect(setTimeoutSpy).not.toHaveBeenCalled();
+      await logoutAsync;
+
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      expect(deleteSpy).toHaveBeenCalledOnce();
+      expect(deleteSpy).toHaveBeenCalledWith('/session', true);
+      
+      expect(assignSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).toHaveBeenCalledWith(relativeUrl);
     });
 
     it('should attempt to delete the session if credentials are enabled and work for no redirect url presented', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
       const relativeUrl = null;
 
-      const deleteMock = sandbox.mock(httpClient.prototype).expects('delete').once().withArgs('/session', true);
-
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const deleteSpy = vi.spyOn(httpClient.prototype, 'delete').mockResolvedValue(undefined);
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
+      const assignSpy = vi.spyOn(windowManager, 'assign'); // Should not be called
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://unit-test.authress.io', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
       loginClient.enableCredentials = true;
       await loginClient.logout(relativeUrl);
 
-      expect(setTimeoutStub.calledOnce).to.eql(false);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      deleteMock.verify();
+      expect(setTimeoutSpy).not.toHaveBeenCalled();
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      expect(deleteSpy).toHaveBeenCalledOnce();
+      expect(deleteSpy).toHaveBeenCalledWith('/session', true);
+      
+      expect(assignSpy).not.toHaveBeenCalled();
     });
 
     it('should assign fullLogoutUrl if session deletion fails', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
-      const deleteMock = sandbox.mock(httpClient.prototype).expects('delete').rejects(new Error('Failed to delete session'));
-      const assignMock = sandbox.mock(windowManager).expects('assign').once();
-      const getCurrentLocationMock = sandbox.mock(windowManager).expects('getCurrentLocation').returns({ href: 'https://current.location' });
+      const fullLogoutUrl = 'https://auth.example.com/logout?redirect_uri=https%3A%2F%2Fvalid-redirect.url&client_id=app_id';
 
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      // Mock delete to reject
+      const deleteSpy = vi.spyOn(httpClient.prototype, 'delete').mockRejectedValue(new Error('Failed to delete session'));
+
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      const getCurrentLocationSpy = vi.spyOn(windowManager, 'getCurrentLocation').mockReturnValue({ href: 'https://current.location' });
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://auth.example.com', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
       loginClient.enableCredentials = true;
-      await loginClient.logout(requestedRedirectUrl);
+      const logoutAsync = loginClient.logout(requestedRedirectUrl);
 
-      expect(setTimeoutStub.calledOnce).to.eql(true);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      deleteMock.verify();
-      assignMock.verify();
-      getCurrentLocationMock.verify();
+      // Pass control over the event loop back to the logoutAsync call so that it can actually hit the set timeout, and once we hit the timeout, then we can await logoutAsync, and assert the rest of the test.
+      await Promise.resolve();
+      vi.runAllTimers();
+      await logoutAsync;
+
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      expect(deleteSpy).toHaveBeenCalledOnce();
+      expect(getCurrentLocationSpy).toHaveBeenCalled();
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).toHaveBeenCalledWith(fullLogoutUrl);
     });
 
     it('should assign the fullLogoutUrl with redirect_uri and client_id when credentials are not enabled', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
       const fullLogoutUrl = 'https://auth.example.com/logout?redirect_uri=https%3A%2F%2Fvalid-redirect.url&client_id=app_id';
-      const assignMock = sandbox.mock(windowManager).expects('assign').once().withArgs(fullLogoutUrl);
-      const getCurrentLocationMock = sandbox.mock(windowManager).expects('getCurrentLocation').returns({ href: 'https://valid-redirect.url' });
+      
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      const getCurrentLocationSpy = vi.spyOn(windowManager, 'getCurrentLocation').mockReturnValue({ href: 'https://valid-redirect.url' });
 
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://auth.example.com', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
-      await loginClient.logout(requestedRedirectUrl);
-
-      expect(setTimeoutStub.calledOnce).to.eql(true);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      assignMock.verify();
-      getCurrentLocationMock.verify();
+      const logoutAsync = loginClient.logout(requestedRedirectUrl);
+      
+      vi.runAllTimers();
+      await logoutAsync;
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      expect(assignSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).toHaveBeenCalledWith(fullLogoutUrl);
+      expect(getCurrentLocationSpy).toHaveBeenCalled();
     });
 
     it('should handle relative requestedRedirectUrl and resolve using current location as /', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
       const relativeUrl = '/';
 
-      const windowManagerMock = sandbox.mock(windowManager);
-      windowManagerMock.expects('assign').once().withArgs('https://auth.example.com/logout?redirect_uri=https%3A%2F%2Fcurrent.location%2F&client_id=app_id');
-      windowManagerMock.expects('getCurrentLocation').twice().returns({ href: 'https://current.location' });
+      const windowManagerAssignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      const windowManagerLocationSpy = vi.spyOn(windowManager, 'getCurrentLocation').mockReturnValue({ href: 'https://current.location' });
 
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://auth.example.com', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
-      await loginClient.logout(relativeUrl);
+      const logoutAsync = loginClient.logout(relativeUrl);
 
-      expect(setTimeoutStub.calledOnce).to.eql(true);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      windowManagerMock.verify();
+      const expectedUrl = 'https://auth.example.com/logout?redirect_uri=https%3A%2F%2Fcurrent.location%2F&client_id=app_id';
+      
+      vi.runAllTimers();
+      await logoutAsync;
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      // Should be called twice by the implementation to resolve the relative URL
+      expect(windowManagerLocationSpy).toHaveBeenCalledTimes(2); 
+      expect(windowManagerAssignSpy).toHaveBeenCalledOnce();
+      expect(windowManagerAssignSpy).toHaveBeenCalledWith(expectedUrl);
     });
 
     it('should handle relative requestedRedirectUrl and resolve using current location as /relative-url', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
       const relativeUrl = '/relative-url';
-      const windowManagerMock = sandbox.mock(windowManager);
-      windowManagerMock.expects('assign').once().withArgs('https://auth.example.com/logout?redirect_uri=https%3A%2F%2Fcurrent.location%2Frelative-url&client_id=app_id');
-      windowManagerMock.expects('getCurrentLocation').twice().returns({ href: 'https://current.location' });
+      
+      const windowManagerAssignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      const windowManagerLocationSpy = vi.spyOn(windowManager, 'getCurrentLocation').mockReturnValue({ href: 'https://current.location' });
 
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://auth.example.com', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
       
-      await loginClient.logout(relativeUrl);
+      const logoutAsync = loginClient.logout(relativeUrl);
 
-      expect(setTimeoutStub.calledOnce).to.eql(true);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      windowManagerMock.verify();
+      const expectedUrl = 'https://auth.example.com/logout?redirect_uri=https%3A%2F%2Fcurrent.location%2Frelative-url&client_id=app_id';
+      
+      vi.runAllTimers();
+      await logoutAsync;
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      expect(windowManagerLocationSpy).toHaveBeenCalledTimes(2);
+      expect(windowManagerAssignSpy).toHaveBeenCalledOnce();
+      expect(windowManagerAssignSpy).toHaveBeenCalledWith(expectedUrl);
     });
 
     it('should set lastSessionCheck to 0 after logging out', async () => {
-      const setTimeoutStub = sandbox.stub(global, 'setTimeout').callsFake(cb => cb());
-      const assignMock = sandbox.mock(windowManager).expects('assign').once();
-
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://auth.example.com', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
       loginClient.lastSessionCheck = 12345;
-      await loginClient.logout(requestedRedirectUrl);
+      const logoutAsync = loginClient.logout(requestedRedirectUrl);      
+      vi.runAllTimers();
+      await logoutAsync;
 
-      expect(setTimeoutStub.calledOnce).to.eql(true);
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      expect(loginClient.lastSessionCheck).to.equal(0);
-      assignMock.verify();
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      
+      // Assert property change
+      expect(loginClient.lastSessionCheck).toEqual(0);
+      
+      expect(assignSpy).toHaveBeenCalledOnce();
     });
 
     it('should wait for 500ms after logging out', async () => {
-      const clock = sandbox.useFakeTimers();
-      const assignMock = sandbox.mock(windowManager).expects('assign').once();
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
 
-      const userIdentityTokenStorageManagerMock = sandbox.mock(userIdentityTokenStorageManager);
-      userIdentityTokenStorageManagerMock.expects('clear').once();
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
 
       const loginClient = new LoginClient({ authressApiUrl: 'https://auth.example.com', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
-      const sanitizeQueryParametersStub = sandbox.stub(loginClient, 'sanitizeQueryParameters');
-      sanitizeQueryParametersStub.returns();
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
 
-      const logoutAsync = loginClient.logout(requestedRedirectUrl);
-      clock.tick(500);
-      await logoutAsync;
+      const logoutPromise = loginClient.logout(requestedRedirectUrl);
+      
+      // Advance time by 500ms
+      vi.advanceTimersByTime(500); 
+      
+      // Now the setTimeout callback should have executed
+      await logoutPromise;
 
-      expect(sanitizeQueryParametersStub.calledOnce).to.eql(true);
-      userIdentityTokenStorageManagerMock.verify();
-      assignMock.verify();
-      clock.restore();
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).toHaveBeenCalledOnce();
     });
   });
 });
