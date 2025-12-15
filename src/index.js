@@ -453,10 +453,16 @@ export class LoginClient {
       throw e;
     }
 
+    if (!this.enableCredentials && !windowManager.isLocalHost()) {
+      const e = Error(`"updateExtensionAuthenticationRequest()" can only be run on sites that match the login domain. ${windowManager.getCurrentLocation().host} Does not match ${this.hostUrl}`);
+      e.code = 'OriginMismatch';
+      throw e;
+    }
+
     try {
       const resolvedTenantLookupIdentifier = hint || tenantLookupIdentifier;
       const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ connectionId, tenantLookupIdentifier: resolvedTenantLookupIdentifier, authenticationRequestId });
-      const requestOptions = await this.httpClient.patch(`/authentication/${authenticationRequestId}`, true, {
+      const requestOptions = await this.httpClient.patch(`/authentication/${authenticationRequestId}`, this.enableCredentials, {
         antiAbuseHash,
         connectionId,
         tenantLookupIdentifier: resolvedTenantLookupIdentifier,
