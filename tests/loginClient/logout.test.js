@@ -282,5 +282,59 @@ describe('loginClient.js', () => {
       expect(clearSpy).toHaveBeenCalledOnce();
       expect(assignSpy).toHaveBeenCalledOnce();
     });
+
+    it('Prevent returning before delete session is finished. If someone does not want to wait for it, then they should not await. If we want to make it easier for users, then we would need to keep track of the state in a cookie', async () => {
+      let deleteResolved = false;
+      let logoutReturned = false;
+
+      // Create a promise that we control
+      const deletePromiseBlockTime = 10000;
+      const deletePromise = new Promise(resolve => {
+        setTimeout(() => { deleteResolved = true; resolve(); }, deletePromiseBlockTime);
+      });
+
+      const deleteSpy = vi.spyOn(httpClient.prototype, 'delete').mockReturnValue(deletePromise);
+      const assignSpy = vi.spyOn(windowManager, 'assign').mockImplementation(() => {});
+      const clearSpy = vi.spyOn(userIdentityTokenStorageManager, 'clear').mockImplementation(() => {});
+
+      const loginClient = new LoginClient({ authressApiUrl: 'https://unit-test.authress.io', applicationId: 'app_id', skipBackgroundCredentialsCheck: true });
+      const sanitizeQueryParametersStub = vi.spyOn(loginClient, 'sanitizeQueryParameters').mockImplementation(() => {});
+
+      loginClient.enableCredentials = true;
+
+      // Start the logout process
+      const logoutPromise = loginClient.logout(null).then(() => {
+        logoutReturned = true;
+      });
+
+      // At this point, delete should have been called but not resolved
+      expect(deleteSpy).toHaveBeenCalledOnce();
+      expect(deleteResolved).toBe(false);
+      expect(logoutReturned).toBe(false);
+
+      // Advance timers to ensure that logout has not called
+      vi.advanceTimersByTime(deletePromiseBlockTime / 2);
+  
+      // Give the event loop a chance to process any resolved promises
+      await Promise.resolve();
+  
+      // CRITICAL: logout should NOT have returned yet because delete hasn't resolved
+      expect(deleteResolved).toBe(false);
+      expect(logoutReturned).toBe(false);
+
+      // Advance timers to allow the delete to resolve
+      vi.advanceTimersByTime(deletePromiseBlockTime / 2);
+  
+      // Wait for the logout to complete
+      await logoutPromise;
+
+      // Verify that delete was resolved before logout returned
+      expect(deleteResolved).toBe(true);
+      expect(logoutReturned).toBe(true);
+  
+      expect(sanitizeQueryParametersStub).toHaveBeenCalledOnce();
+      expect(clearSpy).toHaveBeenCalledOnce();
+      expect(assignSpy).not.toHaveBeenCalled();
+    });
   });
 });

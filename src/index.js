@@ -981,6 +981,7 @@ export class LoginClient {
       try {
         await this.httpClient.delete('/session', this.enableCredentials);
         this.lastSessionCheck = 0;
+
         // We use the requestedRedirectUrl here and not the redirectUrl because `windowManager.assign` actually accepts relative urls
         // * AND we don't want to force a navigation if we are already in the right location.
         if (requestedRedirectUrl && requestedRedirectUrl !== windowManager.getCurrentLocation().href) {
