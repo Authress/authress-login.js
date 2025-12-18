@@ -8,7 +8,6 @@ import importPlugin from 'eslint-plugin-import';
 const globalVariables = {
   ...globals.browser,
   ...globals.es2021,
-  ...globals.mocha,
   fetch: 'readonly'
 };
 
