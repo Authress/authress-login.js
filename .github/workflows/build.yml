@@ -24,8 +24,16 @@ jobs:
         node-version: 20.19
         registry-url: 'https://registry.npmjs.org'
 
+    - name: Merge PR into target before building
+      if: github.event_name == 'pull_request'
+      run: |
+        git config --global user.email "github@rhosys.github.com"
+        git config --global user.name "GitHub Runner"
+        git fetch origin
+        git merge ${GITHUB_BASE_REF} --no-edit
+
     - name: Install packages
-      run: npm install
+      run: yarn install
     - name: Run build
       run: yarn build
     - name: Test
