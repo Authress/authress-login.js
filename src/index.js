@@ -671,12 +671,11 @@ export class LoginClient {
    * @param {String} [responseLocation=cookie] Store the credentials response in the specified location. Options are either 'cookie' or 'query'.
    * @param {String} [flowType=token id_token] The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow.
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
-   * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
    * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async authenticateWithOneTimeCode(options = {}) {
-    const { serviceClientId, inviteId, redirectUrl, force, responseLocation, flowType, clearUserDataBeforeLogin, audiences } = (options || {});
+    const { serviceClientId, inviteId, redirectUrl, responseLocation, flowType, clearUserDataBeforeLogin, audiences } = (options || {});
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
@@ -687,24 +686,6 @@ export class LoginClient {
       const e = Error('The Passwordless Service Client ID is required');
       e.code = 'InvalidInput';
       throw e;
-    }
-
-    // We include inviteId here because inviteId also allow linking to tenants and capturing groups and access records associated with the invite
-    if (!inviteId && !force && await this.userSessionExists()) {
-      const existingJwtTokenString = await this.ensureToken();
-      const jwtPayload = jwtManager.decode(existingJwtTokenString);
-      if (jwtPayload && jwtPayload.azp && serviceClientId !== jwtPayload.azp) {
-        this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
-        const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
-        Recommended Options:
-          (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
-          (2) If the goal is link their current identity with a new from the new connection, use the linkIdentity() method.
-          (3) If the goal is skip log in if they are already logged in or force log in with the connectionId, first check if userSessionExists() and then only if "false", call authenticate().`);
-        e.code = 'AuthenticationConstraintContention';
-        throw e;
-      }
-
-      return null;
     }
 
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();
@@ -754,38 +735,19 @@ export class LoginClient {
    * @param {String} [flowType=token id_token] The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow.
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
-   * @param {Boolean} [force=false] Force getting new credentials.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
    * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
    * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async authenticate(options = {}) {
     const {
-      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences
+      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences
     } = (options || {});
 
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
       throw e;
-    }
-
-    // We include inviteId here because inviteId also allow linking to tenants and capturing groups and access records associated with the invite
-    if (!inviteId && !force && !multiAccount && await this.userSessionExists()) {
-      const existingJwtTokenString = await this.ensureToken();
-      const jwtPayload = jwtManager.decode(existingJwtTokenString);
-      if (connectionId && jwtPayload && jwtPayload.azp && connectionId !== jwtPayload.azp) {
-        this.logger.log({ title: '[Authress Login SDK] Authentication blocked because the user is already logged in, and the requested authentication parameters do not match the original session.', requestedAuthenticationOptions: options, currentAuthenticationSessionData: jwtPayload });
-        const e = Error(`Authentication requested for user that is already logged in, but the connectionId specified does not match their existing session.
-        Recommended Options:
-          (1) If the goal is to force them to log in with this new connection and ignore their existing session, use the "force" flag.
-          (2) If the goal is link their current identity with a new from the new connection, use the linkIdentity() method.
-          (3) If the goal is skip log in if they are already logged in or force log in with the connectionId, first check if userSessionExists() and then only if "false", call authenticate().`);
-        e.code = 'AuthenticationConstraintContention';
-        throw e;
-      }
-
-      return null;
     }
 
     const { codeVerifier, codeChallenge } = await jwtManager.getAuthCodes();

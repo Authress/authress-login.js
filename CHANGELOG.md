@@ -2,7 +2,7 @@
 This is the changelog for [Authress Login](readme.md).
 
 ## 2.6 ##
-* [Bug] Self-Hosted Login pages will now correctly report the user as still logged in. This means taht requests to `authenticate()` will fail without the `force` flag, if the user is already logged in and new parameters do not match the logged in user. Make sure to always call `userSessionExists()` before `authenticate()`.
+* [Bug Fix] Self-Hosted Login pages will now correctly report the user as still logged in. All calls to `authenticate` implicitly assume `force`.
 * Minimum supported NodeJs compiler version: 20
 * Converted library to be a module
 
@@ -12,10 +12,10 @@ This is the changelog for [Authress Login](readme.md).
 * Also remove the `AuthUserId` cookie when removing other cookies.
 * Add `antiAbuseHash` generation as part of authentication requests
 * clear the `nonce` and `iss` parameters from the URL when they are set.
-* [Bug] Force a sessionCheck after a logout.
+* [Bug Fix] Force a sessionCheck after a logout.
 * Validate logout redirect urls to ensure they are valid before attempting to log the user out.
-* [Bug] enable iOS 'Load Failed' non-compliant HTTP Fetch retries.
-* [Bug] Improve support for timeoutInMillis for long values.
+* [Bug Fix] enable iOS 'Load Failed' non-compliant HTTP Fetch retries.
+* [Bug Fix] Improve support for timeoutInMillis for long values.
 * Add audience support via the `audience` property for `authenticate`.
 * Update documentation to clarify `EnsureToken` waits for timeout for 5 seconds, and if a timeout occurs why exactly that is.
 

@@ -28,8 +28,6 @@ export interface OneTimeCodeAuthenticateParameters {
   redirectUrl?: string;
   /** A list of audiences to add to the JWT in the `aud` claim. This list must be a subset of the audiences defined for the application. To allow additional audiences, see https://authress.io/app/#/manage?focus=applications */
   audiences?: Array<string>;
-  /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
-  force?: boolean;
   /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
   clearUserDataBeforeLogin?: boolean;
 }
@@ -51,8 +49,6 @@ export interface AuthenticationParameters {
   audiences?: Array<string>;
   /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
-  /** Force getting new credentials. (Default: **false** - only get new credentials if none exist.) */
-  force?: boolean;
   /** Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already. (Default: **false** - the current session is validated and no login is displayed) */
   multiAccount?: boolean;
   /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
