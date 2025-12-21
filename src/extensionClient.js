@@ -140,9 +140,6 @@ class ExtensionClient {
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('redirect_uri', redirectUrl);
     windowManager.assign(url.toString());
-
-    // Prevent the current UI from taking any action once we decided we need to log in.
-    await new Promise(resolve => setTimeout(resolve, 5000));
     return null;
   }
 }

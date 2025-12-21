@@ -487,8 +487,6 @@ export class LoginClient {
       throw (error.data || error);
     }
 
-    // Prevent the current UI from taking any action once we decided we need to log in.
-    await new Promise(resolve => setTimeout(resolve, 5000));
     return null;
   }
 
@@ -659,9 +657,6 @@ export class LoginClient {
       }
       throw error;
     }
-
-    // Prevent the current UI from taking any action once we decided we need to log in.
-    await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
   /**
@@ -800,8 +795,6 @@ export class LoginClient {
       throw (error.data || error);
     }
 
-    // Prevent the current UI from taking any action once we decided we need to log in.
-    await new Promise(resolve => setTimeout(resolve, 5000));
     return null;
   }
 
