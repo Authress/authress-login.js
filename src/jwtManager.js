@@ -64,15 +64,14 @@ class JwtManager {
     const valueString = Object.values(props).filter(v => v).join('|');
 
     let fineTuner = 0;
-    let hash = null;
     while (++fineTuner) {
-      hash = base64url.encode(await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(`${timestamp};${fineTuner};${valueString}`)));
+      const hash = base64url.encode(await (window.crypto || window.msCrypto).subtle.digest('SHA-256', new TextEncoder().encode(`${timestamp};${fineTuner};${valueString}`)));
       if (hash.match(/^00/)) {
-        break;
+        return `v2;${timestamp};${fineTuner};${hash}`;
       }
     }
 
-    return `v2;${timestamp};${fineTuner};${hash}`;
+    throw Error('HashFaled');
   }
 }
 
