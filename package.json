@@ -13,6 +13,7 @@
   ],
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "import": "./src/index.js",
       "require": "./dist/authress.min.js",
       "default": "./src/index.js"
