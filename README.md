@@ -5,7 +5,7 @@
 # Authress Login SDK for UIs
 
 <p align="center">
-    <a href=https://www.npmjs.com/package/@authress/login" alt="Authress SDK on npm"><img src="https://badge.fury.io/js/@authress%2Flogin.svg"></a>
+    <a href="https://www.npmjs.com/package/@authress/login" alt="Authress SDK on npm"><img src="https://badge.fury.io/js/@authress%2Flogin.svg"></a>
     <a href="./LICENSE" alt="Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
     <a href="https://authress.io/community" alt="authress community"><img src="https://img.shields.io/badge/Community-Authress-fbaf0b.svg"></a>
 </p>
