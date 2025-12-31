@@ -1,6 +1,6 @@
 import { sanitizeUrl } from './util.js';
 import windowManager from './windowManager.js';
-import packageInfo from '../package.json';
+import packageInfo from '../package.json' with { type: 'json' };
 
 const defaultHeaders = {
   'Content-Type': 'application/json',
