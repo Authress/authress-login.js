@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -32,7 +34,7 @@ jobs:
       run: |
         git config --global user.email "github@rhosys.github.com"
         git config --global user.name "GitHub Runner"
-        git fetch origin $BASE_BRANCH
+        git fetch origin $BASE_BRANCH --deepen=50
         git merge origin/${BASE_BRANCH} --allow-unrelated-histories --no-edit
 
     - name: Install packages
