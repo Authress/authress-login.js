@@ -33,7 +33,7 @@ jobs:
         git config --global user.email "github@rhosys.github.com"
         git config --global user.name "GitHub Runner"
         git fetch origin $BASE_BRANCH
-        git merge origin/${BASE_BRANCH} --no-edit
+        git merge origin/${BASE_BRANCH} --allow-unrelated-histories --no-edit
 
     - name: Install packages
       run: yarn install
