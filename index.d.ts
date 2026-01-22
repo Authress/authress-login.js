@@ -24,6 +24,8 @@ export interface OneTimeCodeAuthenticateParameters {
   responseLocation?: string;
   /** The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow. (Default: **token id_token**) */
   flowType?: string;
+  /** A list of scopes to populate into the scope claim of the generaned JWT. */
+  scopes?: Array<string>;
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
   /** A list of audiences to add to the JWT in the `aud` claim. This list must be a subset of the audiences defined for the application. To allow additional audiences, see https://authress.io/app/#/manage?focus=applications */
@@ -43,6 +45,8 @@ export interface AuthenticationParameters {
   responseLocation?: string;
   /** The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow. (Default: **token id_token**) */
   flowType?: string;
+  /** A list of scopes to populate into the scope claim of the generaned JWT. */
+  scopes?: Array<string>;
   /** Specify where the provider should redirect the user to in your application. If not specified, will be the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal. (Default: **window.location.href**) */
   redirectUrl?: string;
   /** A list of audiences to add to the JWT in the `aud` claim. This list must be a subset of the audiences defined for the application. To allow additional audiences, see https://authress.io/app/#/manage?focus=applications */
