@@ -665,12 +665,13 @@ export class LoginClient {
    * @param {String} [inviteId] Invite to use to login, only one of the connectionId, tenantLookupIdentifier, or the inviteId is required.
    * @param {String} [responseLocation=cookie] Store the credentials response in the specified location. Options are either 'cookie' or 'query'.
    * @param {String} [flowType=token id_token] The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow.
+   * @param {Array<String>} [scopes=[]] A list of scopes to populate into the scope claim of the generaned JWT.
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
    * @param {Boolean} [clearUserDataBeforeLogin=true] Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience.
    * @return {Promise<AuthenticateResponse | null>} The authentication response.
    */
   async authenticateWithOneTimeCode(options = {}) {
-    const { serviceClientId, inviteId, redirectUrl, responseLocation, flowType, clearUserDataBeforeLogin, audiences } = (options || {});
+    const { serviceClientId, inviteId, redirectUrl, responseLocation, flowType, clearUserDataBeforeLogin, audiences, scopes } = (options || {});
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
       e.code = 'InvalidResponseLocation';
@@ -699,7 +700,8 @@ export class LoginClient {
         audiences,
         connectionId: serviceClientId, inviteId,
         applicationId: this.applicationId,
-        responseLocation, flowType
+        responseLocation, flowType,
+        requestedScopes: scopes
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
         nonce: authResponse.data.authenticationRequestId, codeVerifier, lastConnectionId: serviceClientId, redirectUrl: selectedRedirectUrl,
@@ -728,6 +730,7 @@ export class LoginClient {
    * @param {String} [inviteId] Invite to use to login, only one of the connectionId, tenantLookupIdentifier, or the inviteId is required.
    * @param {String} [responseLocation=cookie] Store the credentials response in the specified location. Options are either 'cookie' or 'query'.
    * @param {String} [flowType=token id_token] The type of credentials returned in the response. The list of options is any of 'code token id_token' separated by a space. Select token to receive an access_token, id_token to return the user identity in an JWT, and code for the authorization_code grant_type flow.
+   * @param {Array<String>} [scopes=[]] A list of scopes to populate into the scope claim of the generaned JWT.
    * @param {String} [redirectUrl=${window.location.href}] Specify where the provider should redirect to the user to in your application. If not specified, the default is the current location href. Must be a valid redirect url matching what is defined in the application in the Authress Management portal.
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @param {Boolean} [multiAccount=false] Enable multi-account login. The user will be prompted to login with their other account, if they are not logged in already.
@@ -736,7 +739,7 @@ export class LoginClient {
    */
   async authenticate(options = {}) {
     const {
-      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences
+      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences, scopes
     } = (options || {});
 
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
@@ -762,7 +765,8 @@ export class LoginClient {
         connectionId, tenantLookupIdentifier, inviteId,
         connectionProperties,
         applicationId: this.applicationId,
-        responseLocation, flowType, multiAccount
+        responseLocation, flowType, multiAccount,
+        requestedScopes: scopes
       });
       localStorage.setItem(AuthenticationRequestNonceKey, JSON.stringify({
         nonce: authResponse.data.authenticationRequestId, codeVerifier, lastConnectionId: connectionId, tenantLookupIdentifier, redirectUrl: selectedRedirectUrl,
