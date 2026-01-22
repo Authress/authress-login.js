@@ -11,6 +11,7 @@ on:
 permissions:
   id-token: write
   contents: write
+  pull-requests: write
   
 jobs:
   nodejs:
@@ -26,11 +27,13 @@ jobs:
 
     - name: Merge PR into target before building
       if: github.event_name == 'pull_request'
+      env:
+        BASE_BRANCH: ${{ github.base_ref }}
       run: |
         git config --global user.email "github@rhosys.github.com"
         git config --global user.name "GitHub Runner"
-        git fetch origin
-        git merge origin/${GITHUB_BASE_REF} --no-edit
+        git fetch origin $BASE_BRANCH
+        git merge origin/${BASE_BRANCH} --no-edit
 
     - name: Install packages
       run: yarn install
