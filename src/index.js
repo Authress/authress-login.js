@@ -491,6 +491,46 @@ export class LoginClient {
   }
 
   /**
+   * @description Retriev user profile properties for the users the user's account.
+   * @return {Promise<UserProfile>} The user profile. Throws if the user is not logged in.
+   */
+  async getUserProfile() {
+    if (!this.getUserIdentity()) {
+      const e = Error('User must be logged in to unlink an account.');
+      e.code = 'NotLoggedIn';
+      throw e;
+    }
+
+    let accessToken;
+    try {
+      accessToken = await this.ensureToken({ timeoutInMillis: 100 });
+    } catch (error) {
+      if (error.code === 'TokenTimeout') {
+        const e = Error('User must be logged into an existing account before linking a second account.');
+        e.code = 'NotLoggedIn';
+        throw e;
+      }
+    }
+
+    const headers = this.enableCredentials && !windowManager.isLocalHost() ? {} : {
+      Authorization: `Bearer ${accessToken}`
+    };
+
+    try {
+      const identityResult = await this.httpClient.get(`/session/profile`, this.enableCredentials, headers);
+      return identityResult.data;
+    } catch (error) {
+      this.logger.log({ title: '[Authress Login SDK] Failed to fetch user profile', error });
+      if (error.status && error.status >= 400 && error.status < 500) {
+        const e = Error(error.data && (error.data.title || error.data.errorCode) || error.data || 'Unknown Error');
+        e.code = error.data && error.data.errorCode;
+        throw e;
+      }
+      throw (error.data || error);
+    }
+  }
+
+  /**
    * @description Unlink an identity from the user's account.
    * @param {String} identityId Specify the provider connection id or the user id of that connection that user would like to unlink - see https://authress.io/app/#/manage?focus=connections
    * @return {Promise<void>} Throws an error if identity cannot be unlinked.
@@ -524,7 +564,7 @@ export class LoginClient {
     };
 
     try {
-      await this.httpClient.delete(`/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
+      await this.httpClient.delete(`/session/identities/${encodeURIComponent(identityId)}`, this.enableCredentials, headers);
     } catch (error) {
       this.logger.log({ title: '[Authress Login SDK] Failed to unlink user identity', error });
       if (error.status && error.status >= 400 && error.status < 500) {

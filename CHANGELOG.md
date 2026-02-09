@@ -5,6 +5,7 @@ This is the changelog for [Authress Login](readme.md).
 * [Bug Fix] Self-Hosted Login pages will now correctly report the user as still logged in. All calls to `authenticate` implicitly assume `force`.
 * Minimum supported NodeJs compiler version: 20
 * Converted library to be a module
+* Add `getUserProfile` method
 
 ## 2.5 ##
 * Minimum supported NodeJs compiler version: 18

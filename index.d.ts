@@ -77,6 +77,22 @@ export interface OneTimeCodeLinkIdentityParameters {
   redirectUrl?: string;
 }
 
+export interface UserProfile {
+  /** List of Linked Identities for the user. */
+  linkedIdentities: Array<LinkedIdentity>;
+}
+export interface LinkedIdentity {
+  /** The linked identity originating identity provider user information. */
+  connection: LinkedIdentityConnection;
+}
+
+export interface LinkedIdentityConnection {
+  /** The linked identity provider connection ID. */
+  connectionId: string;
+  /** The user's user ID from the linked identity provider. */
+  userId: string;
+}
+
 export interface ExtensionAuthenticationParameters {
   /** The redirect to your login screen will contain two query parameters `state`. Pass the state into this method. (Default: **window.location.query.state**) */
   state?: string;
