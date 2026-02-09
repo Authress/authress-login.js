@@ -170,10 +170,16 @@ export class LoginClient {
   constructor(settings: Settings, logger?: unknown);
 
   /**
-   * @description Gets the user's profile data and returns it if it exists. Should be called after {@link userSessionExists} or it will be empty.
+   * @description Get the user identity generated for the current completed login request. Should be called after {@link userSessionExists} or it will be empty. The recommended use of this method is to popuplate user personalization into your UI for the logged in user. For additional user related information use {@link getUserProfile}.
    * @return {Object} The user identity which contains a userData object.
    */
   getUserIdentity(): Record<string, unknown>;
+
+  /**
+   * @description Retrieve the user profile properties for the users the user's account.
+   * @return {Promise<UserProfile>} The user profile. Throws if the user is not logged in.
+   */
+  getUserProfile(): Promise<UserProfile>;
 
   /**
    * @description Gets the user's credentials that were generated as part of the connection provider. These credentials work directly with that provider.

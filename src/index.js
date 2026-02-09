@@ -491,7 +491,7 @@ export class LoginClient {
   }
 
   /**
-   * @description Retriev user profile properties for the users the user's account.
+   * @description Retrieve the user profile properties for the users the user's account.
    * @return {Promise<UserProfile>} The user profile. Throws if the user is not logged in.
    */
   async getUserProfile() {
