@@ -61,7 +61,8 @@ class JwtManager {
 
   async calculateAntiAbuseHash(props) {
     const timestamp = Date.now();
-    const valueString = Object.values(props).filter(v => v).join('|');
+    const valueString = Object.values(props).filter(v => v)
+    .map(v => v && typeof v === 'object' && !Array.isArray(v) ? JSON.stringify(v) : v).join('|');
 
     let fineTuner = 0;
     while (++fineTuner) {
