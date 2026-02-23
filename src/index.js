@@ -215,12 +215,12 @@ export class LoginClient {
         rp: {
           // Allow all subdomains, this works because Authress always runs on a subdomain such as login.example.com, where the domain example.com is owned by the authress account owner.
           id: this.hostUrl.split('.').slice(1).join('.'),
-          name: 'WebAuthN Login'
+          name: this.hostUrl.split('.').slice(1).join('.')
         },
         user: {
           id: Uint8Array.from(userId, c => c.charCodeAt(0)),
           name: userId,
-          displayName: `Generated User ID: ${userId}`
+          displayName: `User ID: ${userId}`
         },
         // https://www.iana.org/assignments/cose/cose.xhtml#algorithms (Order Matters)
         pubKeyCredParams: [
@@ -243,7 +243,7 @@ export class LoginClient {
           // authenticatorAttachment: 'cross-platform'
         },
         timeout: 60000,
-        attestation: 'direct'
+        attestation: 'none'
       };
 
       const credential = await navigator.credentials.create({
