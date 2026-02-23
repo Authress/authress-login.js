@@ -1018,4 +1018,4 @@ export const UserConfigurationScreen = {
   MFA: 'MFA'
 };
 
-export * from './extensionClient.js';
+export * as ExtensionClient from './extensionClient.js';
