@@ -110,7 +110,7 @@ class ExtensionClient {
     newUrl.searchParams.delete('expires_in');
     newUrl.searchParams.delete('access_token');
     newUrl.searchParams.delete('id_token');
-    history.replaceState({}, undefined, newUrl.toString());
+    history.replaceState(history.state, undefined, newUrl.toString());
 
     return this.getTokenResponse();
   }
