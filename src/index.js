@@ -496,7 +496,7 @@ export class LoginClient {
    */
   async getUserProfile() {
     if (!this.getUserIdentity()) {
-      const e = Error('User must be logged in to unlink an account.');
+      const e = Error('User must be logged in to fetch the user profile.');
       e.code = 'NotLoggedIn';
       throw e;
     }
@@ -506,7 +506,7 @@ export class LoginClient {
       accessToken = await this.ensureToken({ timeoutInMillis: 100 });
     } catch (error) {
       if (error.code === 'TokenTimeout') {
-        const e = Error('User must be logged into an existing account before linking a second account.');
+        const e = Error('User must be logged in to fetch the user profile.');
         e.code = 'NotLoggedIn';
         throw e;
       }
@@ -553,7 +553,7 @@ export class LoginClient {
       accessToken = await this.ensureToken({ timeoutInMillis: 100 });
     } catch (error) {
       if (error.code === 'TokenTimeout') {
-        const e = Error('User must be logged into an existing account before linking a second account.');
+        const e = Error('User must be logged in to unlink an account.');
         e.code = 'NotLoggedIn';
         throw e;
       }
