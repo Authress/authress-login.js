@@ -385,10 +385,11 @@ export class LoginClient {
           const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000);
           document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/', sameSite: 'strict' });
+          userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
 
           const sessionTokenExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
-          document.cookie = cookieManager.serialize('authress-session', urlSearchParams.get('session_token') || '', { expires: expiry, path: '/', sameSite: 'strict' });
-          userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
+          document.cookie = cookieManager.serialize('authress-session', urlSearchParams.get('session_token') || '', { expires: sessionTokenExpiry, path: '/', sameSite: 'strict' });
+
           userSessionResolver();
           return true;
         }
