@@ -608,7 +608,7 @@ export class LoginClient {
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @return {Promise<void>} Is there a valid existing session.
    */
-  async linkIdentity({ connectionId, tenantLookupIdentifier, redirectUrl, connectionProperties }) {
+  async linkIdentity({ connectionId, tenantLookupIdentifier, redirectUrl, connectionProperties, onStartAuthentication }) {
     if (!connectionId && !tenantLookupIdentifier) {
       const e = Error('connectionId or tenantLookupIdentifier must be specified');
       e.code = 'InvalidConnection';
@@ -649,6 +649,13 @@ export class LoginClient {
         connectionProperties,
         applicationId: this.applicationId
       }, headers);
+
+      if (onStartAuthentication) {
+        await onStartAuthentication({
+          authenticationUrl: requestOptions.data.authenticationUrl,
+          authenticationRequestId: requestOptions.data.authenticationRequestId
+        });
+      }
       windowManager.assign(requestOptions.data.authenticationUrl);
     } catch (error) {
       this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
@@ -761,7 +768,7 @@ export class LoginClient {
    */
   async authenticate(options = {}) {
     const {
-      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences
+      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, force, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences, onStartAuthentication
     } = (options || {});
 
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
@@ -820,6 +827,13 @@ export class LoginClient {
         };
       }
 
+
+      if (onStartAuthentication) {
+        await onStartAuthentication({
+          authenticationUrl: authResponse.data.authenticationUrl,
+          authenticationRequestId: authResponse.data.authenticationRequestId
+        });
+      }
       if (openType === 'tab') {
         const result = windowManager.open(authResponse.data.authenticationUrl, '_blank');
         if (!result || result.closed || typeof result.closed === 'undefined') {

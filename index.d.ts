@@ -57,6 +57,8 @@ export interface AuthenticationParameters {
   multiAccount?: boolean;
   /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
   clearUserDataBeforeLogin?: boolean;
+  /** Called with the authentication response (including authenticationRequestId) after the authentication request is created but before the browser navigates to the identity provider. If the callback returns a Promise, navigation is blocked until it resolves. */
+  onStartAuthentication?: (response: AuthenticateResponse) => void | Promise<void>;
 }
 
 export interface LinkIdentityParameters {
@@ -68,6 +70,8 @@ export interface LinkIdentityParameters {
   redirectUrl?: string;
   /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
+  /** Called with the authentication response after the authentication request is created but before the browser navigates to the identity provider. If the callback returns a Promise, navigation is blocked until it resolves. */
+  onStartAuthentication?: (response: AuthenticateResponse) => void | Promise<void>;
 }
 
 export interface OneTimeCodeLinkIdentityParameters {
