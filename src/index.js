@@ -14,6 +14,14 @@ let userSessionCheckIsInProgress = false;
 
 const AuthenticationRequestNonceKey = 'AuthenticationRequestNonce';
 
+export const RedirectOpenType = Object.freeze({
+  Redirect: 'redirect',
+  Tab: 'tab',
+  ClientManaged: 'client-managed'
+});
+
+const validRedirectOpenTypes = Object.values(RedirectOpenType);
+
 export class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
@@ -650,10 +658,17 @@ export class LoginClient {
    * @param {Object} [connectionProperties] Connection specific properties to pass to the identity provider. Can be used to override default scopes for example.
    * @return {Promise<void>} Is there a valid existing session.
    */
-  async linkIdentity({ connectionId, tenantLookupIdentifier, redirectUrl, connectionProperties }) {
+  async linkIdentity({ connectionId, tenantLookupIdentifier, redirectUrl, connectionProperties, redirectOpenType }) {
     if (!connectionId && !tenantLookupIdentifier) {
       const e = Error('connectionId or tenantLookupIdentifier must be specified');
       e.code = 'InvalidConnection';
+      throw e;
+    }
+
+    const effectiveOpenType = redirectOpenType ?? RedirectOpenType.Redirect;
+    if (!validRedirectOpenTypes.includes(effectiveOpenType)) {
+      const e = Error(`The redirectOpenType "${effectiveOpenType}" is not valid. Must be one of: ${validRedirectOpenTypes.join(', ')}`);
+      e.code = 'InvalidRedirectOpenType';
       throw e;
     }
 
@@ -691,7 +706,26 @@ export class LoginClient {
         connectionProperties,
         applicationId: this.applicationId
       }, headers);
+
+      this.logger.log({ title: '[Authress Login SDK] User Identity Linking Requested', authenticationRequestId: requestOptions.data.authenticationRequestId || '' });
+      const response = {
+        authenticationUrl: requestOptions.data.authenticationUrl,
+        authenticationRequestId: requestOptions.data.authenticationRequestId
+      };
+
+      if (effectiveOpenType === RedirectOpenType.ClientManaged) {
+        return response;
+      }
+
+      if (effectiveOpenType === RedirectOpenType.Tab) {
+        const openedWindow = windowManager.open(requestOptions.data.authenticationUrl, '_blank');
+        if (openedWindow?.closed === false) {
+          return response;
+        }
+      }
+
       windowManager.assign(requestOptions.data.authenticationUrl);
+      return response;
     } catch (error) {
       this.logger.log({ title: '[Authress Login SDK] Failed to start user identity link', error });
       if (error.status && error.status >= 400 && error.status < 500) {
@@ -783,8 +817,16 @@ export class LoginClient {
    */
   async authenticate(options = {}) {
     const {
-      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties, openType, multiAccount, clearUserDataBeforeLogin, audiences, scopes
+      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties, openType, redirectOpenType, multiAccount, clearUserDataBeforeLogin, audiences, scopes
     } = (options || {});
+
+    // Resolve effective navigation mode: redirectOpenType wins, fallback to openType, default to 'redirect'
+    const effectiveOpenType = redirectOpenType ?? openType ?? RedirectOpenType.Redirect;
+    if (!validRedirectOpenTypes.includes(effectiveOpenType)) {
+      const e = Error(`The redirectOpenType "${effectiveOpenType}" is not valid. Must be one of: ${validRedirectOpenTypes.join(', ')}`);
+      e.code = 'InvalidRedirectOpenType';
+      throw e;
+    }
 
     if (responseLocation && responseLocation !== 'cookie' && responseLocation !== 'query' && responseLocation !== 'none') {
       const e = Error('Authentication response location is not valid');
@@ -817,22 +859,32 @@ export class LoginClient {
         enableCredentials: authResponse.data.enableCredentials, multiAccount
       }));
 
+      const response = {
+        authenticationUrl: authResponse.data.authenticationUrl,
+        authenticationRequestId: authResponse.data.authenticationRequestId
+      };
+
+      this.logger.log({ title: '[Authress Login SDK] User Authentication Requested', authenticationRequestId: authResponse.data.authenticationRequestId || '' });
+
       // If authenticate is called from inside the custom login screen then instead return the redirect url and let the caller deal with it. That is, if the federated login provider is the same as the current UI, there is no need to do anything special.
       if (!authResponse.data.authenticationUrl || new URL(authResponse.data.authenticationUrl).hostname === windowManager.getCurrentLocation().hostname) {
-        return {
-          authenticationUrl: authResponse.data.authenticationUrl,
-          authenticationRequestId: authResponse.data.authenticationRequestId
-        };
+        return response;
       }
 
-      if (openType === 'tab') {
-        const result = windowManager.open(authResponse.data.authenticationUrl, '_blank');
-        if (!result || result.closed || typeof result.closed === 'undefined') {
-          windowManager.assign(authResponse.data.authenticationUrl);
-        }
-      } else {
-        windowManager.assign(authResponse.data.authenticationUrl);
+      if (effectiveOpenType === RedirectOpenType.ClientManaged) {
+        return response;
       }
+
+      if (effectiveOpenType === RedirectOpenType.Tab) {
+        const openedWindow = windowManager.open(authResponse.data.authenticationUrl, '_blank');
+        if (openedWindow?.closed === false) {
+          return response;
+        }
+      }
+
+      windowManager.assign(authResponse.data.authenticationUrl);
+
+      return response;
     } catch (error) {
       this.logger.log({ title: '[Authress Login SDK] Failed to start authentication for user', error });
       if (error.status && error.status >= 400 && error.status < 500) {
@@ -842,8 +894,6 @@ export class LoginClient {
       }
       throw (error.data || error);
     }
-
-    return null;
   }
 
   /**

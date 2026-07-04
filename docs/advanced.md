@@ -19,6 +19,45 @@ Actually attempts to fetch the token from the `authorization` cookie and if it d
 ### [`authenticate(options)`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L525)
 Validates that the user does not have an available session and then redirects to the user via the configured options to the Authress Login screen to actually log in. The result of this call will be the user ending up back in your app, at the specified redirect location. At that time **repeat the call to the `userSessionExists()` method above**. It is important as always to call `userSessionExists()` as soon as possible so that any login flow that might be in-progress gets completed.
 
+#### `redirectOpenType` option
+
+Controls how the SDK navigates the user agent to the authentication URL after creating the authentication request. Accepts a value from the `RedirectOpenType` enum:
+
+| Value | Behavior |
+|-------|----------|
+| `RedirectOpenType.Redirect` | Full-page redirect via `window.location.assign` **(default)** |
+| `RedirectOpenType.Tab` | Opens the authentication URL in a new browser tab. Falls back to a full-page redirect if the browser blocks the popup. |
+| `RedirectOpenType.ClientManaged` | No navigation. Returns `{ authenticationUrl, authenticationRequestId }` so the caller can log the request ID and navigate manually. |
+
+The previous `openType` option is deprecated in favor of `redirectOpenType` and will be removed in a future major version. If both are provided, `redirectOpenType` takes precedence.
+
+#### Client-managed mode example
+
+Use `RedirectOpenType.ClientManaged` when you need to reliably capture the `authenticationRequestId` before the browser navigates away — for example, to correlate login attempts with support tickets.
+
+```js
+import { LoginClient, RedirectOpenType } from '@authress/login';
+
+const loginClient = new LoginClient({ authressApiUrl: 'https://login.example.com', applicationId: 'app_yourAppId' });
+
+const result = await loginClient.authenticate({
+  connectionId: 'con_yourConnectionId',
+  redirectOpenType: RedirectOpenType.ClientManaged
+});
+
+// Log the authentication request ID to your own backend
+await fetch('/api/auth-log', {
+  method: 'POST',
+  body: JSON.stringify({
+    authenticationRequestId: result.authenticationRequestId,
+    userId: currentUser.id
+  })
+});
+
+// Now navigate the user to the identity provider
+window.location.assign(result.authenticationUrl);
+```
+
 ### [`updateExtensionAuthenticationRequest(options)`](https://github.com/Authress/authress-login.js/blob/release/2.3/src/index.js#L371)
 Works the same as `authenticate`, but expects to be called as part of the login flow for users coming from an extension login. Pass the expected parameters, and the user will be logged and redirected to the appropriate extension post login page.
 

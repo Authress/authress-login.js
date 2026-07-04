@@ -57,6 +57,15 @@ export interface AuthenticationParameters {
   multiAccount?: boolean;
   /** Remove all cookies, LocalStorage, and SessionStorage related data before logging in. In most cases, this helps prevent corrupted browser state from affecting your user's experience. (Default: **true**) */
   clearUserDataBeforeLogin?: boolean;
+
+  /**
+   * Controls how the SDK navigates the user agent to the authentication URL after creating the authentication request.
+   * - `RedirectOpenType.Redirect` — Full-page redirect via window.location.assign (default)
+   * - `RedirectOpenType.Tab` — Opens authentication URL in a new tab; falls back to full-page redirect if the browser blocks the popup
+   * - `RedirectOpenType.ClientManaged` — No navigation; returns { authenticationUrl, authenticationRequestId } for the caller to handle
+   * @default RedirectOpenType.Redirect
+   */
+  redirectOpenType?: RedirectOpenType;
 }
 
 export interface LinkIdentityParameters {
@@ -68,6 +77,14 @@ export interface LinkIdentityParameters {
   redirectUrl?: string;
   /** Overrides the connection specific properties from the Authress Identity Connection to pass to the identity provider */
   connectionProperties?: Record<string, string>;
+  /**
+   * Controls how the SDK navigates the user agent to the authentication URL after creating the authentication request.
+   * - `RedirectOpenType.Redirect` — Full-page redirect via window.location.assign (default)
+   * - `RedirectOpenType.Tab` — Opens authentication URL in a new tab; falls back to full-page redirect if the browser blocks the popup
+   * - `RedirectOpenType.ClientManaged` — No navigation; returns { authenticationUrl, authenticationRequestId } for the caller to handle
+   * @default RedirectOpenType.Redirect
+   */
+  redirectOpenType?: RedirectOpenType;
 }
 
 export interface OneTimeCodeLinkIdentityParameters {
@@ -152,6 +169,12 @@ export enum DeviceType {
 export enum UserConfigurationScreen {
   Profile = 'Profile',
   MFA = 'MFA'
+}
+
+export enum RedirectOpenType {
+  Redirect = 'redirect',
+  Tab = 'tab',
+  ClientManaged = 'client-managed'
 }
 
 export interface UserConfigurationScreenParameters {
@@ -250,7 +273,7 @@ export class LoginClient {
    * @param {LinkIdentityParameters} settings Parameters for selecting which identity of a user should be linked.
    * @return {Promise<void>}
    */
-  linkIdentity(settings: LinkIdentityParameters): Promise<void>;
+  linkIdentity(settings: LinkIdentityParameters): Promise<AuthenticateResponse>;
 
   /**
    * @description Logs a user in, if the user is not logged in, will begin the passwordless flow as documented at: https://authress.io/knowledge-base/docs/authentication/connecting-providers-idp/oauth-setup-guide-part-3, then redirect back to the {@link redirectUrl}.
@@ -264,7 +287,7 @@ export class LoginClient {
    * @param {AuthenticationParameters} [settings] Parameters for controlling how and when users should be authenticated for the app.
    * @return {Promise<AuthenticateResponse | null>} Automatically redirects the user to the appropriate location, unless the connectionId matches a legacy authentication flow.
    */
-  authenticate(settings?: AuthenticationParameters): Promise<AuthenticateResponse | null>;
+  authenticate(settings?: AuthenticationParameters): Promise<AuthenticateResponse>;
 
   /**
    * @description Waits the user's bearer token exists, and then returns it. To be used in the Authorization header as a Bearer token. This method blocks on a valid user session being created, and expects {@link authenticate} to have been called first. Additionally, if the application configuration specifies that tokens should be secured from javascript, the token will be a hidden cookie only visible to service APIs and will not be returned. If the token is expired and the session is still valid, then it will automatically generate a new token directly from Authress.
