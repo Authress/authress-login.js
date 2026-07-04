@@ -817,7 +817,8 @@ export class LoginClient {
    */
   async authenticate(options = {}) {
     const {
-      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties, openType, redirectOpenType, multiAccount, clearUserDataBeforeLogin, audiences, scopes
+      connectionId, tenantLookupIdentifier, inviteId, redirectUrl, responseLocation, flowType, connectionProperties,
+      openType, redirectOpenType, multiAccount, clearUserDataBeforeLogin, audiences, scopes
     } = (options || {});
 
     // Resolve effective navigation mode: redirectOpenType wins, fallback to openType, default to 'redirect'
