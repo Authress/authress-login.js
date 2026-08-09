@@ -101,6 +101,9 @@ export interface UserProfile {
 export interface LinkedIdentity {
   /** The linked identity originating identity provider user information. */
   connection: LinkedIdentityConnection;
+  email?: string;
+  identityId: string;
+  linkedTime?: string;
 }
 
 export interface LinkedIdentityConnection {
