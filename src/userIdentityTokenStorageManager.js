@@ -130,7 +130,8 @@ class UserIdentityTokenStorageManager {
       // * So instead we loop on domain parts more than just a single part.
       for (const domain of domainsToRemove) {
         const domainString = domain ? `domain=${domain};` : '';
-        const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; ${domainString} SameSite=Strict; path=`;
+        const secureString = windowManager.isHttps() ? ' Secure;' : '';
+        const cookieBase = `${encodeURIComponent(cookie.split(';')[0].split('=')[0])}=; expires=Thu, 01-Jan-1970 00:00:01 GMT; ${domainString} SameSite=Strict;${secureString} path=`;
         // console.log('clearing cookie', `${cookieBase}/`);
         document.cookie = `${cookieBase}/`;
 

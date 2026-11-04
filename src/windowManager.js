@@ -11,6 +11,10 @@ class WindowManager {
     return isLocalHost;
   }
 
+  isHttps() {
+    return this.getCurrentLocation().protocol === 'https:';
+  }
+
   getCurrentLocation() {
     return typeof window !== 'undefined' && new URL(window.location) || new URL('http://localhost:8080');
   }

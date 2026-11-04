@@ -369,7 +369,7 @@ export class LoginClient {
           const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
           const idToken = jwtManager.decode(tokenResult.data.id_token);
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000);
-          document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
+          document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
           userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
           userSessionResolver();
           return true;
@@ -392,11 +392,11 @@ export class LoginClient {
         if (!authRequest.nonce || authRequest.nonce === urlSearchParams.get('nonce')) {
           const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000);
-          document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/', sameSite: 'strict' });
+          document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
           userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
 
           const sessionTokenExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
-          document.cookie = cookieManager.serialize('authress-session', urlSearchParams.get('session_token') || '', { expires: sessionTokenExpiry, path: '/', sameSite: 'strict' });
+          document.cookie = cookieManager.serialize('authress-session', urlSearchParams.get('session_token') || '', { expires: sessionTokenExpiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
 
           userSessionResolver();
           return true;
@@ -420,7 +420,7 @@ export class LoginClient {
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000);
-          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict' });
+          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
       } catch (error) {
