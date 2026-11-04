@@ -5,7 +5,8 @@ import windowManager from './windowManager.js';
 import HttpClient from './httpClient.js';
 import jwtManager from './jwtManager.js';
 import { sanitizeUrl } from './util.js';
-import userIdentityTokenStorageManager from './userIdentityTokenStorageManager.js';
+import userIdentityTokenStorageManager, { PersistenceType } from './userIdentityTokenStorageManager.js';
+export { PersistenceType };
 let userSessionResolver;
 let userSessionPromise = new Promise(resolve => userSessionResolver = resolve);
 
@@ -22,12 +23,15 @@ export const RedirectOpenType = Object.freeze({
 
 const validRedirectOpenTypes = Object.values(RedirectOpenType);
 
+const validPersistenceTypes = Object.values(PersistenceType);
+
 export class LoginClient {
   /**
    * @constructor constructs the LoginClient with a given configuration
    * @param {Object} settings
    * @param {String} settings.authressApiUrl Your Authress custom domain - see https://authress.io/app/#/manage?focus=applications
    * @param {String} settings.applicationId the Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications
+   * @param {String} [settings.persistenceType] where the SDK persists the authorization and session tokens. Use `PersistenceType.LocalStorage` to keep the tokens out of cookies, so they are not automatically sent with every request to your domain. (Default: **PersistenceType.Cookie**)
    * @param {Object} [logger] a configured logger object, optionally `console`, which can used to display debug and warning messages.
    */
   constructor(settings, logger) {
@@ -60,6 +64,14 @@ export class LoginClient {
     this.enableCredentials = this.getMatchingDomainInfo(this.hostUrl);
 
     userIdentityTokenStorageManager.retainUserCookie = settings.retainUserCookie;
+
+    const persistenceType = settingsWithDefault.persistenceType ?? PersistenceType.Cookie;
+    if (!validPersistenceTypes.includes(persistenceType)) {
+      const error = Error(`The persistenceType "${persistenceType}" is not valid. Must be one of: ${validPersistenceTypes.join(', ')}`);
+      error.code = 'InvalidPersistenceType';
+      throw error;
+    }
+    userIdentityTokenStorageManager.persistenceType = persistenceType;
 
     if (!settingsWithDefault.skipBackgroundCredentialsCheck) {
       windowManager.onLoad(async () => {
@@ -369,7 +381,7 @@ export class LoginClient {
           const tokenResult = await this.httpClient.post(`/authentication/${authRequest.nonce}/tokens`, this.enableCredentials, request);
           const idToken = jwtManager.decode(tokenResult.data.id_token);
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || tokenResult.data.expires_in && new Date(Date.now() + tokenResult.data.expires_in * 1000);
-          document.cookie = cookieManager.serialize('authorization', tokenResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
+          userIdentityTokenStorageManager.setAuthorizationToken(tokenResult.data.access_token, expiry);
           userIdentityTokenStorageManager.set(tokenResult.data.id_token, expiry);
           userSessionResolver();
           return true;
@@ -392,11 +404,11 @@ export class LoginClient {
         if (!authRequest.nonce || authRequest.nonce === urlSearchParams.get('nonce')) {
           const idToken = jwtManager.decode(urlSearchParams.get('id_token'));
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || Number(urlSearchParams.get('expires_in')) && new Date(Date.now() + Number(urlSearchParams.get('expires_in')) * 1000);
-          document.cookie = cookieManager.serialize('authorization', urlSearchParams.get('access_token') || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
+          userIdentityTokenStorageManager.setAuthorizationToken(urlSearchParams.get('access_token'), expiry);
           userIdentityTokenStorageManager.set(urlSearchParams.get('id_token'), expiry);
 
           const sessionTokenExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
-          document.cookie = cookieManager.serialize('authress-session', urlSearchParams.get('session_token') || '', { expires: sessionTokenExpiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
+          userIdentityTokenStorageManager.setSessionToken(urlSearchParams.get('session_token'), sessionTokenExpiry);
 
           userSessionResolver();
           return true;
@@ -420,7 +432,7 @@ export class LoginClient {
         if (sessionResult.data.access_token) {
           const idToken = jwtManager.decode(sessionResult.data.id_token);
           const expiry = idToken.exp && new Date(idToken.exp * 1000) || sessionResult.data.expires_in && new Date(Date.now() + sessionResult.data.expires_in * 1000);
-          document.cookie = cookieManager.serialize('authorization', sessionResult.data.access_token || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
+          userIdentityTokenStorageManager.setAuthorizationToken(sessionResult.data.access_token, expiry);
           userIdentityTokenStorageManager.set(sessionResult.data.id_token, expiry);
         }
       } catch (error) {

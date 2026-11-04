@@ -6,6 +6,17 @@ export interface Settings {
 
   /** The Authress applicationId for this app - see https://authress.io/app/#/manage?focus=applications */
   applicationId: string;
+
+  /**
+   * Controls where the SDK persists data when possible. Use `PersistenceType.LocalStorage` to force primary usage of LocalStorage. The default let's the SDK determine the optimal strategy for data storage.
+   * @default PersistenceType.Cookie
+   */
+  persistenceType?: PersistenceType;
+}
+
+export enum PersistenceType {
+  Cookie = 'COOKIE',
+  LocalStorage = 'LOCAL_STORAGE'
 }
 
 export interface AuthenticateResponse {
