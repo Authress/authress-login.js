@@ -8,7 +8,7 @@ export interface Settings {
   applicationId: string;
 
   /**
-   * Controls where the SDK persists data when possible. Use `PersistenceType.LocalStorage` to force primary usage of LocalStorage. The default let's the SDK determine the optimal strategy for data storage.
+   * Influences where the SDK persists access tokens when possible. Use `PersistenceType.LocalStorage` to set the primary preference to use LocalStorage instead of storing as a client side cookie. When not specified the default lets the SDK determine the optimal strategy for data storage.
    * @default PersistenceType.Cookie
    */
   persistenceType?: PersistenceType;

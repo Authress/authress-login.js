@@ -1,6 +1,9 @@
 # Change log
 This is the changelog for [Authress Login](readme.md).
 
+## 2.7 ##
+* Add `persistenceType` switch to enable capability to influence where an access token will be automatically saved.
+
 ## 2.6 ##
 * [Bug Fix] Self-Hosted Login pages will now correctly report the user as still logged in. All calls to `authenticate` implicitly assume `force`.
 * Minimum supported NodeJs compiler version: 20
