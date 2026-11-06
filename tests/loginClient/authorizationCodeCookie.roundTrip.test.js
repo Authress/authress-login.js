@@ -20,8 +20,10 @@ let httpPostSpy;
 /**
  * Simulates the Authress hosted login on the custom domain setting the `auth-code` cookie for the parent domain, then redirecting back to the application with `code=cookie`.
  */
-function returnFromHostedLogin({ queryCode = 'cookie', authCodeSetCookieHeaders = [] }) {
-  authCodeSetCookieHeaders.forEach(setCookieHeader => serverSetsCookie(setCookieHeader, hostedLoginUrl));
+async function returnFromHostedLogin({ queryCode = 'cookie', authCodeSetCookieHeaders = [] }) {
+  for (const setCookieHeader of authCodeSetCookieHeaders) {
+    await serverSetsCookie(setCookieHeader, hostedLoginUrl);
+  }
   browseTo(`https://app.example.com/callback?code=${queryCode}&nonce=${authenticationRequestId}`);
   localStorage.setItem('AuthenticationRequestNonce', JSON.stringify({ nonce: authenticationRequestId, codeVerifier: 'code-verifier', redirectUrl: 'https://app.example.com/callback' }));
 }
@@ -39,8 +41,8 @@ beforeEach(() => {
   vi.spyOn(jwtManager, 'calculateAntiAbuseHash').mockResolvedValue('anti-abuse-hash');
 });
 
-afterEach(() => {
-  clearBrowserState();
+afterEach(async () => {
+  await clearBrowserState();
   vi.useRealTimers();
   vi.restoreAllMocks();
   userIdentityTokenStorageManager.persistenceType = PersistenceType.Cookie;
@@ -49,7 +51,7 @@ afterEach(() => {
 describe('loginClient.js in a browser', () => {
   describe('userSessionContinuation with the authorization code delivered by cookie', () => {
     it('should exchange the auth-code cookie value for tokens', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       const result = await loginClient.userSessionContinuation();
 
@@ -60,7 +62,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should pass the same auth-code cookie value into the anti abuse hash that is sent to the token exchange', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       await loginClient.userSessionContinuation();
 
@@ -73,7 +75,7 @@ describe('loginClient.js in a browser', () => {
       document.cookie = `authorization=${accessToken}; Path=/`;
       document.cookie = `user=${idToken}; Path=/`;
       document.cookie = 'AuthUserId=google|112233445566778899001; Path=/';
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       await loginClient.userSessionContinuation();
 
@@ -81,7 +83,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should ignore spaces the server puts around the cookie name and value', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [`auth-code =  ${authorizationCode}  ; Domain=example.com; Path=/; Secure`] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [`auth-code =  ${authorizationCode}  ; Domain=example.com; Path=/; Secure`] });
 
       await loginClient.userSessionContinuation();
 
@@ -89,7 +91,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should exchange a base64url auth-code containing tildes without altering any of its characters', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('XFhyO-qcZtEuzhJdbYslHdN3BTgPO4CB~YN1XzhRrRaZc')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('XFhyO-qcZtEuzhJdbYslHdN3BTgPO4CB~YN1XzhRrRaZc')] });
 
       await loginClient.userSessionContinuation();
 
@@ -97,7 +99,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should decode a tilde that the server percent-encoded with an encoder that treats it as reserved', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('XFhyO-qcZtEuzhJdbYslHdN3BTgPO4CB%7EYN1XzhRrRaZc')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('XFhyO-qcZtEuzhJdbYslHdN3BTgPO4CB%7EYN1XzhRrRaZc')] });
 
       await loginClient.userSessionContinuation();
 
@@ -105,7 +107,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should keep the equals sign padding of a base64 auth-code cookie value', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('q8/Zr+9TfE2Xg0kH7v1mUw==')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('q8/Zr+9TfE2Xg0kH7v1mUw==')] });
 
       await loginClient.userSessionContinuation();
 
@@ -113,7 +115,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should percent-decode the auth-code cookie value', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('q8%2FZr%2B9TfE2Xg0kH7v1mUw%3D%3D')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('q8%2FZr%2B9TfE2Xg0kH7v1mUw%3D%3D')] });
 
       await loginClient.userSessionContinuation();
 
@@ -121,7 +123,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should percent-decode non-ascii characters as utf-8', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('caf%C3%A9')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('caf%C3%A9')] });
 
       await loginClient.userSessionContinuation();
 
@@ -129,7 +131,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should not convert a plus sign into a space, because cookies are not form encoded', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('code+from+cookie')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('code+from+cookie')] });
 
       await loginClient.userSessionContinuation();
 
@@ -137,7 +139,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should keep the raw auth-code cookie value when its percent-encoding is malformed', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('code%E0%A4%A')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('code%E0%A4%A')] });
 
       await loginClient.userSessionContinuation();
 
@@ -145,7 +147,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should use the auth-code cookie set for the callback path over one set for the whole site, because browsers list the most specific path first', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [
         'auth-code=code_for_root_path; Domain=example.com; Path=/; Secure',
         'auth-code=code_for_callback_path; Domain=example.com; Path=/callback; Secure'
       ] });
@@ -157,7 +159,7 @@ describe('loginClient.js in a browser', () => {
 
     it('should find the auth-code cookie after a cookie that has no equals sign', async () => {
       document.cookie = 'consent_given';
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       await loginClient.userSessionContinuation();
 
@@ -167,7 +169,7 @@ describe('loginClient.js in a browser', () => {
     it('should find the auth-code cookie when the site has a cookie named after an object prototype property', async () => {
       document.cookie = '__proto__=polluted; Path=/';
       document.cookie = 'constructor=polluted; Path=/';
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       await loginClient.userSessionContinuation();
 
@@ -175,7 +177,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should exchange an empty code when the auth-code cookie is present but empty', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('')] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin('')] });
 
       await loginClient.userSessionContinuation();
 
@@ -183,7 +185,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should not treat cookies whose names only contain auth-code as the authorization code', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: ['my-auth-code=wrong_code; Domain=example.com; Path=/', 'auth-code-backup=wrong_code; Domain=example.com; Path=/'] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: ['my-auth-code=wrong_code; Domain=example.com; Path=/', 'auth-code-backup=wrong_code; Domain=example.com; Path=/'] });
 
       await loginClient.userSessionContinuation();
 
@@ -191,7 +193,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should not treat a cookie named auth-code with different casing as the authorization code, because cookie names are case sensitive', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: ['Auth-Code=wrong_code; Domain=example.com; Path=/', 'AUTH-CODE=wrong_code; Domain=example.com; Path=/'] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: ['Auth-Code=wrong_code; Domain=example.com; Path=/', 'AUTH-CODE=wrong_code; Domain=example.com; Path=/'] });
 
       await loginClient.userSessionContinuation();
 
@@ -199,8 +201,8 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should not exchange an auth-code cookie set for a different site', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [] });
-      serverSetsCookie(`auth-code=${authorizationCode}; Path=/; Secure`, 'https://login.other-site.com/');
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [] });
+      await serverSetsCookie(`auth-code=${authorizationCode}; Path=/; Secure`, 'https://login.other-site.com/');
 
       await loginClient.userSessionContinuation();
 
@@ -208,9 +210,9 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should not exchange an auth-code cookie that expired before the user returned to the application', async () => {
-      serverSetsCookie(`auth-code=${authorizationCode}; Domain=example.com; Path=/; Secure; Max-Age=60`, hostedLoginUrl);
+      await serverSetsCookie(`auth-code=${authorizationCode}; Domain=example.com; Path=/; Secure; Max-Age=60`, hostedLoginUrl);
       vi.setSystemTime(new Date('2026-11-06T12:01:01.000Z'));
-      returnFromHostedLogin({});
+      await returnFromHostedLogin({});
 
       await loginClient.userSessionContinuation();
 
@@ -219,7 +221,7 @@ describe('loginClient.js in a browser', () => {
 
     it('should exchange an undefined code when the auth-code cookie is missing', async () => {
       document.cookie = 'theme=dark; Path=/';
-      returnFromHostedLogin({});
+      await returnFromHostedLogin({});
 
       await loginClient.userSessionContinuation();
 
@@ -227,7 +229,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should exchange an undefined code when the site has no cookies', async () => {
-      returnFromHostedLogin({});
+      await returnFromHostedLogin({});
 
       await loginClient.userSessionContinuation();
 
@@ -235,7 +237,7 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should exchange the query string code and ignore the auth-code cookie when the code is delivered in the query string', async () => {
-      returnFromHostedLogin({ queryCode: 'code_from_query', authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ queryCode: 'code_from_query', authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       await loginClient.userSessionContinuation();
 
@@ -243,11 +245,11 @@ describe('loginClient.js in a browser', () => {
     });
 
     it('should store the exchanged access token in the authorization cookie', async () => {
-      returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
+      await returnFromHostedLogin({ authCodeSetCookieHeaders: [authCodeCookieFromHostedLogin(authorizationCode)] });
 
       await loginClient.userSessionContinuation();
 
-      expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: true });
+      expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: true });
       expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([accessToken]);
     });
   });

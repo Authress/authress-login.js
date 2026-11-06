@@ -39,8 +39,8 @@ beforeEach(() => {
   vi.spyOn(jwtManager, 'calculateAntiAbuseHash').mockResolvedValue('anti-abuse-hash');
 });
 
-afterEach(() => {
-  clearBrowserState();
+afterEach(async () => {
+  await clearBrowserState();
   vi.useRealTimers();
   vi.restoreAllMocks();
   userIdentityTokenStorageManager.persistenceType = PersistenceType.Cookie;
@@ -55,7 +55,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: true });
+        expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: true });
       });
 
       it('should keep an id token expiry that is more than two years away for the authorization cookie', async () => {
@@ -65,7 +65,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization')).toMatchObject({ value: accessToken, expires: new Date('2028-12-31T23:59:50.000Z') });
+        expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, expires: new Date('2028-12-31T23:59:50.000Z') });
         expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([accessToken]);
       });
 
@@ -76,7 +76,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization').expires).toEqual(new Date('2026-11-06T13:00:00.000Z'));
+        expect((await await storedCookie('authorization')).expires).toEqual(new Date('2026-11-06T13:00:00.000Z'));
       });
 
       it('should store the authorization cookie as a browser session cookie when neither the id token nor the response has an expiry', async () => {
@@ -85,8 +85,8 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', sameSite: 'strict', secure: true });
-        expect(storedCookie('authorization').isPersistent()).toEqual(false);
+        expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', sameSite: 'strict', secure: true });
+        expect((await await storedCookie('authorization')).isPersistent()).toEqual(false);
       });
 
       it('should make the exchanged access token readable to the application', async () => {
@@ -105,7 +105,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: false });
+        expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: false });
         expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([accessToken]);
       });
 
@@ -114,7 +114,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authress-session')).toMatchObject({ value: sessionToken, path: '/', expires: new Date('2027-02-04T12:00:00.000Z'), sameSite: 'strict', secure: false });
+        expect(await storedCookie('authress-session')).toMatchObject({ value: sessionToken, path: '/', expires: new Date('2027-02-04T12:00:00.000Z'), sameSite: 'strict', secure: false });
       });
 
       it('should store an empty session cookie when the hosted login does not return a session token', async () => {
@@ -122,7 +122,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authress-session')).toMatchObject({ value: '' });
+        expect(await storedCookie('authress-session')).toMatchObject({ value: '' });
       });
 
       it('should expire the authorization cookie after expires_in when the id token has no expiry', async () => {
@@ -130,7 +130,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization').expires).toEqual(new Date('2026-11-06T13:00:00.000Z'));
+        expect((await await storedCookie('authorization')).expires).toEqual(new Date('2026-11-06T13:00:00.000Z'));
       });
 
       it('should store the authorization cookie as a browser session cookie when neither the id token nor the query string has an expiry', async () => {
@@ -138,8 +138,8 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', sameSite: 'strict' });
-        expect(storedCookie('authorization').isPersistent()).toEqual(false);
+        expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', sameSite: 'strict' });
+        expect((await await storedCookie('authorization')).isPersistent()).toEqual(false);
       });
     });
 
@@ -150,7 +150,7 @@ describe('loginClient.js in a browser', () => {
         const result = await loginClient.userSessionContinuation();
 
         expect(result).toEqual(true);
-        expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: true });
+        expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: new Date('2026-11-06T12:59:50.000Z'), sameSite: 'strict', secure: true });
         expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([accessToken]);
       });
 
@@ -159,7 +159,7 @@ describe('loginClient.js in a browser', () => {
 
         await loginClient.userSessionContinuation();
 
-        expect(storedCookie('authorization')).toBeUndefined();
+        expect(await storedCookie('authorization')).toBeUndefined();
       });
     });
   });

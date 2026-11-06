@@ -3,11 +3,11 @@
  */
 export const browseTo = url => globalThis.jsdom.reconfigure({ url });
 
-export const storedCookie = cookieName => globalThis.jsdom.cookieJar.getCookiesSync(window.location.href).find(cookie => cookie.key === cookieName);
+export const storedCookie = async cookieName => (await globalThis.jsdom.cookieJar.getCookies(window.location.href)).find(cookie => cookie.key === cookieName);
 
-export const serverSetsCookie = (setCookieHeader, responseUrl) => globalThis.jsdom.cookieJar.setCookieSync(setCookieHeader, responseUrl);
+export const serverSetsCookie = (setCookieHeader, responseUrl) => globalThis.jsdom.cookieJar.setCookie(setCookieHeader, responseUrl);
 
-export function clearBrowserState() {
-  globalThis.jsdom.cookieJar.removeAllCookiesSync();
+export async function clearBrowserState() {
+  await globalThis.jsdom.cookieJar.removeAllCookies();
   localStorage.clear();
 }

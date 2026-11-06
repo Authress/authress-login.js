@@ -16,8 +16,8 @@ beforeEach(() => {
   userIdentityTokenStorageManager.persistenceType = PersistenceType.Cookie;
 });
 
-afterEach(() => {
-  clearBrowserState();
+afterEach(async () => {
+  await clearBrowserState();
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -25,52 +25,52 @@ afterEach(() => {
 
 describe('userIdentityTokenStorageManager.js in a browser', () => {
   describe('setCookie', () => {
-    it('should store the authorization token as a site wide, strict, secure cookie expiring with the token', () => {
+    it('should store the authorization token as a site wide, strict, secure cookie expiring with the token', async () => {
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, oneHourFromNow);
 
-      expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: oneHourFromNow, sameSite: 'strict', secure: true, hostOnly: true });
+      expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', expires: oneHourFromNow, sameSite: 'strict', secure: true, hostOnly: true });
     });
 
-    it('should store the session token under the authress-session cookie name', () => {
+    it('should store the session token under the authress-session cookie name', async () => {
       userIdentityTokenStorageManager.setSessionToken(sessionToken, oneHourFromNow);
 
-      expect(storedCookie('authress-session')).toMatchObject({ value: sessionToken, path: '/', expires: oneHourFromNow, sameSite: 'strict', secure: true });
+      expect(await storedCookie('authress-session')).toMatchObject({ value: sessionToken, path: '/', expires: oneHourFromNow, sameSite: 'strict', secure: true });
     });
 
-    it('should store the cookie without the secure flag when the site is served over http, because browsers reject secure cookies from insecure origins', () => {
+    it('should store the cookie without the secure flag when the site is served over http, because browsers reject secure cookies from insecure origins', async () => {
       browseTo('http://app.example.com/dashboard');
 
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, oneHourFromNow);
 
-      expect(storedCookie('authorization')).toMatchObject({ value: accessToken, secure: false });
+      expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, secure: false });
     });
 
-    it('should store the cookie without the secure flag on localhost', () => {
+    it('should store the cookie without the secure flag on localhost', async () => {
       browseTo('http://localhost:8080/');
 
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, oneHourFromNow);
 
-      expect(storedCookie('authorization')).toMatchObject({ value: accessToken, secure: false });
+      expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, secure: false });
     });
 
-    it('should drop the milliseconds of the expiry, because cookie dates only have second precision', () => {
+    it('should drop the milliseconds of the expiry, because cookie dates only have second precision', async () => {
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, new Date('2026-11-06T13:00:00.789Z'));
 
-      expect(storedCookie('authorization').expires).toEqual(new Date('2026-11-06T13:00:00.000Z'));
+      expect((await await storedCookie('authorization')).expires).toEqual(new Date('2026-11-06T13:00:00.000Z'));
     });
 
-    it('should not store a cookie whose expiry has already passed', () => {
+    it('should not store a cookie whose expiry has already passed', async () => {
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, new Date('2026-11-06T11:59:50.000Z'));
 
-      expect(storedCookie('authorization')).toBeUndefined();
+      expect(await storedCookie('authorization')).toBeUndefined();
     });
 
-    it('should stop returning the cookie once its expiry passes', () => {
+    it('should stop returning the cookie once its expiry passes', async () => {
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, oneHourFromNow);
 
       vi.setSystemTime(new Date('2026-11-06T13:00:01.000Z'));
 
-      expect(storedCookie('authorization')).toBeUndefined();
+      expect(await storedCookie('authorization')).toBeUndefined();
       expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([]);
     });
 
@@ -78,36 +78,36 @@ describe('userIdentityTokenStorageManager.js in a browser', () => {
       ['undefined, when no expiry is provided', undefined],
       ['null, when the token response has a null expires_in', null],
       ['0, when the localhost redirect has no expires_in query parameter', 0]
-    ])('should store a browser session cookie without an expiry when the expiry is %s', (_, expiry) => {
+    ])('should store a browser session cookie without an expiry when the expiry is %s', async (_, expiry) => {
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, expiry);
 
-      expect(storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', sameSite: 'strict', secure: true });
-      expect(storedCookie('authorization').isPersistent()).toEqual(false);
+      expect(await storedCookie('authorization')).toMatchObject({ value: accessToken, path: '/', sameSite: 'strict', secure: true });
+      expect((await await storedCookie('authorization')).isPersistent()).toEqual(false);
     });
 
-    it('should store an empty cookie value when the token is undefined', () => {
+    it('should store an empty cookie value when the token is undefined', async () => {
       userIdentityTokenStorageManager.setSessionToken(undefined, oneHourFromNow);
 
-      expect(storedCookie('authress-session')).toMatchObject({ value: '' });
+      expect(await storedCookie('authress-session')).toMatchObject({ value: '' });
     });
 
-    it('should store an empty cookie value when the localhost redirect has no session_token query parameter', () => {
+    it('should store an empty cookie value when the localhost redirect has no session_token query parameter', async () => {
       userIdentityTokenStorageManager.setSessionToken(new URLSearchParams('').get('session_token'), oneHourFromNow);
 
-      expect(storedCookie('authress-session')).toMatchObject({ value: '' });
+      expect(await storedCookie('authress-session')).toMatchObject({ value: '' });
     });
 
-    it('should refuse to write the cookie when the expiry is not a valid date', () => {
+    it('should refuse to write the cookie when the expiry is not a valid date', async () => {
       expect(() => userIdentityTokenStorageManager.setAuthorizationToken(accessToken, new Date('not-a-date'))).toThrow(TypeError);
-      expect(storedCookie('authorization')).toBeUndefined();
+      expect(await storedCookie('authorization')).toBeUndefined();
     });
 
-    it('should not write any cookie when running outside of a browser', () => {
+    it('should not write any cookie when running outside of a browser', async () => {
       vi.stubGlobal('window', undefined);
 
       expect(() => userIdentityTokenStorageManager.setAuthorizationToken(accessToken, oneHourFromNow)).not.toThrow();
       vi.unstubAllGlobals();
-      expect(storedCookie('authorization')).toBeUndefined();
+      expect(await storedCookie('authorization')).toBeUndefined();
     });
   });
 
@@ -127,11 +127,11 @@ describe('userIdentityTokenStorageManager.js in a browser', () => {
       expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([refreshedAccessToken]);
     });
 
-    it('should no longer read back the access token once it is written with an already passed expiry', () => {
+    it('should no longer read back the access token once it is written with an already passed expiry', async () => {
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, oneHourFromNow);
       userIdentityTokenStorageManager.setAuthorizationToken(accessToken, new Date('2026-11-06T11:59:50.000Z'));
 
-      expect(storedCookie('authorization')).toBeUndefined();
+      expect(await storedCookie('authorization')).toBeUndefined();
       expect(userIdentityTokenStorageManager.getAuthorizationTokens()).toEqual([]);
     });
 
