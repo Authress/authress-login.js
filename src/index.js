@@ -1,4 +1,4 @@
-import cookieManager from 'cookie';
+import { parseCookie } from 'cookie';
 import take from 'lodash.take';
 
 import windowManager from './windowManager.js';
@@ -374,7 +374,7 @@ export class LoginClient {
       // Compare the initial authentication requestId to the returned one. If they don't match either the nonce has been tampered with or this isn't the latest authentication request
       // * This prevents canonical replay attacks, and fall through. If the user is already logged in, then the new log in attempt is ignored.
       if (authRequest.nonce === urlSearchParams.get('nonce')) {
-        const code = urlSearchParams.get('code') === 'cookie' ? cookieManager.parse(document.cookie)['auth-code'] : urlSearchParams.get('code');
+        const code = urlSearchParams.get('code') === 'cookie' ? parseCookie(document.cookie)['auth-code'] : urlSearchParams.get('code');
         const antiAbuseHash = await jwtManager.calculateAntiAbuseHash({ client_id: this.applicationId, authenticationRequestId: authRequest.nonce, code });
         const request = { grant_type: 'authorization_code', redirect_uri: authRequest.redirectUrl, client_id: this.applicationId, code, code_verifier: authRequest.codeVerifier, antiAbuseHash };
         try {

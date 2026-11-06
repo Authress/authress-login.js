@@ -1,4 +1,4 @@
-import cookieManager from 'cookie';
+import { stringifySetCookie } from 'cookie';
 import windowManager from './windowManager.js';
 
 const AuthenticationCredentialsStorageKey = 'AuthenticationCredentialsStorage';
@@ -68,7 +68,7 @@ class UserIdentityTokenStorageManager {
     if (!document) {
       return;
     }
-    document.cookie = cookieManager.serialize(cookieName, value || '', { expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
+    document.cookie = stringifySetCookie({ name: cookieName, value: value || '', expires: expiry, path: '/', sameSite: 'strict', secure: windowManager.isHttps() });
   }
 
   getLocalStorageTokens() {
